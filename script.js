@@ -1,3 +1,25 @@
+// Función mágica para convertir ID de Drive en Audio Reproducible
+function getDriveLink(fileId) {
+    return `https://docs.google.com/uc?export=open&id=${fileId}`;
+}
+
+const songs = [
+    {
+        title: "La canción de nuestro viaje", // Título que ella verá
+        artist: "Su Artista Favorito",
+        // Aquí solo pegas el ID que copiaste del enlace de Drive
+        src: getDriveLink("1A-xB3_PEGAR_AQUI_EL_ID_DEL_ARCHIVO_MP3"), 
+        cover: getDriveLink("1B-yC4_PEGAR_AQUI_EL_ID_DE_LA_FOTO_PORTADA") // ¡También sirve para fotos!
+    },
+    {
+        title: "Nuestra favorita",
+        artist: "Su Artista Favorito",
+        src: getDriveLink("1C-zD5_OTRO_ID_DE_DRIVE"),
+        cover: "assets/img/foto-local.jpg" // Puedes mezclar Drive y archivos locales
+    }
+];
+
+// ... el resto del código del reproductor sigue igual ...
 const songs = [
     {
         title: "Canción Favorita 1",
