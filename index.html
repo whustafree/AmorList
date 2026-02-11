@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para la Kote ❤️</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1>Koteify 🎧</h1>
+            <nav>
+                <ul>
+                    <li class="active">Inicio</li>
+                    <li><button id="msg-btn">💌 Mensaje Secreto</button></li>
+                </ul>
+            </nav>
+            <div class="playlist-list" id="playlist-container">
+                </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="hero" style="background-image: url('foto-kote-portada.jpg');">
+                <div class="hero-text">
+                    <h2>Solo para ti</h2>
+                    <p>La colección exclusiva de [NOMBRE DEL GRUPO]</p>
+                </div>
+            </div>
+
+            <div class="player-container">
+                <div class="now-playing">
+                    <img src="album-cover.jpg" id="cover-art" alt="Album Art">
+                    <div class="track-info">
+                        <h3 id="track-title">Selecciona una canción</h3>
+                        <p id="artist-name">[Artista Favorito]</p>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="prev">⏮️</button>
+                    <button id="play">▶️</button>
+                    <button id="next">⏭️</button>
+                    <input type="range" id="progress" value="0" min="0" max="100">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
