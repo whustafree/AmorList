@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* --- RESET Y BASE --- */
+        /* --- ESTILOS "DARK ROMANCE" --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: #121212;
@@ -17,18 +17,18 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Evita scroll doble */
+            overflow: hidden;
         }
 
-        /* --- LAYOUT PRINCIPAL --- */
+        /* --- LAYOUT --- */
         .main-container {
             display: flex;
             flex: 1;
             overflow: hidden;
-            background: linear-gradient(180deg, #2a0a12 0%, #121212 40%); /* Degradado romántico superior */
+            background: linear-gradient(180deg, #2a0a12 0%, #121212 40%);
         }
 
-        /* --- SIDEBAR (Menú Lateral) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             width: 240px;
             background-color: #000000;
@@ -38,12 +38,12 @@
             gap: 20px;
         }
         
-        @media (max-width: 768px) { .sidebar { display: none; } } /* Ocultar en celular */
+        @media (max-width: 768px) { .sidebar { display: none; } }
 
         .logo {
             font-size: 24px;
             font-weight: 800;
-            color: #ff4d6d; /* Color San Valentín */
+            color: #ff4d6d;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -60,17 +60,16 @@
             transition: 0.3s;
         }
         .menu-item:hover, .menu-item.active { color: white; }
-        .menu-item i { font-size: 20px; }
 
-        /* --- CONTENIDO CENTRAL --- */
+        /* --- CONTENIDO --- */
         .content {
             flex: 1;
             padding: 20px 40px;
-            overflow-y: auto; /* Scroll solo aquí */
-            background: rgba(0,0,0,0.2); /* Sutil */
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
         }
 
-        /* Hero Header (Portada del "Album") */
+        /* HERO (Portada) */
         .hero {
             display: flex;
             align-items: flex-end;
@@ -84,13 +83,13 @@
             height: 232px;
             box-shadow: 0 4px 60px rgba(0,0,0,0.5);
             object-fit: cover;
-            /* Aquí pon una foto linda de ustedes o del artista */
             background-color: #333; 
+            border-radius: 4px;
         }
 
         .hero-info h4 { font-size: 14px; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;}
         .hero-info h1 { 
-            font-size: 60px; /* Grande e impactante */
+            font-size: 60px; 
             font-weight: 800; 
             margin-bottom: 20px;
             line-height: 1;
@@ -101,7 +100,7 @@
             width: 56px;
             height: 56px;
             border-radius: 50%;
-            background-color: #ff4d6d; /* Botón Play Rosa */
+            background-color: #ff4d6d;
             border: none;
             font-size: 24px;
             color: black;
@@ -114,7 +113,7 @@
         }
         .play-btn-hero:hover { transform: scale(1.05); }
 
-        /* --- LISTA DE CANCIONES --- */
+        /* --- LISTA --- */
         .track-list { width: 100%; border-collapse: collapse; }
         .track-list th { text-align: left; border-bottom: 1px solid #333; padding-bottom: 10px; color: #b3b3b3; font-size: 12px; text-transform: uppercase; }
         .track-row { 
@@ -128,12 +127,12 @@
         .track-row td.title-col { color: white; font-weight: 500; }
         .track-num { width: 40px; text-align: center; }
         
-        .equalizer-gif { width: 14px; display: none; } /* Para animar luego */
-        .track-row.playing .track-num span { display: none; }
-        .track-row.playing .equalizer-gif { display: block; margin: 0 auto;}
-        .track-row.playing .title-col { color: #ff4d6d; }
+        /* Estado Activo (Reproduciendo) */
+        .track-row.active { background-color: rgba(255, 77, 109, 0.2); }
+        .track-row.active .title-col { color: #ff4d6d; }
+        .track-row.active .track-num { color: #ff4d6d; }
 
-        /* --- PLAYER BAR (Abajo) --- */
+        /* --- PLAYER BAR --- */
         .player-bar {
             height: 90px;
             background-color: #181818;
@@ -157,14 +156,6 @@
         .control-btn:hover { color: white; }
         .control-btn.play-circle { font-size: 32px; color: white; }
         .control-btn.play-circle:hover { transform: scale(1.1); }
-
-        .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 11px; color: #b3b3b3; }
-        .progress-bar { 
-            flex: 1; height: 4px; background-color: #4d4d4d; border-radius: 2px; cursor: pointer; position: relative;
-        }
-        .progress-fill { width: 0%; height: 100%; background-color: #ff4d6d; border-radius: 2px; }
-        .progress-bar:hover .progress-fill { background-color: #ff7e95; }
-
     </style>
 </head>
 <body>
@@ -180,19 +171,19 @@
                 <a href="#" class="menu-item"><i class="fa-solid fa-book"></i> Tu Biblioteca</a>
             </nav>
             <div style="margin-top: auto;">
-                <p style="font-size: 12px; color: #b3b3b3;">Instalada App para Kote ❤️</p>
+                <p style="font-size: 12px; color: #b3b3b3;">Hecho con ❤️ para Kote</p>
             </div>
         </aside>
 
         <main class="content">
             <div class="hero">
-                <img src="https://via.placeholder.com/232" alt="Portada" class="album-cover-big">
+                <img src="https://via.placeholder.com/232" alt="Portada" class="album-cover-big" id="hero-img">
                 <div class="hero-info">
                     <h4>Playlist Privada</h4>
-                    <h1>Solo lo mejor de [ARTISTA]</h1>
-                    <p>Creado especialmente para María José por Gustavo.</p>
+                    <h1>Para mi Kote ❤️</h1>
+                    <p>La colección especial de tu música favorita.</p>
                     <div style="margin-top: 20px;">
-                        <button class="play-btn-hero"><i class="fa-solid fa-play"></i></button>
+                        <button class="play-btn-hero" onclick="playTrack(0)"><i class="fa-solid fa-play"></i></button>
                     </div>
                 </div>
             </div>
@@ -207,24 +198,7 @@
                     </tr>
                 </thead>
                 <tbody id="playlist-body">
-                    <tr class="track-row">
-                        <td class="track-num">
-                            <span>1</span>
-                            <img src="https://open.spotifycdn.com/cdn/images/equaliser-animated-green.f93a2ef4.gif" class="equalizer-gif" style="filter: hue-rotate(300deg);">
-                        </td>
-                        <td class="title-col">
-                            <div>Nombre de la Canción</div>
-                            <div style="font-size: 12px; color: #b3b3b3;">Artista</div>
-                        </td>
-                        <td>Álbum Favorito</td>
-                        <td style="text-align: right;">3:45</td>
-                    </tr>
-                    <tr class="track-row">
-                        <td class="track-num"><span>2</span></td>
-                        <td class="title-col">Otra canción romántica</td>
-                        <td>Álbum Favorito</td>
-                        <td style="text-align: right;">4:12</td>
-                    </tr>
+                    <tr><td colspan="4" style="text-align:center; padding: 20px;">Cargando música de Drive... 🎧</td></tr>
                 </tbody>
             </table>
         </main>
@@ -243,19 +217,138 @@
         <div class="player-controls">
             <div class="control-buttons">
                 <button class="control-btn"><i class="fa-solid fa-shuffle"></i></button>
-                <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
-                <button class="control-btn play-circle"><i class="fa-solid fa-circle-play"></i></button>
-                <button class="control-btn"><i class="fa-solid fa-forward-step"></i></button>
+                <button class="control-btn" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+                <button class="control-btn play-circle" onclick="togglePlay()"><i class="fa-solid fa-circle-play" id="play-icon"></i></button>
+                <button class="control-btn" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
                 <button class="control-btn"><i class="fa-solid fa-repeat"></i></button>
             </div>
-            <div class="progress-container">
-                <span>0:00</span>
-                <div class="progress-bar"><div class="progress-fill"></div></div>
-                <span>3:45</span>
+            <div style="width: 100%; height: 4px; background: #4d4d4d; border-radius: 2px;">
+                <div style="width: 0%; height: 100%; background: #ff4d6d;" id="progress-fill"></div>
             </div>
         </div>
         
-        <div style="width: 30%;"></div> </div>
+        <div style="width: 30%;"></div>
+    </div>
 
+    <script>
+        let songs = [];
+        let currentIndex = 0;
+        const audioPlayer = new Audio();
+        const playlistBody = document.getElementById('playlist-body');
+        
+        // Elementos de la interfaz
+        const playerTitle = document.getElementById('current-title');
+        const playerArtist = document.getElementById('current-artist');
+        const playerCover = document.getElementById('current-cover');
+        const heroImg = document.getElementById('hero-img');
+        const playIcon = document.getElementById('play-icon');
+
+        // 1. CARGAR MÚSICA DEL BACKEND
+        async function loadMusic() {
+            try {
+                // Fetch al endpoint que creamos en index.js
+                const response = await fetch('/api/music');
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    songs = data;
+                    renderPlaylist();
+                    // Cargar la primera canción sin reproducir
+                    loadTrackInfo(0);
+                } else {
+                    playlistBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No se encontró música en la carpeta :(</td></tr>';
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                playlistBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #ff4d6d;">Error de conexión con el servidor</td></tr>';
+            }
+        }
+
+        // 2. DIBUJAR LA LISTA
+        function renderPlaylist() {
+            playlistBody.innerHTML = '';
+            songs.forEach((song, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'track-row';
+                tr.id = `track-${index}`;
+                tr.onclick = () => playTrack(index);
+                
+                tr.innerHTML = `
+                    <td class="track-num"><span>${index + 1}</span></td>
+                    <td class="title-col">
+                        <div>${song.title}</div>
+                        <div style="font-size: 12px; color: #b3b3b3;">${song.artist}</div>
+                    </td>
+                    <td>${song.album || 'Álbum Desconocido'}</td>
+                    <td style="text-align: right;"><i class="fa-solid fa-play" style="font-size: 12px;"></i></td>
+                `;
+                playlistBody.appendChild(tr);
+            });
+        }
+
+        // 3. FUNCIONES DE REPRODUCCIÓN
+        function loadTrackInfo(index) {
+            const song = songs[index];
+            playerTitle.innerText = song.title;
+            playerArtist.innerText = song.artist;
+            playerCover.src = song.cover || 'https://via.placeholder.com/56';
+            heroImg.src = song.cover || 'https://via.placeholder.com/232'; // Actualiza también la portada grande
+            audioPlayer.src = song.src;
+        }
+
+        function playTrack(index) {
+            currentIndex = index;
+            loadTrackInfo(index);
+            audioPlayer.play().catch(e => console.log("Esperando interacción del usuario..."));
+            updatePlayButton(true);
+            highlightActiveRow(index);
+        }
+
+        function togglePlay() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                updatePlayButton(true);
+            } else {
+                audioPlayer.pause();
+                updatePlayButton(false);
+            }
+        }
+
+        function nextTrack() {
+            let nextIndex = currentIndex + 1;
+            if (nextIndex >= songs.length) nextIndex = 0; // Loop al inicio
+            playTrack(nextIndex);
+        }
+
+        function prevTrack() {
+            let prevIndex = currentIndex - 1;
+            if (prevIndex < 0) prevIndex = songs.length - 1;
+            playTrack(prevIndex);
+        }
+
+        function updatePlayButton(isPlaying) {
+            if (isPlaying) {
+                playIcon.classList.remove('fa-circle-play');
+                playIcon.classList.add('fa-circle-pause');
+            } else {
+                playIcon.classList.remove('fa-circle-pause');
+                playIcon.classList.add('fa-circle-play');
+            }
+        }
+
+        function highlightActiveRow(index) {
+            // Quitar clase activa a todos
+            document.querySelectorAll('.track-row').forEach(row => row.classList.remove('active'));
+            // Agregar a la actual
+            const activeRow = document.getElementById(`track-${index}`);
+            if (activeRow) activeRow.classList.add('active');
+        }
+
+        // Evento cuando termina una canción -> pasar a la siguiente
+        audioPlayer.addEventListener('ended', nextTrack);
+
+        // Iniciar
+        window.onload = loadMusic;
+    </script>
 </body>
 </html>
