@@ -1,14 +1,14 @@
 {
   "name": "Koteify - Nuestra Música",
   "short_name": "Koteify",
-  "start_url": "public/logo.png",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
