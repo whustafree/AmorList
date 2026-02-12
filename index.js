@@ -4,6 +4,7 @@ const { google } = require('googleapis');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios'); // Nueva librería para buscar en internet
 
 const app = express();
 app.use(cors());
@@ -22,64 +23,86 @@ const auth = new google.auth.GoogleAuth({
 const drive = google.drive({ version: 'v3', auth });
 const FOLDER_ID = process.env.DRIVE_FOLDER_ID;
 
-// --- STREAMING INTELIGENTE (AUDIO Y VIDEO) ---
+// --- FUNCIÓN PARA BUSCAR CARÁTULA EN ITUNES ---
+async function findCoverOnItunes(query) {
+    try {
+        // Limpiamos el nombre para la búsqueda (quitamos caracteres raros)
+        const term = encodeURIComponent(query);
+        const url = `https://itunes.apple.com/search?term=${term}&media=music&entity=album&limit=1`;
+        
+        const response = await axios.get(url);
+        
+        if (response.data.results.length > 0) {
+            // iTunes devuelve una imagen de 100x100, la trucamos para pedir la de 600x600
+            return response.data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+        }
+    } catch (error) {
+        console.error("No se encontró en iTunes:", query);
+    }
+    return null; // Si falla, devolvemos null
+}
+
+// --- STREAMING (Audio y Video) ---
 app.get('/api/stream/:id', async (req, res) => {
     try {
         const fileId = req.params.id;
-
-        // Pedimos el archivo a Google
         const response = await drive.files.get(
             { fileId: fileId, alt: 'media' },
             { responseType: 'stream' }
         );
-
-        // COPIAMOS el tipo de archivo real que nos da Google (ej: video/mp4 o audio/mpeg)
-        // Esto es crucial para que el navegador sepa qué reproductor usar
         if (response.headers['content-type']) {
             res.setHeader('Content-Type', response.headers['content-type']);
             res.setHeader('Content-Length', response.headers['content-length']);
         }
-        
-        // Enviamos los datos
         response.data.pipe(res);
-
     } catch (error) {
         console.error("Error stream:", error.message);
         res.status(500).end();
     }
 });
 
-// API: LISTA DE ÁLBUMES Y VIDEOS
+// --- API PRINCIPAL ---
 app.get('/api/albums', async (req, res) => {
     try {
         const library = [];
         
-        // 1. Listar carpetas (Discos)
+        // 1. Listar Carpetas (Discos)
         const foldersRes = await drive.files.list({
             q: `'${FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
             fields: 'files(id, name)',
         });
 
-        // 2. Entrar a cada carpeta
+        // 2. Procesar cada disco
         for (const folder of foldersRes.data.files) {
-            // AHORA BUSCAMOS AUDIO Y VIDEO
+            // Buscar contenido (Audio o Video)
             const mediaRes = await drive.files.list({
                 q: `'${folder.id}' in parents and (mimeType contains 'audio/' or mimeType contains 'video/') and trashed = false`,
-                fields: 'files(id, name, mimeType, thumbnailLink)', // Pedimos mimeType para saber qué es
+                fields: 'files(id, name, mimeType, thumbnailLink)',
                 pageSize: 50 
             });
 
             if (mediaRes.data.files.length > 0) {
-                // Buscar portada
+                // A. Intentar buscar portada en Drive (Prioridad 1)
                 const coverRes = await drive.files.list({
                     q: `'${folder.id}' in parents and mimeType contains 'image/' and trashed = false`,
                     fields: 'files(thumbnailLink)',
                     pageSize: 1
                 });
 
-                let albumCover = "https://placehold.co/600?text=" + encodeURIComponent(folder.name);
+                let albumCover = null;
+
+                // Si hay imagen en Drive, úsala
                 if (coverRes.data.files.length > 0) {
                     albumCover = coverRes.data.files[0].thumbnailLink.replace('=s220', '=s600');
+                } 
+                // Si NO hay imagen en Drive, búscala en iTunes
+                else {
+                    albumCover = await findCoverOnItunes(folder.name);
+                }
+
+                // Si tampoco está en iTunes, usa la imagen por defecto
+                if (!albumCover) {
+                    albumCover = "https://placehold.co/600?text=" + encodeURIComponent(folder.name);
                 }
 
                 const tracks = mediaRes.data.files.map(file => ({
@@ -89,7 +112,6 @@ app.get('/api/albums', async (req, res) => {
                     album: folder.name,
                     src: `/api/stream/${file.id}`,
                     cover: albumCover,
-                    // Detectamos si es video mirando el tipo de archivo
                     isVideo: file.mimeType.includes('video') 
                 }));
 
