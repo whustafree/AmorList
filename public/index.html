@@ -7,97 +7,277 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* RESET & BASE */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #121212; color: white; font-family: 'Montserrat', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .main-container { display: flex; flex: 1; overflow: hidden; background: linear-gradient(180deg, #2a0a12 0%, #121212 40%); }
-        .content { flex: 1; padding: 20px; overflow-y: auto; text-align: center; }
-        .hero img { width: 200px; height: 200px; border-radius: 10px; box-shadow: 0 4px 60px rgba(0,0,0,0.5); object-fit: cover; margin-bottom: 20px; }
-        .hero h1 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
-        .track-list { width: 100%; margin-top: 20px; text-align: left; border-collapse: collapse; }
-        .track-row { height: 50px; cursor: pointer; border-bottom: 1px solid #333; }
+        
+        /* LAYOUT */
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 220px; background: #000; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .sidebar button { background: none; border: none; color: #b3b3b3; font-size: 16px; cursor: pointer; text-align: left; display: flex; gap: 10px; align-items: center; padding: 10px 0; transition: 0.3s; font-family: inherit; font-weight: 600;}
+        .sidebar button:hover, .sidebar button.active { color: white; }
+        .logo { color: #ff4d6d; font-size: 22px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+        .content { flex: 1; padding: 20px 40px; overflow-y: auto; background: linear-gradient(180deg, #2a0a12 0%, #121212 40%); position: relative; }
+
+        /* VISTA DE GRID (ÁLBUMES) */
+        .albums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px; margin-top: 20px; }
+        .album-card { background: #181818; padding: 16px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .album-card:hover { background: #282828; transform: translateY(-5px); }
+        .album-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .album-title { font-weight: 700; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .album-artist { font-size: 12px; color: #b3b3b3; }
+
+        /* VISTA DE LISTA (CANCIONES) */
+        .playlist-view { display: none; } /* Oculto por defecto */
+        .hero { display: flex; align-items: flex-end; gap: 20px; margin-bottom: 30px; }
+        .hero img { width: 200px; height: 200px; box-shadow: 0 4px 60px rgba(0,0,0,0.5); object-fit: cover; }
+        .hero-info h1 { font-size: 48px; font-weight: 800; line-height: 1; margin-bottom: 10px; }
+        .btn-back { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #b3b3b3; font-size: 14px; }
+        .btn-back:hover { text-decoration: underline; color: white; }
+
+        .track-list { width: 100%; border-collapse: collapse; }
+        .track-row { height: 50px; cursor: pointer; border-radius: 4px; }
         .track-row:hover { background: rgba(255,255,255,0.1); }
-        .track-row td { padding: 0 10px; }
-        .track-row.active { color: #ff4d6d; }
-        .player-bar { height: 80px; background: #181818; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-top: 1px solid #333; }
-        .controls button { background: none; border: none; color: white; font-size: 20px; margin: 0 10px; cursor: pointer; }
-        .controls button:hover { color: #ff4d6d; }
+        .track-row td { padding: 0 10px; color: #b3b3b3; }
+        .track-row.active .title-col { color: #ff4d6d; }
+        .title-col { color: white; font-weight: 500; }
+        .heart-btn { background: none; border: none; cursor: pointer; color: #b3b3b3; font-size: 16px; }
+        .heart-btn.liked { color: #ff4d6d; }
+        .heart-btn:hover { transform: scale(1.2); }
+
+        /* PLAYER BAR */
+        .player-bar { height: 90px; background: #181818; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
+        .now-playing { display: flex; align-items: center; gap: 15px; width: 30%; }
+        .now-playing img { width: 56px; height: 56px; border-radius: 4px; }
+        .controls { display: flex; flex-direction: column; align-items: center; width: 40%; }
+        .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+        .buttons button { background: none; border: none; color: #b3b3b3; font-size: 20px; cursor: pointer; }
+        .buttons button:hover { color: white; }
+        .play-pause { font-size: 35px !important; color: white !important; }
+
+        /* Responsive */
+        @media (max-width: 768px) { .sidebar { display: none; } .hero { flex-direction: column; align-items: center; text-align: center; } .hero h1 { font-size: 28px; } }
     </style>
 </head>
 <body>
+
     <div class="main-container">
+        <aside class="sidebar">
+            <div class="logo"><i class="fa-brands fa-spotify"></i> Koteify</div>
+            <button onclick="showLibrary()" class="active" id="btn-home"><i class="fa-solid fa-house"></i> Inicio</button>
+            <button onclick="showFavorites()" id="btn-fav"><i class="fa-solid fa-heart"></i> Mis Favoritos</button>
+        </aside>
+
         <main class="content">
-            <div class="hero">
-                <img src="https://via.placeholder.com/200" id="hero-img">
-                <h1>Para mi Kote ❤️</h1>
-                <p>Nuestra música favorita</p>
+            <div id="library-view">
+                <h2 style="margin-bottom: 20px;">Discos para ti</h2>
+                <div class="albums-grid" id="albums-container">
+                    <p>Cargando discos...</p>
+                </div>
             </div>
-            <table class="track-list">
-                <tbody id="playlist-body">
-                    <tr><td>Cargando canciones...</td></tr>
-                </tbody>
-            </table>
+
+            <div id="playlist-view" class="playlist-view">
+                <div class="btn-back" onclick="showLibrary()">← Volver a los discos</div>
+                <div class="hero">
+                    <img src="" id="album-cover-hero">
+                    <div class="hero-info">
+                        <h4>Álbum</h4>
+                        <h1 id="album-title-hero">Nombre del Disco</h1>
+                        <p id="album-songs-count">0 canciones</p>
+                    </div>
+                </div>
+                <table class="track-list">
+                    <tbody id="track-body"></tbody>
+                </table>
+            </div>
         </main>
     </div>
+
     <div class="player-bar">
-        <div id="current-title" style="font-size: 14px;">Selecciona una canción</div>
-        <div class="controls">
-            <button onclick="prevTrack()"><i class="fa-solid fa-backward"></i></button>
-            <button onclick="togglePlay()"><i class="fa-solid fa-play" id="play-icon"></i></button>
-            <button onclick="nextTrack()"><i class="fa-solid fa-forward"></i></button>
+        <div class="now-playing">
+            <img src="https://via.placeholder.com/56" id="player-img">
+            <div>
+                <div style="font-weight: 600; font-size: 14px;" id="player-title">Selecciona una canción</div>
+                <div style="font-size: 11px; color: #b3b3b3;" id="player-artist">...</div>
+            </div>
         </div>
+        <div class="controls">
+            <div class="buttons">
+                <button onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+                <button onclick="togglePlay()" class="play-pause"><i class="fa-solid fa-circle-play" id="play-icon"></i></button>
+                <button onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
+        </div>
+        <div style="width: 30%;"></div>
     </div>
 
     <script>
-        let songs = [];
+        let libraryData = []; // Aquí guardamos toda la info de los discos
+        let currentPlaylist = []; // La lista que se está reproduciendo ahora
         let currentIndex = 0;
+        let favoriteIds = JSON.parse(localStorage.getItem('koteifyLikes')) || [];
         const audio = new Audio();
-        
-        async function loadMusic() {
+
+        // 1. CARGAR DATOS
+        async function loadLibrary() {
             try {
-                const res = await fetch('/api/music');
-                const data = await res.json();
-                if(data.length) { 
-                    songs = data; 
-                    renderList(); 
-                    loadTrack(0); 
-                } else { document.getElementById('playlist-body').innerHTML = '<tr><td>No encontré música :(</td></tr>'; }
-            } catch (e) { console.error(e); }
+                const res = await fetch('/api/albums');
+                libraryData = await res.json();
+                renderAlbums();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('albums-container').innerHTML = "Error cargando discos. Revisa el servidor.";
+            }
         }
 
-        function renderList() {
-            const tbody = document.getElementById('playlist-body');
+        // 2. DIBUJAR PORTADAS (Discos)
+        function renderAlbums() {
+            const container = document.getElementById('albums-container');
+            container.innerHTML = '';
+            
+            if(libraryData.length === 0) {
+                container.innerHTML = "<p>No encontré discos. Revisa que haya subcarpetas en Drive.</p>";
+                return;
+            }
+
+            libraryData.forEach(album => {
+                const card = document.createElement('div');
+                card.className = 'album-card';
+                card.onclick = () => openAlbum(album);
+                card.innerHTML = `
+                    <img src="${album.cover}">
+                    <div class="album-title">${album.name}</div>
+                    <div class="album-artist">Para la Kote</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 3. ABRIR UN ÁLBUM (Ver canciones)
+        function openAlbum(album) {
+            document.getElementById('library-view').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'block';
+
+            // Actualizar cabecera
+            document.getElementById('album-cover-hero').src = album.cover;
+            document.getElementById('album-title-hero').innerText = album.name;
+            document.getElementById('album-songs-count').innerText = `${album.songs.length} canciones`;
+
+            // Dibujar lista
+            renderTrackList(album.songs);
+        }
+
+        function renderTrackList(songs) {
+            const tbody = document.getElementById('track-body');
             tbody.innerHTML = '';
-            songs.forEach((s, i) => {
+
+            songs.forEach((song, index) => {
+                const isLiked = favoriteIds.includes(song.id);
                 const tr = document.createElement('tr');
                 tr.className = 'track-row';
-                tr.onclick = () => playTrack(i);
-                tr.innerHTML = `<td>${i+1}</td><td>${s.title}</td>`;
+                tr.onclick = (e) => {
+                    // Si clic en corazón, no reproducir, solo dar like
+                    if(e.target.closest('.heart-btn')) return;
+                    playTrack(songs, index);
+                };
+
+                tr.innerHTML = `
+                    <td style="width: 40px;">${index + 1}</td>
+                    <td class="title-col">
+                        <div>${song.title}</div>
+                        <div style="font-size: 11px; color: #b3b3b3;">${song.artist}</div>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="heart-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${song.id}', this)">
+                            <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                        </button>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
         }
 
-        function loadTrack(i) {
-            document.getElementById('hero-img').src = songs[i].cover;
-            document.getElementById('current-title').innerText = songs[i].title;
-            audio.src = songs[i].src;
+        // 4. LÓGICA DE FAVORITOS
+        function toggleLike(songId, btn) {
+            if (favoriteIds.includes(songId)) {
+                favoriteIds = favoriteIds.filter(id => id !== songId);
+                btn.classList.remove('liked');
+                btn.querySelector('i').classList.remove('fa-solid');
+                btn.querySelector('i').classList.add('fa-regular');
+            } else {
+                favoriteIds.push(songId);
+                btn.classList.add('liked');
+                btn.querySelector('i').classList.remove('fa-regular');
+                btn.querySelector('i').classList.add('fa-solid');
+            }
+            localStorage.setItem('koteifyLikes', JSON.stringify(favoriteIds));
         }
 
-        function playTrack(i) {
-            currentIndex = i;
-            loadTrack(i);
-            audio.play();
-            document.getElementById('play-icon').className = 'fa-solid fa-pause';
+        function showFavorites() {
+            // Recolectar todas las canciones de todos los discos
+            let allSongs = [];
+            libraryData.forEach(album => allSongs.push(...album.songs));
+            
+            // Filtrar las que están en la lista de IDs favoritos
+            const myFavs = allSongs.filter(s => favoriteIds.includes(s.id));
+
+            // Crear un "Álbum Falso" para visualizarlo
+            const favAlbum = {
+                name: "Mis Favoritos ❤️",
+                cover: "https://via.placeholder.com/300?text=Loves",
+                songs: myFavs
+            };
+            openAlbum(favAlbum);
+        }
+
+        function showLibrary() {
+            document.getElementById('library-view').style.display = 'block';
+            document.getElementById('playlist-view').style.display = 'none';
+        }
+
+        // 5. REPRODUCTOR
+        function playTrack(playlist, index) {
+            currentPlaylist = playlist;
+            currentIndex = index;
+            const song = currentPlaylist[index];
+
+            audio.src = song.src;
+            audio.play().catch(e => console.log("Error play", e));
+            
+            // Actualizar barra abajo
+            document.getElementById('player-img').src = song.cover;
+            document.getElementById('player-title').innerText = song.title;
+            document.getElementById('player-artist').innerText = song.artist;
+            document.getElementById('play-icon').className = "fa-solid fa-circle-pause";
         }
 
         function togglePlay() {
-            if(audio.paused) { audio.play(); document.getElementById('play-icon').className = 'fa-solid fa-pause'; }
-            else { audio.pause(); document.getElementById('play-icon').className = 'fa-solid fa-play'; }
+            if (audio.paused) {
+                audio.play();
+                document.getElementById('play-icon').className = "fa-solid fa-circle-pause";
+            } else {
+                audio.pause();
+                document.getElementById('play-icon').className = "fa-solid fa-circle-play";
+            }
         }
-        
-        function nextTrack() { playTrack((currentIndex + 1) % songs.length); }
-        function prevTrack() { playTrack((currentIndex - 1 + songs.length) % songs.length); }
 
-        window.onload = loadMusic;
+        function nextTrack() {
+            if (currentPlaylist.length === 0) return;
+            let next = currentIndex + 1;
+            if (next >= currentPlaylist.length) next = 0;
+            playTrack(currentPlaylist, next);
+        }
+
+        function prevTrack() {
+            if (currentPlaylist.length === 0) return;
+            let prev = currentIndex - 1;
+            if (prev < 0) prev = currentPlaylist.length - 1;
+            playTrack(currentPlaylist, prev);
+        }
+
+        audio.addEventListener('ended', nextTrack);
+        window.onload = loadLibrary;
     </script>
 </body>
 </html>
