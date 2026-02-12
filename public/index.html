@@ -24,6 +24,11 @@
         .sidebar button.active { color: white; background: #282828; font-weight: 800; }
         .sidebar button i { width: 20px; text-align: center; }
 
+        /* Botón especial de actualizar */
+        .refresh-btn { margin-top: auto; border-top: 1px solid #333; padding-top: 20px !important; color: #ff4d6d !important; }
+        .refresh-btn:hover { background: rgba(255, 77, 109, 0.1) !important; }
+        .fa-spin-fast { animation: fa-spin 1s infinite linear; }
+
         .logo { color: #ff4d6d; font-size: 22px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-left: 10px;}
 
         .content { flex: 1; padding: 20px 40px; overflow-y: auto; background: linear-gradient(180deg, #2a0a12 0%, #121212 40%); position: relative; }
@@ -40,17 +45,7 @@
         .playlist-view { display: none; }
         .hero { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 30px; transition: all 0.3s ease; }
         
-        /* MODO CINE (Video) */
-        .media-container { 
-            width: 232px; height: 232px; 
-            position: relative; 
-            box-shadow: 0 4px 60px rgba(0,0,0,0.5); 
-            border-radius: 8px; 
-            overflow: hidden; 
-            background: #000; 
-            flex-shrink: 0;
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+        .media-container { width: 232px; height: 232px; position: relative; box-shadow: 0 4px 60px rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; background: #000; flex-shrink: 0; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
         .media-container.video-mode { width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; }
         .media-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .media-container video { width: 100%; height: 100%; display: none; object-fit: contain; }
@@ -76,16 +71,10 @@
         .heart-btn { background: none; border: none; cursor: pointer; color: #b3b3b3; font-size: 16px; transition: 0.2s;}
         .heart-btn.liked { color: #ff4d6d; transform: scale(1.1); }
 
-        /* PLAYER BAR MEJORADO */
-        .player-bar { 
-            height: 90px; background: #181818; border-top: 1px solid #282828; 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 24px; z-index: 100; 
-        }
+        .player-bar { height: 90px; background: #181818; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 100; }
         .now-playing { display: flex; align-items: center; gap: 15px; width: 30%; }
         .now-playing img { width: 56px; height: 56px; border-radius: 4px; object-fit: cover;}
         
-        /* Controles centrales + Barra de Progreso */
         .controls { display: flex; flex-direction: column; align-items: center; width: 40%; justify-content: center; }
         .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 8px; }
         .buttons button { background: none; border: none; color: #b3b3b3; font-size: 20px; cursor: pointer; transition: 0.2s; }
@@ -93,18 +82,11 @@
         .play-pause { font-size: 38px !important; color: white !important; }
         .play-pause:hover { transform: scale(1.05); }
 
-        /* Barra de Progreso (Timeline) */
         .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 11px; color: #b3b3b3; }
-        .progress-slider {
-            flex: 1; -webkit-appearance: none; height: 4px; background: #4d4d4d; border-radius: 2px; outline: none; cursor: pointer;
-        }
-        .progress-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; display: none; /* Se oculta hasta hover */
-        }
+        .progress-slider { flex: 1; -webkit-appearance: none; height: 4px; background: #4d4d4d; border-radius: 2px; outline: none; cursor: pointer; }
+        .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; display: none; }
         .progress-container:hover .progress-slider::-webkit-slider-thumb { display: block; }
-        .progress-slider:hover::-webkit-slider-thumb { background: #ff4d6d; transform: scale(1.2); }
 
-        /* VOLUMEN */
         .volume-controls { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
         .volume-slider { -webkit-appearance: none; width: 100px; height: 4px; background: #4d4d4d; border-radius: 2px; outline: none; }
         .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
@@ -122,6 +104,10 @@
             <button onclick="switchMode('audio')" id="btn-audio" class="active"><i class="fa-solid fa-music"></i> Música</button>
             <button onclick="switchMode('video')" id="btn-video"><i class="fa-solid fa-film"></i> Videos</button>
             <button onclick="showFavorites()" id="btn-fav"><i class="fa-solid fa-heart"></i> Favoritos</button>
+            
+            <button onclick="refreshLibrary()" class="refresh-btn" id="btn-refresh">
+                <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar Biblioteca
+            </button>
         </aside>
 
         <main class="content">
@@ -189,29 +175,53 @@
         let favoriteIds = JSON.parse(localStorage.getItem('koteifyLikes')) || [];
         let currentMode = 'audio';
         let isVideoPlaying = false;
-        let isDragging = false; // Para que no salte mientras arrastras
+        let isDragging = false;
 
         const audioPlayer = new Audio();
         const videoPlayer = document.getElementById('hero-video');
-        
-        // Elementos Interfaz
         const coverImage = document.getElementById('album-cover-hero');
         const mediaBox = document.getElementById('media-box');
         const heroSection = document.getElementById('hero-section');
         const volumeSlider = document.getElementById('volume-slider');
         const volIcon = document.getElementById('vol-icon');
-        
-        // Elementos Progreso
         const seekSlider = document.getElementById('seek-slider');
         const currTimeText = document.getElementById('curr-time');
         const totalDurationText = document.getElementById('total-duration');
 
         async function loadLibrary() {
             try {
+                // Al cargar la página, pedimos la lista (ahora es rápido desde caché)
                 const res = await fetch('/api/albums');
                 fullLibraryData = await res.json();
                 switchMode('audio');
             } catch (e) { console.error("Error cargando:", e); }
+        }
+
+        // --- FUNCIÓN PARA ACTUALIZAR (REFRESH) ---
+        async function refreshLibrary() {
+            const btn = document.getElementById('btn-refresh');
+            const icon = document.getElementById('refresh-icon');
+            
+            // Animación
+            icon.classList.add('fa-spin-fast');
+            btn.innerHTML = `<i class="fa-solid fa-rotate fa-spin-fast"></i> Escaneando...`;
+            btn.disabled = true;
+
+            try {
+                // Pedimos al servidor que escanee de nuevo
+                const res = await fetch('/api/refresh');
+                fullLibraryData = await res.json();
+                
+                alert("¡Biblioteca actualizada con éxito!");
+                switchMode(currentMode); // Recargamos la vista actual
+            } catch (error) {
+                alert("Error actualizando: " + error.message);
+            } finally {
+                // Restauramos el botón
+                icon.classList.remove('fa-spin-fast');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar Biblioteca`;
+            }
         }
 
         function switchMode(mode) {
@@ -317,7 +327,6 @@
             document.getElementById('player-artist').innerText = track.isVideo ? "Video" : track.artist;
             document.getElementById('play-icon').className = "fa-solid fa-circle-pause";
             
-            // Resetear barra
             seekSlider.value = 0;
             currTimeText.innerText = "0:00";
             totalDurationText.innerText = "0:00";
@@ -394,7 +403,6 @@
             if(currentMode === 'fav') renderAlbumsByMode();
         }
 
-        // --- LÓGICA DE TIEMPO Y BARRA ---
         function formatTime(seconds) {
             if(isNaN(seconds)) return "0:00";
             const min = Math.floor(seconds / 60);
@@ -403,17 +411,11 @@
         }
 
         function updateProgress(e) {
-            // Si el usuario está arrastrando la barra, no actualizamos visualmente
-            if(isDragging) return; 
-
+            if(isDragging) return;
             const { duration, currentTime } = e.srcElement;
             if(isNaN(duration)) return;
-
-            // Actualizar slider
             seekSlider.max = duration;
             seekSlider.value = currentTime;
-
-            // Actualizar texto
             currTimeText.innerText = formatTime(currentTime);
             totalDurationText.innerText = formatTime(duration);
         }
@@ -423,19 +425,16 @@
             player.currentTime = e.target.value;
         }
 
-        // Eventos del Audio
         audioPlayer.addEventListener('timeupdate', updateProgress);
         audioPlayer.addEventListener('ended', nextTrack);
         audioPlayer.addEventListener('play', updatePlayIcon);
         audioPlayer.addEventListener('pause', updatePlayIcon);
         
-        // Eventos del Video
         videoPlayer.addEventListener('timeupdate', updateProgress);
         videoPlayer.addEventListener('ended', nextTrack);
         videoPlayer.addEventListener('play', updatePlayIcon);
         videoPlayer.addEventListener('pause', updatePlayIcon);
 
-        // Eventos de la Barra (Seek)
         seekSlider.addEventListener('mousedown', () => isDragging = true);
         seekSlider.addEventListener('touchstart', () => isDragging = true);
         seekSlider.addEventListener('change', (e) => {
@@ -443,11 +442,9 @@
             setProgress(e);
         });
         seekSlider.addEventListener('input', (e) => {
-            // Actualizar texto mientras arrastras
             currTimeText.innerText = formatTime(e.target.value);
         });
 
-        // Eventos Volumen
         volumeSlider.addEventListener('input', (e) => {
             const val = e.target.value;
             audioPlayer.volume = val;
