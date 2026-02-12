@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "koteify-music",
+  "private_key_id": "e6831a964b1ea055c237b9f99b4dcda8c4277422",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC4IsItj4Z793YX\n6edJH6N2q7nMj/pf7UkRKm0nOrUOiu1hHFllJ2J8tbpVCDzjHiKn+u6Ck0AFRrWC\nYkN82XprCPawOUAnJHMVDfyBEVMIwJgSu4fOGkKc2jeXixkObXZXtf3LX7/5GiPW\nvMMv/yedNmXDL67YEHWmapqhFjSEHtWaau+W08cubWSTZ56Q7MMcoOvnL0cGmOSQ\nMkpGh+9BkSGGg+QFEJeaeuDIptsx1Gpf5eyILJU1FUOrVokw3HGbkMgiB+S0T804\nesj3GR+zZlyIZLnuOQs7jiz4SjaB9GoN3Ruk9d9FNySGBFPvlyT77quMYZXXjcff\nB1OrPVhlAgMBAAECggEABEhYrE8ZgWIaxskbpj18Y4rwbhPOLrN53tKWCdLJeb5c\n8YSDhsEA/yYJ4KbppZ2ikDYbnIFYvJatq4vmBm4XdQxXEneuaIqmO4/g9s6EmCBE\nmTDv4mkFchj4MIfdbBK7LSSQM831DNHhEgI/ZusgDH3CpaTDBAbz+Ywirwrxaz4z\nLEnFVwIMFxIcw171DW2ohyAJwDeccmGNunkauaRhiIGoz64jztvGPEXnITTHwuDs\nGgn1qWLtQ6iAxGafp65VFEf5mxZFXh7DEUYKcfZX8ZVUmQ5HPH/9rWPPfma7c6av\n/YF0Wtybhi3vGFF/RwiY6Gv4B6+jG/tXmIGbQsKbuQKBgQD1YIKbsSYQ+wF6GBSs\n7Z6F4tHeOT2QjjTJq+lhxwizeDdDUmXgo3ZHqtG5zmSf/XmtDWHW2h9+s6yKctoC\nxZmfhvEcJ62SNgaw3rtfqdw8u6WV78r0m9V2fFWZWyWkJk3J+aoQymPx5qiytTzo\nHCDgbLHUewfBRjDVwQ4wowKbPQKBgQDAG4SLBbv4mxj5z2N//vjCXRwJu1HLois8\nLwJglXsW2yndTokrD2Bv7EdLfRumX3H2Tm7OHc7WKnMF6BkWo1viuw3zbk1QSUZv\nGkktwyzc7w63f+P/jeO9fsWMpnfbuvtgA9VZUWboqReH5pjh7sZutk6b7D9e0Fpf\nGd3MxPykSQKBgHMPVU9CazItMU0aO5+3MM1hRb3po2fEdxZWKXKzDO5zIZ7M5X7H\nx6/ldsCk+mRXTJYMH2PLFleoUvD82CPSmq3Gbgsgw/A6qzqGxuAd22sTJps/PTEk\nXZ1Ywh7OMcFeQL3D96416VXGLjbWa3//qJ7z+RNEuac0jbO9+jRuS8uVAoGAX+od\nThAJ3sEJQkiSZCiYaOp2AkHdP+9y6LSL2k8nyqyYBV+dyrr9qkPtALqxIGsNCi30\n0sI9L9632R4d0Ji1WsmL2JuczFYZbYVRPiDxeEl/Lo0S99gO+eCen2/J7hI4SaMA\nVXz4BXfPQNIYSM2fk01AiEb3CM68IDlY7VD41skCgYBDv7CByk/H6CdX7ucb8EFe\nQk2VzKIgVYQODq4ARNJQXlqcDDQ5L6QxwY0o3WXm5Bhjq6pPlMDa9nKxUGP5VCl8\niSu0c6M29kblfg6zpAuVRYLVa4WANYpvLdWahsY+nl9pGi7zLL0N4Lo8nCIdteNK\nCmA5I4pdWM9tU42pVrA9Xw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "koteify-bot@koteify-music.iam.gserviceaccount.com",
+  "client_id": "115216494852749643608",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/koteify-bot%40koteify-music.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
