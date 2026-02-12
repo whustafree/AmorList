@@ -22,49 +22,54 @@ const auth = new google.auth.GoogleAuth({
 const drive = google.drive({ version: 'v3', auth });
 const FOLDER_ID = process.env.DRIVE_FOLDER_ID;
 
-// --- NUEVA FUNCIONALIDAD: STREAMING DE AUDIO ---
-// Esto hace que el audio pase por tu servidor en lugar de ir directo a Google
+// --- STREAMING INTELIGENTE (AUDIO Y VIDEO) ---
 app.get('/api/stream/:id', async (req, res) => {
     try {
         const fileId = req.params.id;
 
-        // 1. Obtener el stream desde Drive usando las credenciales del robot
+        // Pedimos el archivo a Google
         const response = await drive.files.get(
             { fileId: fileId, alt: 'media' },
             { responseType: 'stream' }
         );
 
-        // 2. Decirle al navegador que esto es audio
-        res.setHeader('Content-Type', 'audio/mpeg');
+        // COPIAMOS el tipo de archivo real que nos da Google (ej: video/mp4 o audio/mpeg)
+        // Esto es crucial para que el navegador sepa qué reproductor usar
+        if (response.headers['content-type']) {
+            res.setHeader('Content-Type', response.headers['content-type']);
+            res.setHeader('Content-Length', response.headers['content-length']);
+        }
         
-        // 3. Enviar el audio (pipe)
+        // Enviamos los datos
         response.data.pipe(res);
 
     } catch (error) {
-        console.error("Error en streaming:", error.message);
-        res.status(500).send("Error reproduciendo archivo");
+        console.error("Error stream:", error.message);
+        res.status(500).end();
     }
 });
 
-// API: Devuelve la lista de discos
+// API: LISTA DE ÁLBUMES Y VIDEOS
 app.get('/api/albums', async (req, res) => {
     try {
         const library = [];
+        
         // 1. Listar carpetas (Discos)
         const foldersRes = await drive.files.list({
             q: `'${FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
             fields: 'files(id, name)',
         });
 
-        // 2. Entrar a cada disco
+        // 2. Entrar a cada carpeta
         for (const folder of foldersRes.data.files) {
-            const songsRes = await drive.files.list({
-                q: `'${folder.id}' in parents and mimeType contains 'audio/' and trashed = false`,
-                fields: 'files(id, name, thumbnailLink)',
+            // AHORA BUSCAMOS AUDIO Y VIDEO
+            const mediaRes = await drive.files.list({
+                q: `'${folder.id}' in parents and (mimeType contains 'audio/' or mimeType contains 'video/') and trashed = false`,
+                fields: 'files(id, name, mimeType, thumbnailLink)', // Pedimos mimeType para saber qué es
                 pageSize: 50 
             });
 
-            if (songsRes.data.files.length > 0) {
+            if (mediaRes.data.files.length > 0) {
                 // Buscar portada
                 const coverRes = await drive.files.list({
                     q: `'${folder.id}' in parents and mimeType contains 'image/' and trashed = false`,
@@ -72,29 +77,27 @@ app.get('/api/albums', async (req, res) => {
                     pageSize: 1
                 });
 
-                // Portada por defecto (Placehold.co para evitar errores)
                 let albumCover = "https://placehold.co/600?text=" + encodeURIComponent(folder.name);
-                
                 if (coverRes.data.files.length > 0) {
-                    // Usamos la portada real de Drive si existe
                     albumCover = coverRes.data.files[0].thumbnailLink.replace('=s220', '=s600');
                 }
 
-                const songs = songsRes.data.files.map(file => ({
+                const tracks = mediaRes.data.files.map(file => ({
                     id: file.id,
                     title: file.name.replace(/\.[^/.]+$/, ""),
                     artist: "Para ti ❤️",
                     album: folder.name,
-                    // CAMBIO CLAVE: Ahora el src apunta a TU servidor, no a Google
-                    src: `/api/stream/${file.id}`, 
-                    cover: albumCover
+                    src: `/api/stream/${file.id}`,
+                    cover: albumCover,
+                    // Detectamos si es video mirando el tipo de archivo
+                    isVideo: file.mimeType.includes('video') 
                 }));
 
                 library.push({
                     id: folder.id,
                     name: folder.name,
                     cover: albumCover,
-                    songs: songs
+                    songs: tracks
                 });
             }
         }
