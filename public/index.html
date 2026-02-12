@@ -15,7 +15,6 @@
         .main-container { display: flex; flex: 1; overflow: hidden; }
         .sidebar { width: 220px; background: #000; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         
-        /* BOTONES SIDEBAR ACTUALIZADOS */
         .sidebar button { 
             background: none; border: none; color: #b3b3b3; font-size: 15px; cursor: pointer; 
             text-align: left; display: flex; gap: 12px; align-items: center; padding: 10px 15px; 
@@ -39,10 +38,20 @@
 
         /* VISTA LISTA */
         .playlist-view { display: none; }
-        .hero { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 30px; }
+        .hero { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 30px; transition: all 0.3s ease; }
         
-        /* ESTILOS VIDEO/FOTO */
-        .media-container { width: 232px; height: 232px; position: relative; box-shadow: 0 4px 60px rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; background: #000; flex-shrink: 0;}
+        /* MODO CINE (Video) */
+        .media-container { 
+            width: 232px; height: 232px; 
+            position: relative; 
+            box-shadow: 0 4px 60px rgba(0,0,0,0.5); 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: #000; 
+            flex-shrink: 0;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .media-container.video-mode { width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; }
         .media-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .media-container video { width: 100%; height: 100%; display: none; object-fit: contain; }
         
@@ -50,7 +59,9 @@
         .hero-info h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
         .hero-info h1 { font-size: 48px; font-weight: 800; line-height: 1; margin-bottom: 10px; }
         .hero-info p { color: #b3b3b3; font-size: 14px; }
-        
+        .hero.video-active { flex-direction: column; align-items: flex-start; }
+        .hero.video-active .hero-info { width: 100%; margin-top: 20px; }
+
         .btn-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; cursor: pointer; color: #b3b3b3; font-size: 14px; font-weight: 600; }
         .btn-back:hover { color: white; }
 
@@ -64,27 +75,39 @@
         .type-icon { font-size: 12px; opacity: 0.7; width: 16px; text-align: center;}
         .heart-btn { background: none; border: none; cursor: pointer; color: #b3b3b3; font-size: 16px; transition: 0.2s;}
         .heart-btn.liked { color: #ff4d6d; transform: scale(1.1); }
-        .heart-btn:hover { color: white; }
 
-        /* PLAYER BAR */
-        .player-bar { height: 90px; background: #181818; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 100; }
+        /* PLAYER BAR MEJORADO */
+        .player-bar { 
+            height: 90px; background: #181818; border-top: 1px solid #282828; 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 24px; z-index: 100; 
+        }
         .now-playing { display: flex; align-items: center; gap: 15px; width: 30%; }
         .now-playing img { width: 56px; height: 56px; border-radius: 4px; object-fit: cover;}
-        .controls { display: flex; flex-direction: column; align-items: center; width: 40%; }
-        .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+        
+        /* Controles centrales + Barra de Progreso */
+        .controls { display: flex; flex-direction: column; align-items: center; width: 40%; justify-content: center; }
+        .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 8px; }
         .buttons button { background: none; border: none; color: #b3b3b3; font-size: 20px; cursor: pointer; transition: 0.2s; }
         .buttons button:hover { color: white; }
         .play-pause { font-size: 38px !important; color: white !important; }
         .play-pause:hover { transform: scale(1.05); }
 
+        /* Barra de Progreso (Timeline) */
+        .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 11px; color: #b3b3b3; }
+        .progress-slider {
+            flex: 1; -webkit-appearance: none; height: 4px; background: #4d4d4d; border-radius: 2px; outline: none; cursor: pointer;
+        }
+        .progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; display: none; /* Se oculta hasta hover */
+        }
+        .progress-container:hover .progress-slider::-webkit-slider-thumb { display: block; }
+        .progress-slider:hover::-webkit-slider-thumb { background: #ff4d6d; transform: scale(1.2); }
+
         /* VOLUMEN */
         .volume-controls { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-        .volume-slider { 
-            -webkit-appearance: none; width: 100px; height: 4px; background: #4d4d4d; border-radius: 2px; outline: none; 
-        }
-        .volume-slider::-webkit-slider-thumb { 
-            -webkit-appearance: none; appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; 
-        }
+        .volume-slider { -webkit-appearance: none; width: 100px; height: 4px; background: #4d4d4d; border-radius: 2px; outline: none; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
         .volume-slider:hover::-webkit-slider-thumb { background: #ff4d6d; transform: scale(1.2); }
 
         @media (max-width: 768px) { .sidebar { display: none; } .hero { flex-direction: column; align-items: center; text-align: center; } .hero h1 { font-size: 28px; } .volume-controls { display: none; } }
@@ -95,18 +118,10 @@
     <div class="main-container">
         <aside class="sidebar">
             <div class="logo"><i class="fa-brands fa-spotify"></i> Koteify</div>
-            
             <div style="font-size: 11px; font-weight: 700; color: #b3b3b3; margin-bottom: 10px; padding-left: 15px; letter-spacing: 1px;">BIBLIOTECA</div>
-            
-            <button onclick="switchMode('audio')" id="btn-audio" class="active">
-                <i class="fa-solid fa-music"></i> Música
-            </button>
-            <button onclick="switchMode('video')" id="btn-video">
-                <i class="fa-solid fa-film"></i> Videos
-            </button>
-            <button onclick="showFavorites()" id="btn-fav">
-                <i class="fa-solid fa-heart"></i> Favoritos
-            </button>
+            <button onclick="switchMode('audio')" id="btn-audio" class="active"><i class="fa-solid fa-music"></i> Música</button>
+            <button onclick="switchMode('video')" id="btn-video"><i class="fa-solid fa-film"></i> Videos</button>
+            <button onclick="showFavorites()" id="btn-fav"><i class="fa-solid fa-heart"></i> Favoritos</button>
         </aside>
 
         <main class="content">
@@ -119,18 +134,19 @@
                 <div class="btn-back" onclick="showLibrary()">
                     <i class="fa-solid fa-arrow-left"></i> Volver a la biblioteca
                 </div>
-                <div class="hero">
-                    <div class="media-container">
+                
+                <div class="hero" id="hero-section">
+                    <div class="media-container" id="media-box">
                         <img src="" id="album-cover-hero">
-                        <video id="hero-video" controlsList="nodownload" playsinline></video>
+                        <video id="hero-video" controls playsinline></video>
                     </div>
-                    
                     <div class="hero-info">
                         <h4 id="hero-type">ÁLBUM</h4>
                         <h1 id="album-title-hero">Título</h1>
-                        <p id="album-songs-count">0 canciones</p>
+                        <p id="album-songs-count">0 items</p>
                     </div>
                 </div>
+
                 <table class="track-list">
                     <tbody id="track-body"></tbody>
                 </table>
@@ -146,13 +162,20 @@
                 <div style="font-size: 11px; color: #b3b3b3;" id="player-artist">...</div>
             </div>
         </div>
+        
         <div class="controls">
             <div class="buttons">
                 <button onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
                 <button onclick="togglePlay()" class="play-pause"><i class="fa-solid fa-circle-play" id="play-icon"></i></button>
                 <button onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
             </div>
+            <div class="progress-container">
+                <span id="curr-time">0:00</span>
+                <input type="range" min="0" value="0" class="progress-slider" id="seek-slider">
+                <span id="total-duration">0:00</span>
+            </div>
         </div>
+
         <div class="volume-controls">
             <i class="fa-solid fa-volume-high" id="vol-icon" style="color: #b3b3b3;"></i>
             <input type="range" min="0" max="1" step="0.01" value="1" class="volume-slider" id="volume-slider">
@@ -160,88 +183,76 @@
     </div>
 
     <script>
-        let fullLibraryData = []; // Datos crudos del servidor
-        let currentPlaylist = []; // Lista reproduciéndose
+        let fullLibraryData = [];
+        let currentPlaylist = [];
         let currentIndex = 0;
         let favoriteIds = JSON.parse(localStorage.getItem('koteifyLikes')) || [];
-        
-        // Estado de la App: 'audio' | 'video' | 'fav'
         let currentMode = 'audio';
+        let isVideoPlaying = false;
+        let isDragging = false; // Para que no salte mientras arrastras
 
         const audioPlayer = new Audio();
         const videoPlayer = document.getElementById('hero-video');
+        
+        // Elementos Interfaz
         const coverImage = document.getElementById('album-cover-hero');
+        const mediaBox = document.getElementById('media-box');
+        const heroSection = document.getElementById('hero-section');
         const volumeSlider = document.getElementById('volume-slider');
         const volIcon = document.getElementById('vol-icon');
-        let isVideoPlaying = false;
+        
+        // Elementos Progreso
+        const seekSlider = document.getElementById('seek-slider');
+        const currTimeText = document.getElementById('curr-time');
+        const totalDurationText = document.getElementById('total-duration');
 
         async function loadLibrary() {
             try {
                 const res = await fetch('/api/albums');
                 fullLibraryData = await res.json();
-                
-                // Al cargar, mostramos la sección por defecto (Música)
                 switchMode('audio');
             } catch (e) { console.error("Error cargando:", e); }
         }
 
-        // --- SISTEMA DE CAMBIO DE SECCIÓN ---
         function switchMode(mode) {
             currentMode = mode;
-            stopAll(); // Opcional: detener música al cambiar de sección
-            
-            // Actualizar botones
+            stopAll();
             document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
             if(mode === 'audio') document.getElementById('btn-audio').classList.add('active');
             if(mode === 'video') document.getElementById('btn-video').classList.add('active');
             if(mode === 'fav') document.getElementById('btn-fav').classList.add('active');
 
-            // Actualizar Título
             const titles = { 'audio': 'Tu Música 🎵', 'video': 'Tus Videos 🎬', 'fav': 'Tus Favoritos ❤️' };
             document.getElementById('view-title').innerText = titles[mode];
-
             showLibraryView();
             renderAlbumsByMode();
         }
 
-        function showFavorites() {
-            switchMode('fav');
-        }
+        function showFavorites() { switchMode('fav'); }
 
-        // --- RENDERIZADO INTELIGENTE ---
         function renderAlbumsByMode() {
             const container = document.getElementById('albums-container');
             container.innerHTML = '';
-
             let albumsToShow = [];
 
             if (currentMode === 'fav') {
-                // LÓGICA FAVORITOS: Recopilar todas las canciones likeadas
                 let allSongs = [];
                 fullLibraryData.forEach(album => allSongs.push(...album.songs));
                 const myFavs = allSongs.filter(s => favoriteIds.includes(s.id));
-                
                 if(myFavs.length === 0) {
                     container.innerHTML = "<p>Aún no tienes favoritos. ¡Dale ❤️ a algo!</p>";
                     return;
                 }
-                
-                // Creamos un "Super Álbum" con todos los favoritos
-                // Pero para la vista grid, podríamos mostrar las canciones directamente o un solo card.
-                // Para mantener consistencia, abrimos directo la lista.
                 openAlbum({ name: "Mis Favoritos", cover: "https://placehold.co/600?text=Favoritos", songs: myFavs }, true);
                 return;
             }
 
-            // LÓGICA MÚSICA vs VIDEO
-            // Filtramos los álbumes: Creamos copias de los álbumes que contengan el tipo de archivo correcto
             albumsToShow = fullLibraryData.map(album => {
                 const filteredSongs = album.songs.filter(song => {
                     return currentMode === 'video' ? song.isVideo : !song.isVideo;
                 });
-                // Retornamos el álbum con SOLO las canciones que pasaron el filtro
                 return { ...album, songs: filteredSongs };
-            }).filter(album => album.songs.length > 0); // Eliminamos álbumes vacíos
+            }).filter(album => album.songs.length > 0);
 
             if(albumsToShow.length === 0) {
                 container.innerHTML = `<p>No hay ${currentMode === 'video' ? 'videos' : 'música'} disponible.</p>`;
@@ -252,14 +263,8 @@
                 const card = document.createElement('div');
                 card.className = 'album-card';
                 card.onclick = () => openAlbum(album);
-                
                 const typeText = currentMode === 'video' ? 'Colección de Videos' : 'Álbum';
-                
-                card.innerHTML = `
-                    <img src="${album.cover}">
-                    <div class="album-title">${album.name}</div>
-                    <div class="album-subtitle">${typeText} • ${album.songs.length} items</div>
-                `;
+                card.innerHTML = `<img src="${album.cover}"><div class="album-title">${album.name}</div><div class="album-subtitle">${typeText} • ${album.songs.length} items</div>`;
                 container.appendChild(card);
             });
         }
@@ -267,13 +272,8 @@
         function openAlbum(album, isFavView = false) {
             document.getElementById('library-view').style.display = 'none';
             document.getElementById('playlist-view').style.display = 'block';
-            
-            // Si venimos de favoritos, no cambiamos el estado del sidebar visualmente
-            if(!isFavView && currentMode === 'fav') {
-                // Ajuste visual si fuera necesario
-            }
-
-            // Resetear player hero
+            mediaBox.classList.remove('video-mode');
+            heroSection.classList.remove('video-active');
             coverImage.src = album.cover;
             coverImage.style.display = 'block';
             videoPlayer.style.display = 'none';
@@ -282,7 +282,6 @@
             document.getElementById('album-title-hero').innerText = album.name;
             document.getElementById('hero-type').innerText = currentMode === 'video' ? 'VIDEOS' : 'ÁLBUM';
             document.getElementById('album-songs-count').innerText = `${album.songs.length} items`;
-            
             renderTrackList(album.songs);
         }
 
@@ -291,13 +290,10 @@
             tbody.innerHTML = '';
             songs.forEach((song, index) => {
                 const isLiked = favoriteIds.includes(song.id);
-                // Icono según tipo
                 const icon = song.isVideo ? '<i class="fa-solid fa-film"></i>' : '<i class="fa-solid fa-music"></i>';
-                
                 const tr = document.createElement('tr');
                 tr.className = 'track-row';
                 tr.onclick = (e) => { if(!e.target.closest('.heart-btn')) playTrack(songs, index); };
-                
                 tr.innerHTML = `
                     <td class="track-num">${index + 1}</td>
                     <td class="title-col"><span class="type-icon">${icon}</span> ${song.title}</td>
@@ -311,7 +307,6 @@
             });
         }
 
-        // --- REPRODUCTOR (Igual que antes) ---
         function playTrack(playlist, index) {
             currentPlaylist = playlist;
             currentIndex = index;
@@ -321,12 +316,20 @@
             document.getElementById('player-title').innerText = track.title;
             document.getElementById('player-artist').innerText = track.isVideo ? "Video" : track.artist;
             document.getElementById('play-icon').className = "fa-solid fa-circle-pause";
+            
+            // Resetear barra
+            seekSlider.value = 0;
+            currTimeText.innerText = "0:00";
+            totalDurationText.innerText = "0:00";
 
             if (track.isVideo) {
                 isVideoPlaying = true;
                 audioPlayer.pause();
                 coverImage.style.display = 'none';
                 videoPlayer.style.display = 'block';
+                mediaBox.classList.add('video-mode');
+                heroSection.classList.add('video-active');
+
                 videoPlayer.src = track.src;
                 videoPlayer.volume = volumeSlider.value;
                 videoPlayer.play();
@@ -334,6 +337,9 @@
                 isVideoPlaying = false;
                 videoPlayer.pause();
                 videoPlayer.style.display = 'none';
+                mediaBox.classList.remove('video-mode');
+                heroSection.classList.remove('video-active');
+                
                 coverImage.style.display = 'block';
                 audioPlayer.src = track.src;
                 audioPlayer.volume = volumeSlider.value;
@@ -343,8 +349,7 @@
 
         function togglePlay() {
             const player = isVideoPlaying ? videoPlayer : audioPlayer;
-            if (player.paused) player.play();
-            else player.pause();
+            if (player.paused) player.play(); else player.pause();
             updatePlayIcon();
         }
 
@@ -372,12 +377,10 @@
         function showLibraryView() {
             document.getElementById('library-view').style.display = 'block';
             document.getElementById('playlist-view').style.display = 'none';
+            mediaBox.classList.remove('video-mode');
+            heroSection.classList.remove('video-active');
         }
-        
-        function showLibrary() {
-            // Este botón de volver siempre nos lleva a la vista grid actual
-            showLibraryView();
-        }
+        function showLibrary() { showLibraryView(); }
 
         function toggleLike(id, btn) {
             if (favoriteIds.includes(id)) {
@@ -388,14 +391,63 @@
                 btn.classList.add('liked');
             }
             localStorage.setItem('koteifyLikes', JSON.stringify(favoriteIds));
-            
-            // Si estamos en la vista de favoritos, refrescarla al quitar like
-            if(currentMode === 'fav') {
-                renderAlbumsByMode();
-            }
+            if(currentMode === 'fav') renderAlbumsByMode();
         }
 
-        // Volumen
+        // --- LÓGICA DE TIEMPO Y BARRA ---
+        function formatTime(seconds) {
+            if(isNaN(seconds)) return "0:00";
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }
+
+        function updateProgress(e) {
+            // Si el usuario está arrastrando la barra, no actualizamos visualmente
+            if(isDragging) return; 
+
+            const { duration, currentTime } = e.srcElement;
+            if(isNaN(duration)) return;
+
+            // Actualizar slider
+            seekSlider.max = duration;
+            seekSlider.value = currentTime;
+
+            // Actualizar texto
+            currTimeText.innerText = formatTime(currentTime);
+            totalDurationText.innerText = formatTime(duration);
+        }
+
+        function setProgress(e) {
+            const player = isVideoPlaying ? videoPlayer : audioPlayer;
+            player.currentTime = e.target.value;
+        }
+
+        // Eventos del Audio
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        audioPlayer.addEventListener('ended', nextTrack);
+        audioPlayer.addEventListener('play', updatePlayIcon);
+        audioPlayer.addEventListener('pause', updatePlayIcon);
+        
+        // Eventos del Video
+        videoPlayer.addEventListener('timeupdate', updateProgress);
+        videoPlayer.addEventListener('ended', nextTrack);
+        videoPlayer.addEventListener('play', updatePlayIcon);
+        videoPlayer.addEventListener('pause', updatePlayIcon);
+
+        // Eventos de la Barra (Seek)
+        seekSlider.addEventListener('mousedown', () => isDragging = true);
+        seekSlider.addEventListener('touchstart', () => isDragging = true);
+        seekSlider.addEventListener('change', (e) => {
+            isDragging = false;
+            setProgress(e);
+        });
+        seekSlider.addEventListener('input', (e) => {
+            // Actualizar texto mientras arrastras
+            currTimeText.innerText = formatTime(e.target.value);
+        });
+
+        // Eventos Volumen
         volumeSlider.addEventListener('input', (e) => {
             const val = e.target.value;
             audioPlayer.volume = val;
@@ -404,13 +456,6 @@
             else if(val < 0.5) volIcon.className = "fa-solid fa-volume-low";
             else volIcon.className = "fa-solid fa-volume-high";
         });
-
-        audioPlayer.onended = nextTrack;
-        videoPlayer.onended = nextTrack;
-        videoPlayer.onplay = updatePlayIcon;
-        videoPlayer.onpause = updatePlayIcon;
-        audioPlayer.onplay = updatePlayIcon;
-        audioPlayer.onpause = updatePlayIcon;
 
         window.onload = loadLibrary;
     </script>
