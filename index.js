@@ -22,47 +22,71 @@ const auth = new google.auth.GoogleAuth({
 const drive = google.drive({ version: 'v3', auth });
 const FOLDER_ID = process.env.DRIVE_FOLDER_ID;
 
-// API: Devuelve la música ORDENADA POR DISCOS
+// --- NUEVA FUNCIONALIDAD: STREAMING DE AUDIO ---
+// Esto hace que el audio pase por tu servidor en lugar de ir directo a Google
+app.get('/api/stream/:id', async (req, res) => {
+    try {
+        const fileId = req.params.id;
+
+        // 1. Obtener el stream desde Drive usando las credenciales del robot
+        const response = await drive.files.get(
+            { fileId: fileId, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        // 2. Decirle al navegador que esto es audio
+        res.setHeader('Content-Type', 'audio/mpeg');
+        
+        // 3. Enviar el audio (pipe)
+        response.data.pipe(res);
+
+    } catch (error) {
+        console.error("Error en streaming:", error.message);
+        res.status(500).send("Error reproduciendo archivo");
+    }
+});
+
+// API: Devuelve la lista de discos
 app.get('/api/albums', async (req, res) => {
     try {
         const library = [];
-
-        // 1. Obtener las carpetas (Los Discos)
+        // 1. Listar carpetas (Discos)
         const foldersRes = await drive.files.list({
             q: `'${FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
             fields: 'files(id, name)',
         });
 
-        // 2. Entrar a cada disco y buscar sus canciones
+        // 2. Entrar a cada disco
         for (const folder of foldersRes.data.files) {
             const songsRes = await drive.files.list({
                 q: `'${folder.id}' in parents and mimeType contains 'audio/' and trashed = false`,
                 fields: 'files(id, name, thumbnailLink)',
-                pageSize: 50 // Límite por disco para no saturar
+                pageSize: 50 
             });
 
-            // Solo agregamos el disco si tiene música
             if (songsRes.data.files.length > 0) {
-                // Buscamos si hay una imagen de portada en la carpeta
+                // Buscar portada
                 const coverRes = await drive.files.list({
                     q: `'${folder.id}' in parents and mimeType contains 'image/' and trashed = false`,
                     fields: 'files(thumbnailLink)',
                     pageSize: 1
                 });
 
-                // Definimos la portada del disco
-                let albumCover = "https://via.placeholder.com/300?text=Disco";
+                // Portada por defecto (Placehold.co para evitar errores)
+                let albumCover = "https://placehold.co/600?text=" + encodeURIComponent(folder.name);
+                
                 if (coverRes.data.files.length > 0) {
-                    albumCover = coverRes.data.files[0].thumbnailLink.replace('=s220', '=s600'); // Alta calidad
+                    // Usamos la portada real de Drive si existe
+                    albumCover = coverRes.data.files[0].thumbnailLink.replace('=s220', '=s600');
                 }
 
-                // Preparamos las canciones de este disco
                 const songs = songsRes.data.files.map(file => ({
-                    id: file.id, // Importante para Favoritos
+                    id: file.id,
                     title: file.name.replace(/\.[^/.]+$/, ""),
                     artist: "Para ti ❤️",
                     album: folder.name,
-                    src: `https://docs.google.com/uc?export=open&id=${file.id}`,
+                    // CAMBIO CLAVE: Ahora el src apunta a TU servidor, no a Google
+                    src: `/api/stream/${file.id}`, 
                     cover: albumCover
                 }));
 
@@ -74,7 +98,6 @@ app.get('/api/albums', async (req, res) => {
                 });
             }
         }
-
         res.json(library);
 
     } catch (error) {
