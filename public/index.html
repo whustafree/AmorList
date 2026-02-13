@@ -11,368 +11,489 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <title>Para la Kote ❤️</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* --- ESTILOS BASE --- */
+        /* --- VARIABLES DE TEMA (COLORES) --- */
+        :root {
+            /* TEMA DARK (Por defecto) */
+            --bg-main: #121212;
+            --bg-sidebar: #000000;
+            --bg-card: #181818;
+            --bg-card-hover: #282828;
+            --bg-player: #181818;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent: #ff4d6d; /* Rojo Pasión */
+            --border: #282828;
+            --radius: 8px;
+            --player-height: 90px;
+        }
+
+        /* TEMA KAWAII (Rosa Pastel) */
+        [data-theme="kawaii"] {
+            --bg-main: #fff0f5; /* Lavanda suave */
+            --bg-sidebar: #ffe4e1; /* Rosa bruma */
+            --bg-card: #ffffff;
+            --bg-card-hover: #ffdae0;
+            --bg-player: #ffffff;
+            --text-primary: #5c4b51; /* Marrón suave */
+            --text-secondary: #8b7d82;
+            --accent: #ff85a2; /* Rosa chicle */
+            --border: #ffd1dc;
+            --radius: 20px; /* Más redondito */
+        }
+
+        /* --- RESET & BASE --- */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #121212; color: white; font-family: 'Montserrat', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background-color: var(--bg-main); color: var(--text-primary); font-family: 'Montserrat', sans-serif; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
         
-        /* --- LAYOUT PRINCIPAL --- */
-        .main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
-        
-        /* SIDEBAR (Escritorio) */
-        .sidebar { width: 240px; background: #000; padding: 20px; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
-        
-        .sidebar button { 
-            background: none; border: none; color: #b3b3b3; font-size: 15px; cursor: pointer; 
-            text-align: left; display: flex; gap: 12px; align-items: center; padding: 12px 15px; 
-            transition: 0.3s; font-family: inherit; font-weight: 600; border-radius: 8px;
-        }
-        .sidebar button:hover { color: white; background: #282828; }
-        .sidebar button.active { color: white; background: #282828; font-weight: 800; }
-        .refresh-btn { margin-top: auto; border-top: 1px solid #333; padding-top: 20px !important; color: #ff4d6d !important; }
-        .fa-spin-fast { animation: fa-spin 1s infinite linear; }
-        .logo { color: #ff4d6d; font-size: 24px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-left: 10px;}
-
-        /* ÁREA DE CONTENIDO */
-        .content { 
-            flex: 1; padding: 20px 40px; overflow-y: auto; 
-            background: linear-gradient(180deg, #2a0a12 0%, #121212 40%); 
-            padding-bottom: 160px; /* Espacio extra para que el player no tape el final */
+        /* --- LAYOUT PRINCIPAL (GRID) --- */
+        .app-container {
+            display: grid;
+            grid-template-areas: "sidebar main" "player player";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 1fr var(--player-height);
+            height: 100vh;
         }
 
-        /* --- BOTONERA MÓVIL (Bottom Nav) --- */
-        .mobile-nav {
-            display: none; /* Oculto en PC */
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-            background: rgba(0,0,0,0.95); border-top: 1px solid #333;
-            z-index: 200; justify-content: space-around; align-items: center;
-            backdrop-filter: blur(10px);
-        }
-        .mobile-nav button {
-            background: none; border: none; color: #b3b3b3; flex: 1; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 10px; gap: 4px;
-        }
-        .mobile-nav button i { font-size: 20px; }
-        .mobile-nav button.active { color: white; }
-        .mobile-nav button.active i { color: #ff4d6d; }
-
-        /* --- COMPONENTES VISUALES --- */
-        .albums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin-top: 20px; }
-        .album-card { background: #181818; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .album-card:hover { background: #282828; transform: translateY(-5px); }
-        .album-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .album-title { font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px;}
-        .album-subtitle { font-size: 11px; color: #b3b3b3; }
-        .mobile-only-refresh { display: none; }
-
-        /* VISTA DE LISTA & PLAYER GRANDE */
-        .playlist-view { display: none; }
-        .hero { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 30px; transition: all 0.3s ease; }
+        /* --- SIDEBAR --- */
+        .sidebar { grid-area: sidebar; background: var(--bg-sidebar); padding: 24px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); transition: background 0.3s; }
+        .logo { color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        .logo img { width: 30px; height: 30px; } /* Si quisieras poner imagen */
         
-        .media-container { 
-            width: 200px; height: 200px; position: relative; 
-            box-shadow: 0 4px 60px rgba(0,0,0,0.5); border-radius: 8px; 
-            overflow: hidden; background: #000; flex-shrink: 0; 
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); 
+        .nav-btn {
+            background: transparent; border: none; color: var(--text-secondary);
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            padding: 10px 16px; border-radius: var(--radius); text-align: left;
+            display: flex; align-items: center; gap: 16px; transition: all 0.2s;
+            font-family: inherit;
         }
-        .media-container.video-mode { width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; }
-        .media-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .media-container video { width: 100%; height: 100%; display: none; object-fit: contain; }
-        
-        .hero-info { flex: 1; }
-        .hero-info h1 { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; margin-top: 10px;}
-        .hero.video-active { flex-direction: column; align-items: flex-start; }
-        .hero.video-active .hero-info { width: 100%; margin-top: 15px; }
+        .nav-btn:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+        .nav-btn.active { color: var(--text-primary); background: var(--bg-card-hover); font-weight: 700; }
+        .nav-btn i { font-size: 18px; width: 24px; text-align: center; }
 
-        .btn-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; color: #b3b3b3; font-size: 14px; font-weight: 600; padding: 10px 0; }
-        
-        .track-list { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .track-row { height: 50px; cursor: pointer; border-radius: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .track-row td { padding: 0 10px; color: #b3b3b3; font-size: 13px; }
-        .track-row.active .title-col { color: #ff4d6d; font-weight: 700; }
-        .title-col { color: white; display: flex; align-items: center; gap: 10px;}
-        .heart-btn { background: none; border: none; padding: 10px; cursor: pointer; color: #b3b3b3; font-size: 16px; }
-        .heart-btn.liked { color: #ff4d6d; }
+        .sidebar-divider { height: 1px; background: var(--border); margin: 10px 0; }
+        .playlist-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); padding: 0 16px; margin-bottom: 8px; letter-spacing: 1px; }
 
-        /* --- BARRA DE REPRODUCCIÓN INFERIOR --- */
+        /* --- MAIN CONTENT --- */
+        .main-content { 
+            grid-area: main; 
+            background: linear-gradient(180deg, var(--bg-card-hover) 0%, var(--bg-main) 40%); 
+            overflow-y: auto; padding: 24px 32px; position: relative;
+        }
+        
+        /* HEADER DEL MAIN (Botones superiores) */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .theme-toggle {
+            background: var(--bg-sidebar); border: 1px solid var(--border); color: var(--accent);
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+            transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        /* GRID DE ÁLBUMES */
+        .grid-header { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+        .albums-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+        .album-card {
+            background: var(--bg-card); padding: 16px; border-radius: var(--radius);
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .album-card:hover { background: var(--bg-card-hover); transform: translateY(-6px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+        .album-card img {
+            width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: calc(var(--radius) - 4px);
+            margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .album-title { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; color: var(--text-primary); }
+        .album-desc { font-size: 13px; color: var(--text-secondary); }
+
+        /* VISTA DETALLE (Lista de canciones) */
+        .playlist-view { display: none; padding-bottom: 40px; }
+        .hero { display: flex; align-items: flex-end; gap: 32px; margin-bottom: 32px; }
+        .hero-img-box {
+            width: 232px; height: 232px; box-shadow: 0 4px 60px rgba(0,0,0,0.5);
+            border-radius: var(--radius); overflow: hidden; flex-shrink: 0; background: #000;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        /* Modo Cine Video */
+        .hero-img-box.video-mode { width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; }
+        
+        .hero-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .hero-img-box video { width: 100%; height: 100%; object-fit: contain; display: none; }
+        
+        .hero-info h1 { font-size: 48px; font-weight: 900; margin: 10px 0; line-height: 1; color: var(--text-primary); }
+        .hero-info p { color: var(--text-secondary); font-size: 14px; font-weight: 600; }
+        .hero-type { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+
+        .track-list { width: 100%; border-collapse: collapse; }
+        .track-row { height: 56px; cursor: pointer; border-radius: 4px; transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        [data-theme="kawaii"] .track-row { border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .track-row:hover { background: rgba(255,255,255,0.1); }
+        [data-theme="kawaii"] .track-row:hover { background: rgba(0,0,0,0.05); }
+        
+        .track-row td { color: var(--text-secondary); padding: 0 16px; font-size: 14px; }
+        .track-num { width: 40px; text-align: center; }
+        .track-title { color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 12px; }
+        .track-row.active .track-title, .track-row.active .track-num { color: var(--accent); }
+        
+        .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; transition: transform 0.2s; }
+        .btn-icon:hover { color: var(--text-primary); transform: scale(1.1); }
+        .btn-icon.liked { color: var(--accent); }
+
+        /* --- PLAYER BAR --- */
         .player-bar { 
-            height: 80px; background: #181818; border-top: 1px solid #282828; 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 20px; z-index: 300; position: fixed; bottom: 0; left: 0; width: 100%;
-            transition: bottom 0.3s; /* Para animar si aparece el menú móvil */
+            grid-area: player; background: var(--bg-player); border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+            z-index: 100; transition: background 0.3s;
         }
-        
-        .now-playing { display: flex; align-items: center; gap: 12px; width: 30%; min-width: 120px; }
-        .now-playing img { width: 48px; height: 48px; border-radius: 4px; object-fit: cover;}
-        .track-info-txt { display: flex; flex-direction: column; overflow: hidden; }
-        
-        .controls { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 400px; }
-        .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
-        .buttons button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
-        .play-pause { font-size: 34px !important; }
+        .player-left { display: flex; align-items: center; gap: 16px; width: 30%; }
+        .player-left img { width: 56px; height: 56px; border-radius: 4px; object-fit: cover; }
+        .player-info div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .player-title { color: var(--text-primary); font-weight: 600; font-size: 14px; }
+        .player-artist { color: var(--text-secondary); font-size: 11px; }
 
-        .progress-container { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 10px; color: #b3b3b3; }
-        .progress-slider { flex: 1; height: 3px; -webkit-appearance: none; background: #4d4d4d; border-radius: 2px; }
-        
-        .volume-controls { width: 20%; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
-        .volume-slider { width: 80px; height: 3px; -webkit-appearance: none; background: #4d4d4d; border-radius: 2px; }
+        .player-center { width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+        .player-controls { display: flex; align-items: center; gap: 20px; margin-bottom: 4px; }
+        .ctrl-btn { background: none; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .ctrl-btn:hover { color: var(--text-primary); }
+        .play-btn { font-size: 34px; color: var(--text-primary); background: var(--text-primary); color: var(--bg-player); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
+        .play-btn:hover { transform: scale(1.05); }
+        /* Ajuste icono play para tema kawaii */
+        [data-theme="kawaii"] .play-btn { background: var(--accent); color: white; }
+
+        .progress-bar-container { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
+        .progress-range { flex: 1; -webkit-appearance: none; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; }
+        .progress-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text-primary); border-radius: 50%; display: none; }
+        .progress-bar-container:hover .progress-range::-webkit-slider-thumb { display: block; }
+        [data-theme="kawaii"] .progress-range::-webkit-slider-thumb { background: var(--accent); }
+
+        .player-right { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+        .vol-range { width: 100px; -webkit-appearance: none; height: 4px; background: var(--border); border-radius: 2px; }
+        .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text-primary); border-radius: 50%; cursor: pointer; }
+        [data-theme="kawaii"] .vol-range::-webkit-slider-thumb { background: var(--accent); }
+
+        /* --- MOBILE NAV (Solo visible en celular) --- */
+        .mobile-nav { display: none; }
 
         /* --- RESPONSIVE / MÓVIL --- */
         @media (max-width: 768px) {
+            .app-container {
+                grid-template-areas: "main" "player";
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 120px; /* Espacio para player + nav */
+            }
             .sidebar { display: none; } /* Ocultar sidebar PC */
-            .mobile-nav { display: flex; } /* Mostrar menú móvil */
-            .player-bar { bottom: 60px; height: 70px; padding: 0 10px; border-bottom: 1px solid #000; } /* Subir player sobre el menú */
-            .content { padding: 15px; padding-bottom: 140px; }
-            .volume-controls { display: none; } /* Ocultar volumen en móvil (usan botones físicos) */
-            .now-playing { width: auto; flex: 1; }
-            .controls { flex: 0; margin-right: 10px; }
-            .progress-container { display: none; } /* Ocultar barra progreso mini, usar la del video */
-            .hero { flex-direction: column; align-items: center; text-align: center; }
-            .hero h1 { font-size: 24px; }
-            .media-container { width: 160px; height: 160px; }
-            .mobile-only-refresh { display: block; } /* Mostrar botón actualizar en header móvil */
             
-            /* En móvil los controles son más simples */
-            .buttons { gap: 15px; margin: 0; }
-            .buttons button { font-size: 24px; }
-            .play-pause { font-size: 32px !important; }
-            #btn-prev, #btn-next { display: none; } /* Simplificar player móvil */
+            .main-content { padding: 16px; padding-bottom: 140px; }
+            .grid-header { font-size: 20px; }
+            .albums-container { grid-template-columns: repeat(2, 1fr); gap: 16px; } /* 2 columnas en móvil */
+            .album-title { font-size: 14px; }
+            
+            /* Vista Detalle Móvil */
+            .hero { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+            .hero-img-box { width: 180px; height: 180px; }
+            .hero-info h1 { font-size: 28px; }
+
+            /* Player Móvil Flotante */
+            .player-bar { 
+                position: fixed; bottom: 55px; left: 0; right: 0; 
+                height: 64px; background: var(--bg-card); 
+                border-top: 1px solid var(--border); padding: 0 12px;
+                border-radius: 8px 8px 0 0;
+            }
+            .player-center { width: auto; flex: 0; }
+            .progress-bar-container { display: none; } /* Ocultar barra progreso mini */
+            .player-right { display: none; } /* Ocultar volumen */
+            .player-left { flex: 1; }
+            .ctrl-btn { font-size: 24px; }
+            .play-btn { width: 40px; height: 40px; font-size: 20px; }
+            .player-controls { margin: 0; gap: 16px; }
+
+            /* Mobile Bottom Nav */
+            .mobile-nav {
+                position: fixed; bottom: 0; left: 0; right: 0; height: 55px;
+                background: var(--bg-sidebar); border-top: 1px solid var(--border);
+                display: flex; justify-content: space-around; align-items: center;
+                z-index: 200;
+            }
+            .mob-btn {
+                background: none; border: none; color: var(--text-secondary);
+                display: flex; flex-direction: column; align-items: center;
+                font-size: 10px; gap: 4px; flex: 1; height: 100%; justify-content: center;
+            }
+            .mob-btn i { font-size: 20px; }
+            .mob-btn.active { color: var(--text-primary); }
+            [data-theme="kawaii"] .mob-btn.active { color: var(--accent); }
         }
     </style>
 </head>
 <body>
 
-    <div class="main-container">
+    <div class="app-container">
         <aside class="sidebar">
-            <div class="logo"><i class="fa-brands fa-spotify"></i> Koteify</div>
-            <div style="font-size: 11px; font-weight: 700; color: #b3b3b3; margin-bottom: 10px; padding-left: 15px; letter-spacing: 1px;">BIBLIOTECA</div>
-            <button onclick="switchMode('audio')" id="btn-audio-pc" class="active"><i class="fa-solid fa-music"></i> Música</button>
-            <button onclick="switchMode('video')" id="btn-video-pc"><i class="fa-solid fa-film"></i> Videos</button>
-            <button onclick="showFavorites()" id="btn-fav-pc"><i class="fa-solid fa-heart"></i> Favoritos</button>
-            <button onclick="refreshLibrary()" class="refresh-btn" id="btn-refresh"><i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar</button>
+            <div class="logo">
+                <i class="fa-brands fa-spotify" style="font-size: 32px;"></i> Koteify
+            </div>
+            
+            <button onclick="switchMode('audio')" class="nav-btn active" id="btn-pc-audio">
+                <i class="fa-solid fa-music"></i> Música
+            </button>
+            <button onclick="switchMode('video')" class="nav-btn" id="btn-pc-video">
+                <i class="fa-solid fa-film"></i> Videos
+            </button>
+            <button onclick="switchMode('fav')" class="nav-btn" id="btn-pc-fav">
+                <i class="fa-solid fa-heart"></i> Favoritos
+            </button>
+
+            <div class="sidebar-divider"></div>
+            <div class="playlist-label">ACCIONES</div>
+
+            <button onclick="refreshLibrary()" class="nav-btn" id="btn-refresh">
+                <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar
+            </button>
         </aside>
 
-        <main class="content">
-            <div id="library-view">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="font-size: 24px;" id="view-title">Tu Música</h2>
-                    <button onclick="refreshLibrary()" style="background:none; border:none; color:#ff4d6d; font-size:20px;" class="mobile-only-refresh">
-                        <i class="fa-solid fa-rotate" id="refresh-icon-mob"></i>
-                    </button>
+        <main class="main-content">
+            <div class="top-bar">
+                <div style="flex:1;"></div> <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar Tema">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+            </div>
+
+            <div id="grid-view">
+                <h2 class="grid-header" id="page-title">Tu Música</h2>
+                <div class="albums-container" id="albums-container">
+                    <p style="color:var(--text-secondary)">Cargando tu colección...</p>
                 </div>
-                <div class="albums-grid" id="albums-container"><p style="color: #b3b3b3;">Cargando...</p></div>
             </div>
 
             <div id="playlist-view" class="playlist-view">
-                <div class="btn-back" onclick="showLibrary()">
-                    <i class="fa-solid fa-arrow-left"></i> Volver
+                <div onclick="showGrid()" style="cursor:pointer; margin-bottom:20px; display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--text-secondary);">
+                    <i class="fa-solid fa-chevron-left"></i> Volver
                 </div>
-                <div class="hero" id="hero-section">
-                    <div class="media-container" id="media-box">
-                        <img src="" id="album-cover-hero">
+
+                <div class="hero">
+                    <div class="hero-img-box" id="hero-img-box">
+                        <img src="" id="hero-img">
                         <video id="hero-video" controls playsinline></video>
                     </div>
                     <div class="hero-info">
-                        <h4 id="hero-type">ÁLBUM</h4>
-                        <h1 id="album-title-hero">Título</h1>
-                        <p id="album-songs-count">0 items</p>
+                        <span class="hero-type">ÁLBUM</span>
+                        <h1 id="hero-title">Título</h1>
+                        <p id="hero-meta">Artista • 0 canciones</p>
                     </div>
                 </div>
+
                 <table class="track-list">
-                    <tbody id="track-body"></tbody>
+                    <tbody id="track-table-body"></tbody>
                 </table>
             </div>
         </main>
+
+        <div class="player-bar">
+            <div class="player-left">
+                <img src="https://placehold.co/56" id="player-img">
+                <div class="player-info">
+                    <div class="player-title" id="player-title">Koteify</div>
+                    <div class="player-artist" id="player-artist">Selecciona algo</div>
+                </div>
+            </div>
+            
+            <div class="player-center">
+                <div class="player-controls">
+                    <button class="ctrl-btn" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+                    <button class="play-btn" onclick="togglePlay()">
+                        <i class="fa-solid fa-play" id="play-icon"></i>
+                    </button>
+                    <button class="ctrl-btn" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
+                <div class="progress-bar-container">
+                    <span id="curr-time">0:00</span>
+                    <input type="range" class="progress-range" id="seek-slider" min="0" value="0">
+                    <span id="total-time">0:00</span>
+                </div>
+            </div>
+
+            <div class="player-right">
+                <i class="fa-solid fa-volume-high" style="color:var(--text-secondary); font-size:14px;"></i>
+                <input type="range" class="vol-range" id="vol-slider" min="0" max="1" step="0.01" value="1">
+            </div>
+        </div>
     </div>
 
     <nav class="mobile-nav">
-        <button onclick="switchMode('audio')" id="btn-audio-mob" class="active">
+        <button class="mob-btn active" onclick="switchMode('audio')" id="btn-mob-audio">
             <i class="fa-solid fa-music"></i> <span>Música</span>
         </button>
-        <button onclick="switchMode('video')" id="btn-video-mob">
+        <button class="mob-btn" onclick="switchMode('video')" id="btn-mob-video">
             <i class="fa-solid fa-film"></i> <span>Videos</span>
         </button>
-        <button onclick="showFavorites()" id="btn-fav-mob">
+        <button class="mob-btn" onclick="switchMode('fav')" id="btn-mob-fav">
             <i class="fa-solid fa-heart"></i> <span>Favoritos</span>
         </button>
     </nav>
 
-    <div class="player-bar">
-        <div class="now-playing">
-            <img src="https://placehold.co/56" id="player-img">
-            <div class="track-info-txt">
-                <div style="font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="player-title">Koteify</div>
-                <div style="font-size: 11px; color: #b3b3b3;" id="player-artist">Para ti ❤️</div>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <div class="buttons">
-                <button onclick="prevTrack()" id="btn-prev"><i class="fa-solid fa-backward-step"></i></button>
-                <button onclick="togglePlay()" class="play-pause"><i class="fa-solid fa-circle-play" id="play-icon"></i></button>
-                <button onclick="nextTrack()" id="btn-next"><i class="fa-solid fa-forward-step"></i></button>
-            </div>
-            <div class="progress-container">
-                <span id="curr-time">0:00</span>
-                <input type="range" min="0" value="0" class="progress-slider" id="seek-slider">
-                <span id="total-duration">0:00</span>
-            </div>
-        </div>
-
-        <div class="volume-controls">
-            <i class="fa-solid fa-volume-high" id="vol-icon" style="color: #b3b3b3; font-size: 12px;"></i>
-            <input type="range" min="0" max="1" step="0.01" value="1" class="volume-slider" id="volume-slider">
-        </div>
-    </div>
-
     <script>
+        // --- ESTADO GLOBAL ---
         let fullLibraryData = [];
+        let currentMode = 'audio'; // 'audio', 'video', 'fav'
+        let favoriteIds = JSON.parse(localStorage.getItem('koteifyLikes')) || [];
+        
         let currentPlaylist = [];
         let currentIndex = 0;
-        let favoriteIds = JSON.parse(localStorage.getItem('koteifyLikes')) || [];
-        let currentMode = 'audio';
         let isVideoPlaying = false;
         let isDragging = false;
 
-        // Elementos DOM
-        const audioPlayer = new Audio();
-        const videoPlayer = document.getElementById('hero-video');
-        const coverImage = document.getElementById('album-cover-hero');
-        const mediaBox = document.getElementById('media-box');
-        const heroSection = document.getElementById('hero-section');
-        const volumeSlider = document.getElementById('volume-slider');
-        const seekSlider = document.getElementById('seek-slider');
+        // ELEMENTOS
+        const audioEl = new Audio();
+        const videoEl = document.getElementById('hero-video');
+        const heroImg = document.getElementById('hero-img');
+        const heroBox = document.getElementById('hero-img-box');
         
+        // --- TEMA KAWAII ---
+        function toggleTheme() {
+            const body = document.body;
+            if(body.getAttribute('data-theme') === 'kawaii') {
+                body.removeAttribute('data-theme');
+                localStorage.setItem('koteifyTheme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'kawaii');
+                localStorage.setItem('koteifyTheme', 'kawaii');
+            }
+        }
+        // Cargar tema guardado
+        if(localStorage.getItem('koteifyTheme') === 'kawaii') {
+            document.body.setAttribute('data-theme', 'kawaii');
+        }
+
+        // --- CARGA DE DATOS ---
         async function loadLibrary() {
             try {
                 const res = await fetch('/api/albums');
                 fullLibraryData = await res.json();
-                switchMode('audio');
-            } catch (e) { console.error("Error cargando:", e); }
+                renderGrid();
+            } catch (e) { console.error("Error:", e); }
         }
 
-        async function refreshLibrary() {
-            const btn = document.getElementById('btn-refresh');
-            const icon = document.getElementById('refresh-icon');
-            const iconMob = document.getElementById('refresh-icon-mob');
-            
-            if(icon) icon.classList.add('fa-spin-fast');
-            if(iconMob) iconMob.classList.add('fa-spin-fast');
-            if(btn) btn.innerHTML = `<i class="fa-solid fa-rotate fa-spin-fast"></i> ...`;
-            
-            try {
-                const res = await fetch('/api/refresh');
-                fullLibraryData = await res.json();
-                alert("¡Biblioteca actualizada!");
-                switchMode(currentMode);
-            } catch (error) {
-                alert("Error: " + error.message);
-            } finally {
-                if(icon) icon.classList.remove('fa-spin-fast');
-                if(iconMob) iconMob.classList.remove('fa-spin-fast');
-                if(btn) btn.innerHTML = `<i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar`;
-            }
-        }
-
+        // --- NAVEGACIÓN (Música / Video / Fav) ---
         function switchMode(mode) {
             currentMode = mode;
+            // Actualizar botones activos
+            document.querySelectorAll('.nav-btn, .mob-btn').forEach(b => b.classList.remove('active'));
             
-            // Actualizar botones PC y Móvil
-            document.querySelectorAll('.sidebar button, .mobile-nav button').forEach(b => b.classList.remove('active'));
-            
-            // Mapeo de IDs
             if(mode === 'audio') {
-                if(document.getElementById('btn-audio-pc')) document.getElementById('btn-audio-pc').classList.add('active');
-                if(document.getElementById('btn-audio-mob')) document.getElementById('btn-audio-mob').classList.add('active');
-            }
-            if(mode === 'video') {
-                if(document.getElementById('btn-video-pc')) document.getElementById('btn-video-pc').classList.add('active');
-                if(document.getElementById('btn-video-mob')) document.getElementById('btn-video-mob').classList.add('active');
-            }
-            if(mode === 'fav') {
-                if(document.getElementById('btn-fav-pc')) document.getElementById('btn-fav-pc').classList.add('active');
-                if(document.getElementById('btn-fav-mob')) document.getElementById('btn-fav-mob').classList.add('active');
+                document.getElementById('btn-pc-audio')?.classList.add('active');
+                document.getElementById('btn-mob-audio')?.classList.add('active');
+                document.getElementById('page-title').innerText = "Tu Música";
+            } else if(mode === 'video') {
+                document.getElementById('btn-pc-video')?.classList.add('active');
+                document.getElementById('btn-mob-video')?.classList.add('active');
+                document.getElementById('page-title').innerText = "Tus Videos";
+            } else {
+                document.getElementById('btn-pc-fav')?.classList.add('active');
+                document.getElementById('btn-mob-fav')?.classList.add('active');
+                document.getElementById('page-title').innerText = "Tus Favoritos ❤️";
             }
 
-            const titles = { 'audio': 'Tu Música 🎵', 'video': 'Tus Videos 🎬', 'fav': 'Tus Favoritos ❤️' };
-            document.getElementById('view-title').innerText = titles[mode];
-            showLibraryView();
-            renderAlbumsByMode();
+            showGrid();
+            renderGrid();
         }
 
-        function showFavorites() { switchMode('fav'); }
+        function showGrid() {
+            document.getElementById('grid-view').style.display = 'block';
+            document.getElementById('playlist-view').style.display = 'none';
+            // Reset visual video mode
+            heroBox.classList.remove('video-mode');
+            videoEl.style.display = 'none';
+            videoEl.pause();
+            heroImg.style.display = 'block';
+        }
 
-        function renderAlbumsByMode() {
+        // --- RENDERIZADO GRID ---
+        function renderGrid() {
             const container = document.getElementById('albums-container');
             container.innerHTML = '';
-            let albumsToShow = [];
+            
+            let albumsToRender = [];
 
             if (currentMode === 'fav') {
-                let allSongs = [];
-                fullLibraryData.forEach(album => allSongs.push(...album.songs));
-                const myFavs = allSongs.filter(s => favoriteIds.includes(s.id));
-                if(myFavs.length === 0) {
-                    container.innerHTML = "<p>Aún no tienes favoritos.</p>";
+                // Recopilar likes
+                let allTracks = [];
+                fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
+                const myFavs = allTracks.filter(t => favoriteIds.includes(t.id));
+                
+                if (myFavs.length === 0) {
+                    container.innerHTML = `<p style="color:var(--text-secondary); padding:20px;">No tienes favoritos aún. ¡Dale ❤️ a algo!</p>`;
                     return;
                 }
+                // Mostrar tarjeta única de favoritos
                 openAlbum({ name: "Mis Favoritos", cover: "https://placehold.co/600?text=Favoritos", songs: myFavs }, true);
                 return;
+            } else {
+                // Filtrar álbumes por tipo
+                albumsToRender = fullLibraryData.map(alb => {
+                    const filteredSongs = alb.songs.filter(s => currentMode === 'video' ? s.isVideo : !s.isVideo);
+                    return { ...alb, songs: filteredSongs };
+                }).filter(alb => alb.songs.length > 0);
             }
 
-            albumsToShow = fullLibraryData.map(album => {
-                const filteredSongs = album.songs.filter(song => {
-                    return currentMode === 'video' ? song.isVideo : !song.isVideo;
-                });
-                return { ...album, songs: filteredSongs };
-            }).filter(album => album.songs.length > 0);
-
-            if(albumsToShow.length === 0) {
-                container.innerHTML = `<p>No hay contenido aquí.</p>`;
+            if(albumsToRender.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-secondary);">No hay contenido disponible aquí.</p>`;
                 return;
             }
 
-            albumsToShow.forEach(album => {
+            albumsToRender.forEach(album => {
                 const card = document.createElement('div');
                 card.className = 'album-card';
                 card.onclick = () => openAlbum(album);
-                card.innerHTML = `<img src="${album.cover}"><div class="album-title">${album.name}</div><div class="album-subtitle">${album.songs.length} items</div>`;
+                card.innerHTML = `
+                    <img src="${album.cover}" loading="lazy">
+                    <div class="album-title">${album.name}</div>
+                    <div class="album-desc">${album.songs.length} canciones</div>
+                `;
                 container.appendChild(card);
             });
         }
 
-        function openAlbum(album, isFavView = false) {
-            document.getElementById('library-view').style.display = 'none';
-            document.getElementById('playlist-view').style.display = 'block';
-            mediaBox.classList.remove('video-mode');
-            heroSection.classList.remove('video-active');
-            coverImage.src = album.cover;
-            coverImage.style.display = 'block';
-            videoPlayer.style.display = 'none';
-            videoPlayer.pause();
+        // --- ABRIR ÁLBUM (Vista Detalle) ---
+        function openAlbum(album, isDirect = false) {
+            if(!isDirect) {
+                document.getElementById('grid-view').style.display = 'none';
+                document.getElementById('playlist-view').style.display = 'block';
+            }
+            // Resetear header
+            heroImg.src = album.cover;
+            document.getElementById('hero-title').innerText = album.name;
+            document.getElementById('hero-meta').innerText = `Para ti ❤️ • ${album.songs.length} items`;
             
-            document.getElementById('album-title-hero').innerText = album.name;
-            document.getElementById('hero-type').innerText = currentMode === 'video' ? 'VIDEOS' : 'ÁLBUM';
-            document.getElementById('album-songs-count').innerText = `${album.songs.length} items`;
-            renderTrackList(album.songs);
-        }
-
-        function renderTrackList(songs) {
-            const tbody = document.getElementById('track-body');
+            const tbody = document.getElementById('track-table-body');
             tbody.innerHTML = '';
-            songs.forEach((song, index) => {
+
+            album.songs.forEach((song, idx) => {
                 const isLiked = favoriteIds.includes(song.id);
-                const icon = song.isVideo ? '<i class="fa-solid fa-film"></i>' : '<i class="fa-solid fa-music"></i>';
                 const tr = document.createElement('tr');
                 tr.className = 'track-row';
-                tr.onclick = (e) => { if(!e.target.closest('.heart-btn')) playTrack(songs, index); };
+                tr.onclick = (e) => {
+                    if(e.target.closest('.btn-icon')) return; // Si clickea corazón no reproduce
+                    playTrack(album.songs, idx);
+                };
+                
                 tr.innerHTML = `
-                    <td class="title-col"><span style="opacity:0.6; font-size:10px;">${index + 1}</span> ${song.title}</td>
-                    <td style="text-align: right; width: 40px;">
-                        <button class="heart-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${song.id}', this)">
+                    <td class="track-num">${idx + 1}</td>
+                    <td>
+                        <div class="track-title">
+                            ${song.title}
+                        </div>
+                    </td>
+                    <td style="text-align:right;">
+                        <button class="btn-icon ${isLiked ? 'liked' : ''}" onclick="toggleLike('${song.id}', this)">
                             <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                         </button>
                     </td>
@@ -381,53 +502,57 @@
             });
         }
 
+        // --- REPRODUCTOR ---
         function playTrack(playlist, index) {
             currentPlaylist = playlist;
             currentIndex = index;
             const track = currentPlaylist[index];
-            
+
+            // UI Player Bar
             document.getElementById('player-img').src = track.cover;
             document.getElementById('player-title').innerText = track.title;
             document.getElementById('player-artist').innerText = track.artist;
-            document.getElementById('play-icon').className = "fa-solid fa-circle-pause";
-            
-            seekSlider.value = 0;
-            document.getElementById('curr-time').innerText = "0:00";
+            document.getElementById('play-icon').className = "fa-solid fa-pause";
 
-            if (track.isVideo) {
+            // Reset Seek
+            document.getElementById('seek-slider').value = 0;
+
+            if(track.isVideo) {
+                // VIDEO MODE
                 isVideoPlaying = true;
-                audioPlayer.pause();
-                coverImage.style.display = 'none';
-                videoPlayer.style.display = 'block';
-                mediaBox.classList.add('video-mode');
-                heroSection.classList.add('video-active');
-
-                videoPlayer.src = track.src;
-                videoPlayer.play();
-                // Scroll hacia arriba en móvil para ver el video
-                if(window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                isVideoPlaying = false;
-                videoPlayer.pause();
-                videoPlayer.style.display = 'none';
-                mediaBox.classList.remove('video-mode');
-                heroSection.classList.remove('video-active');
+                audioEl.pause();
                 
-                coverImage.style.display = 'block';
-                audioPlayer.src = track.src;
-                audioPlayer.play();
+                // Activar video en Hero
+                heroImg.style.display = 'none';
+                videoEl.style.display = 'block';
+                heroBox.classList.add('video-mode');
+                
+                videoEl.src = track.src;
+                videoEl.play();
+                // Scroll arriba en móvil
+                if(window.innerWidth < 768) window.scrollTo({top:0, behavior:'smooth'});
+            } else {
+                // AUDIO MODE
+                isVideoPlaying = false;
+                videoEl.pause();
+                heroBox.classList.remove('video-mode');
+                heroImg.style.display = 'block';
+                videoEl.style.display = 'none';
+
+                audioEl.src = track.src;
+                audioEl.play();
             }
         }
 
         function togglePlay() {
-            const player = isVideoPlaying ? videoPlayer : audioPlayer;
-            if (player.paused) player.play(); else player.pause();
-            updatePlayIcon();
-        }
-
-        function updatePlayIcon() {
-            const paused = isVideoPlaying ? videoPlayer.paused : audioPlayer.paused;
-            document.getElementById('play-icon').className = paused ? "fa-solid fa-circle-play" : "fa-solid fa-circle-pause";
+            const player = isVideoPlaying ? videoEl : audioEl;
+            if(player.paused) {
+                player.play();
+                document.getElementById('play-icon').className = "fa-solid fa-pause";
+            } else {
+                player.pause();
+                document.getElementById('play-icon').className = "fa-solid fa-play";
+            }
         }
 
         function nextTrack() {
@@ -439,70 +564,72 @@
             let prev = (currentIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
             playTrack(currentPlaylist, prev);
         }
-        
-        function showLibraryView() {
-            document.getElementById('library-view').style.display = 'block';
-            document.getElementById('playlist-view').style.display = 'none';
-            mediaBox.classList.remove('video-mode');
-            heroSection.classList.remove('video-active');
-        }
-        function showLibrary() { showLibraryView(); }
 
-        function toggleLike(id, btn) {
-            if (favoriteIds.includes(id)) {
-                favoriteIds = favoriteIds.filter(fav => fav !== id);
-                btn.classList.remove('liked');
-            } else {
-                favoriteIds.push(id);
-                btn.classList.add('liked');
-            }
-            localStorage.setItem('koteifyLikes', JSON.stringify(favoriteIds));
-            if(currentMode === 'fav') renderAlbumsByMode();
-        }
-
-        function formatTime(seconds) {
-            if(isNaN(seconds)) return "0:00";
-            const min = Math.floor(seconds / 60);
-            const sec = Math.floor(seconds % 60);
-            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-        }
-
+        // --- PROGRESO Y VOLUMEN ---
         function updateProgress(e) {
             if(isDragging) return;
             const { duration, currentTime } = e.srcElement;
-            if(isNaN(duration)) return;
-            seekSlider.max = duration;
-            seekSlider.value = currentTime;
+            if(!duration) return;
+            
+            const slider = document.getElementById('seek-slider');
+            slider.max = duration;
+            slider.value = currentTime;
+            
             document.getElementById('curr-time').innerText = formatTime(currentTime);
-            document.getElementById('total-duration').innerText = formatTime(duration);
+            document.getElementById('total-time').innerText = formatTime(duration);
         }
 
-        function setProgress(e) {
-            const player = isVideoPlaying ? videoPlayer : audioPlayer;
-            player.currentTime = e.target.value;
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec < 10 ? '0'+sec : sec}`;
         }
 
         // Eventos
-        audioPlayer.addEventListener('timeupdate', updateProgress);
-        audioPlayer.addEventListener('ended', nextTrack);
-        audioPlayer.addEventListener('play', updatePlayIcon);
-        audioPlayer.addEventListener('pause', updatePlayIcon);
-        
-        videoPlayer.addEventListener('timeupdate', updateProgress);
-        videoPlayer.addEventListener('ended', nextTrack);
-        videoPlayer.addEventListener('play', updatePlayIcon);
-        videoPlayer.addEventListener('pause', updatePlayIcon);
-
-        seekSlider.addEventListener('mousedown', () => isDragging = true);
-        seekSlider.addEventListener('touchstart', () => isDragging = true);
-        seekSlider.addEventListener('change', (e) => { isDragging = false; setProgress(e); });
-        seekSlider.addEventListener('input', (e) => { document.getElementById('curr-time').innerText = formatTime(e.target.value); });
-
-        volumeSlider.addEventListener('input', (e) => {
-            const val = e.target.value;
-            audioPlayer.volume = val;
-            videoPlayer.volume = val;
+        [audioEl, videoEl].forEach(media => {
+            media.addEventListener('timeupdate', updateProgress);
+            media.addEventListener('ended', nextTrack);
         });
+
+        const seekSlider = document.getElementById('seek-slider');
+        seekSlider.addEventListener('input', () => isDragging = true);
+        seekSlider.addEventListener('change', (e) => {
+            isDragging = false;
+            const player = isVideoPlaying ? videoEl : audioEl;
+            player.currentTime = e.target.value;
+        });
+
+        document.getElementById('vol-slider').addEventListener('input', (e) => {
+            audioEl.volume = e.target.value;
+            videoEl.volume = e.target.value;
+        });
+
+        // --- FAVORITOS ---
+        function toggleLike(id, btn) {
+            if (favoriteIds.includes(id)) {
+                favoriteIds = favoriteIds.filter(f => f !== id);
+                btn.classList.remove('liked');
+                btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+            } else {
+                favoriteIds.push(id);
+                btn.classList.add('liked');
+                btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+            }
+            localStorage.setItem('koteifyLikes', JSON.stringify(favoriteIds));
+            if(currentMode === 'fav') renderGrid(); // Refrescar si estamos en vista fav
+        }
+
+        // --- ACTUALIZAR ---
+        async function refreshLibrary() {
+            const btn = document.getElementById('refresh-icon');
+            btn.classList.add('fa-spin');
+            try {
+                await fetch('/api/refresh');
+                await loadLibrary();
+                alert("¡Biblioteca actualizada!");
+            } catch(e) { alert("Error al actualizar"); }
+            btn.classList.remove('fa-spin');
+        }
 
         window.onload = loadLibrary;
     </script>
