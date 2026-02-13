@@ -7,7 +7,8 @@
     
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/logo.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <title>Para la Kote ❤️</title>
@@ -61,6 +62,7 @@
         /* --- SIDEBAR --- */
         .sidebar { grid-area: sidebar; background: var(--bg-sidebar); padding: 24px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); }
         .logo { color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        .logo img { width: 30px; height: 30px; } 
         
         .nav-btn {
             background: transparent; border: none; color: var(--text-secondary);
@@ -167,7 +169,7 @@
         .progress-bar-container { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
         .progress-range { 
             flex: 1; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; 
-            -webkit-appearance: none; appearance: none; /* FIX */
+            -webkit-appearance: none; appearance: none;
         }
         .progress-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text-primary); border-radius: 50%; display: none; }
         .progress-bar-container:hover .progress-range::-webkit-slider-thumb { display: block; }
@@ -176,7 +178,7 @@
         .player-right { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
         .vol-range { 
             width: 100px; height: 4px; background: var(--border); border-radius: 2px; 
-            -webkit-appearance: none; appearance: none; /* FIX */
+            -webkit-appearance: none; appearance: none;
         }
         .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text-primary); border-radius: 50%; cursor: pointer; }
         [data-theme="kawaii"] .vol-range::-webkit-slider-thumb { background: var(--accent); }
@@ -244,7 +246,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo">
-                <i class="fa-brands fa-spotify" style="font-size: 32px;"></i> Koteify
+                <img src="/logo.png" alt="Logo"> Koteify
             </div>
             
             <button onclick="switchMode('audio')" class="nav-btn active" id="btn-pc-audio">
@@ -386,16 +388,16 @@
             currentMode = mode;
             document.querySelectorAll('.nav-btn, .mob-btn').forEach(b => b.classList.remove('active'));
             if(mode === 'audio') {
-                document.getElementById('btn-pc-audio')?.classList.add('active');
-                document.getElementById('btn-mob-audio')?.classList.add('active');
+                if(document.getElementById('btn-pc-audio')) document.getElementById('btn-pc-audio').classList.add('active');
+                if(document.getElementById('btn-mob-audio')) document.getElementById('btn-mob-audio').classList.add('active');
                 document.getElementById('page-title').innerText = "Tu Música";
             } else if(mode === 'video') {
-                document.getElementById('btn-pc-video')?.classList.add('active');
-                document.getElementById('btn-mob-video')?.classList.add('active');
+                if(document.getElementById('btn-pc-video')) document.getElementById('btn-pc-video').classList.add('active');
+                if(document.getElementById('btn-mob-video')) document.getElementById('btn-mob-video').classList.add('active');
                 document.getElementById('page-title').innerText = "Tus Videos";
             } else {
-                document.getElementById('btn-pc-fav')?.classList.add('active');
-                document.getElementById('btn-mob-fav')?.classList.add('active');
+                if(document.getElementById('btn-pc-fav')) document.getElementById('btn-pc-fav').classList.add('active');
+                if(document.getElementById('btn-mob-fav')) document.getElementById('btn-mob-fav').classList.add('active');
                 document.getElementById('page-title').innerText = "Tus Favoritos ❤️";
             }
             showGrid();
@@ -585,13 +587,13 @@
 
         async function refreshLibrary() {
             const btn = document.getElementById('refresh-icon');
-            btn.classList.add('fa-spin');
+            if(btn) btn.classList.add('fa-spin');
             try {
                 await fetch('/api/refresh');
                 await loadLibrary();
                 alert("¡Biblioteca actualizada!");
             } catch(e) { alert("Error al actualizar"); }
-            btn.classList.remove('fa-spin');
+            if(btn) btn.classList.remove('fa-spin');
         }
 
         window.onload = loadLibrary;
