@@ -197,9 +197,10 @@
             .grid-header { font-size: 20px; }
 
             /* --- ARREGLO CARPETAS GIGANTES --- */
+            /* FIX: Usamos minmax(0, 1fr) para obligar a que entren y !important para asegurar */
             .albums-container {
                 display: grid;
-                grid-template-columns: 1fr 1fr; /* 2 COLUMNAS SIEMPRE */
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
                 gap: 12px; 
             }
             .album-card { padding: 12px; }
