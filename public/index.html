@@ -61,7 +61,7 @@
         /* --- SIDEBAR --- */
         .sidebar { grid-area: sidebar; background: var(--bg-sidebar); padding: 24px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); transition: background 0.3s; }
         .logo { color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
-        .logo img { width: 30px; height: 30px; } /* Si quisieras poner imagen */
+        .logo img { width: 30px; height: 30px; } 
         
         .nav-btn {
             background: transparent; border: none; color: var(--text-secondary);
@@ -94,11 +94,12 @@
         }
         .theme-toggle:hover { transform: scale(1.1); }
 
-        /* GRID DE ÁLBUMES */
+        /* GRID DE ÁLBUMES (ESCRITORIO) */
         .grid-header { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
         .albums-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            /* Ajustado el mínimo para que sea más flexible */
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 24px;
         }
         .album-card {
@@ -165,7 +166,6 @@
         .ctrl-btn:hover { color: var(--text-primary); }
         .play-btn { font-size: 34px; color: var(--text-primary); background: var(--text-primary); color: var(--bg-player); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
         .play-btn:hover { transform: scale(1.05); }
-        /* Ajuste icono play para tema kawaii */
         [data-theme="kawaii"] .play-btn { background: var(--accent); color: white; }
 
         .progress-bar-container { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
@@ -182,7 +182,7 @@
         /* --- MOBILE NAV (Solo visible en celular) --- */
         .mobile-nav { display: none; }
 
-        /* --- RESPONSIVE / MÓVIL --- */
+        /* --- RESPONSIVE / MÓVIL (AQUÍ ESTÁ EL CAMBIO CLAVE) --- */
         @media (max-width: 768px) {
             .app-container {
                 grid-template-areas: "main" "player";
@@ -193,13 +193,21 @@
             
             .main-content { padding: 16px; padding-bottom: 140px; }
             .grid-header { font-size: 20px; }
-            .albums-container { grid-template-columns: repeat(2, 1fr); gap: 16px; } /* 2 columnas en móvil */
+
+            /* --- ARREGLO DE LAS TARJETAS GIGANTES --- */
+            .albums-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr; /* FUERZA 2 columnas exactas */
+                gap: 12px; /* Reduce el espacio entre ellas */
+            }
+            .album-card { padding: 12px; } /* Tarjetas un poco más compactas */
             .album-title { font-size: 14px; }
+            /* --------------------------------------- */
             
             /* Vista Detalle Móvil */
             .hero { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
-            .hero-img-box { width: 180px; height: 180px; }
-            .hero-info h1 { font-size: 28px; }
+            .hero-img-box { width: 160px; height: 160px; } /* Carátula más pequeña en móvil */
+            .hero-info h1 { font-size: 26px; }
 
             /* Player Móvil Flotante */
             .player-bar { 
