@@ -19,6 +19,8 @@
 </head>
 <body>
 
+    <div id="dynamic-bg"></div>
+
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo">
@@ -34,6 +36,9 @@
             </button>
             <button onclick="switchMode('fav')" class="nav-btn" id="btn-pc-fav">
                 <i class="fa-solid fa-heart"></i> Favoritos
+            </button>
+            <button onclick="switchMode('history')" class="nav-btn" id="btn-pc-history">
+                <i class="fa-solid fa-clock-rotate-left"></i> Historial
             </button>
 
             <div class="sidebar-divider"></div>
@@ -53,7 +58,7 @@
 
                 <div class="search-container">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="search-input" placeholder="¿Qué quieres escuchar hoy, mi amor?">
+                    <input type="text" id="search-input" placeholder="Buscar canción o artista...">
                 </div>
 
                 <div style="flex:1;"></div>
@@ -66,26 +71,39 @@
             <div id="grid-view">
                 <h2 class="greeting-msg" id="greeting-msg">Hola ❤️</h2>
                 
-                <h2 class="grid-header" id="page-title">Tu Música</h2>
-                <div class="albums-container" id="albums-container">
-                    <p style="color:var(--text-secondary)">Cargando tu colección...</p>
+                <div id="monthly-featured" class="featured-section" style="display:none;">
+                    <h3 class="section-title">✨ Especial del Mes</h3>
+                    <div class="featured-card" onclick="playMonthlyTop()">
+                        <div class="featured-info">
+                            <h4>Lo Mejor de Febrero</h4>
+                            <p>Canciones seleccionadas para ti 🌹</p>
+                        </div>
+                        <div class="play-circle"><i class="fa-solid fa-play"></i></div>
+                    </div>
                 </div>
+
+                <h2 class="grid-header" id="page-title">Tu Colección</h2>
+                <div class="albums-container" id="albums-container">
+                    </div>
             </div>
 
             <div id="playlist-view" class="playlist-view">
-                <div onclick="showGrid()" style="cursor:pointer; margin-bottom:20px; display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--text-secondary);">
+                <div onclick="showGrid()" style="cursor:pointer; margin-bottom:20px; display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--text-primary); opacity:0.8;">
                     <i class="fa-solid fa-chevron-left"></i> Volver
                 </div>
 
                 <div class="hero">
                     <div class="hero-img-box" id="hero-img-box">
-                        <img src="" id="hero-img">
-                        <video id="hero-video" controls playsinline></video>
+                        <img src="" id="hero-img" crossorigin="anonymous"> <video id="hero-video" controls playsinline></video>
+                        <canvas id="visualizer"></canvas>
                     </div>
                     <div class="hero-info">
                         <span class="hero-type">ÁLBUM</span>
                         <h1 id="hero-title">Título</h1>
                         <p id="hero-meta">Artista • 0 canciones</p>
+                        <div id="lyrics-container" style="display:none; margin-top:10px; font-size:14px; font-style:italic; color:var(--accent);">
+                            🎵 "Eres la casualidad más bonita de mi vida..."
+                        </div>
                     </div>
                 </div>
 
@@ -102,17 +120,14 @@
                     <div class="player-title" id="player-title">Koteify</div>
                     <div class="player-artist" id="player-artist">Selecciona algo</div>
                 </div>
-                <button class="ctrl-btn dedication-btn" onclick="showDedication()" title="Dedicatoria">
-                    <i class="fa-solid fa-envelope-open-text"></i>
+                <button class="ctrl-btn" onclick="toggleLyrics()" title="Dedicatoria/Letra">
+                    <i class="fa-solid fa-microphone-lines"></i>
                 </button>
             </div>
             
             <div class="player-center">
                 <div class="player-controls">
-                    <button class="ctrl-btn" id="btn-shuffle" onclick="toggleShuffle()" title="Aleatorio">
-                        <i class="fa-solid fa-shuffle"></i>
-                    </button>
-
+                    <button class="ctrl-btn" id="btn-shuffle" onclick="toggleShuffle()"><i class="fa-solid fa-shuffle"></i></button>
                     <button class="ctrl-btn" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
                     
                     <button class="play-btn" onclick="togglePlay()">
@@ -120,10 +135,7 @@
                     </button>
                     
                     <button class="ctrl-btn" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
-
-                    <button class="ctrl-btn" id="btn-repeat" onclick="toggleRepeat()" title="Repetir">
-                        <i class="fa-solid fa-repeat"></i>
-                    </button>
+                    <button class="ctrl-btn" id="btn-repeat" onclick="toggleRepeat()"><i class="fa-solid fa-repeat"></i></button>
                 </div>
                 <div class="progress-bar-container">
                     <span id="curr-time">0:00</span>
@@ -133,7 +145,14 @@
             </div>
 
             <div class="player-right">
-                <i class="fa-solid fa-volume-high" style="color:var(--text-secondary); font-size:14px;"></i>
+                <button class="ctrl-btn" id="btn-cassette" onclick="toggleCassetteMode()" title="Modo Cassette">
+                    <i class="fa-solid fa-compact-disc"></i>
+                </button>
+                <button class="ctrl-btn" id="btn-sleep" onclick="toggleSleepTimer()" title="Temporizador">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                
+                <div style="width:10px;"></div> <i class="fa-solid fa-volume-high" style="font-size:12px; opacity:0.7;"></i>
                 <input type="range" class="vol-range" id="vol-slider" min="0" max="1" step="0.01" value="1">
             </div>
         </div>
@@ -148,6 +167,9 @@
         </button>
         <button class="mob-btn" onclick="switchMode('fav')" id="btn-mob-fav">
             <i class="fa-solid fa-heart"></i> <span>Favoritos</span>
+        </button>
+        <button class="mob-btn" onclick="switchMode('history')" id="btn-mob-history">
+            <i class="fa-solid fa-clock-rotate-left"></i> <span>Historial</span>
         </button>
     </nav>
 
