@@ -67,13 +67,14 @@
         .logo { 
             margin-bottom: 24px; 
             display: flex; 
-            justify-content: center; /* Centrado */
+            justify-content: center;
         }
         .logo img { 
-            width: 100%;       /* Ocupa todo el ancho disponible */
+            width: 100%;
             height: auto; 
-            max-width: 180px;  /* Límite para que no se vea grosero */
-            object-fit: contain; 
+            max-width: 180px;
+            object-fit: contain;
+            transition: all 0.3s ease;
         }
         
         .nav-btn {
@@ -102,10 +103,11 @@
         /* LOGO MÓVIL (TAMAÑO AUMENTADO) */
         .mobile-logo { display: none; }
         .mobile-logo img { 
-            height: 60px; /* Aumentado considerablemente */
+            height: 60px;
             width: auto; 
             max-width: 200px;
             object-fit: contain;
+            transition: all 0.3s ease;
         }
 
         .theme-toggle {
@@ -202,6 +204,14 @@
         }
         .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text-primary); border-radius: 50%; cursor: pointer; }
         [data-theme="kawaii"] .vol-range::-webkit-slider-thumb { background: var(--accent); }
+
+        /* Borde negro al logo SOLO en modo Kawaii (PC y Móvil) */
+        [data-theme="kawaii"] .logo img,
+        [data-theme="kawaii"] .mobile-logo img {
+            border: 2px solid #000000; /* El borde negro pequeño */
+            border-radius: 6px;        /* Un poquito redondeado para que se vea mejor */
+            padding: 2px;              /* Un mini espacio para que respire */
+        }
 
         .mobile-nav { display: none; }
 
