@@ -211,7 +211,8 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
         grid-template-rows: 1fr 65px; /* Player muy compacto */
     }
     .sidebar { display: none; }
-    .main-content { padding: 12px; padding-bottom: 80px; }
+    /* Padding-left extra para dejar espacio al menú lateral */
+    .main-content { padding: 12px; padding-left: 72px; padding-bottom: 80px; }
     .top-bar { margin-bottom: 12px; }
     .mobile-logo { display: block; } .mobile-logo img { height: 40px; width: auto; }
     
@@ -232,14 +233,14 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
         position: fixed; bottom: 0; left: 0; right: 0; height: 65px; 
         background: var(--bg-card); border-top: 1px solid var(--border); 
         padding: 0 10px; display: flex; align-items: center; justify-content: space-between;
-        z-index: 300; /* Encima de todo */
+        z-index: 300; 
     }
     
     /* 1. Info izquierda compacta */
     .player-left { width: 25%; gap: 8px; }
     .player-left img { width: 40px; height: 40px; }
     .player-title { font-size: 13px; } .player-artist { font-size: 10px; }
-    .player-left .ctrl-btn { display: none; } /* Ocultar letra en landscape si estorba */
+    .player-left .ctrl-btn { display: none; } 
 
     /* 2. Controles centro lineales */
     .player-center { width: 50%; gap: 2px; }
@@ -252,8 +253,24 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 
     /* 3. Derecha */
     .player-right { width: 25%; gap: 8px; }
-    .vol-range { display: none; } .fa-volume-high { display: none; } /* Ocultar volumen */
+    .vol-range { display: none; } .fa-volume-high { display: none; }
 
-    /* Navbar Lateral Mini (o abajo muy fina) */
-    .mobile-nav { display: none; } 
+    /* === NAV LATERAL PARA LANDSCAPE === */
+    .mobile-nav { 
+        display: flex; /* Mostrarla */
+        flex-direction: column; /* Vertical */
+        position: fixed; top: 0; bottom: 65px; left: 0; /* Anclada a la izquierda */
+        width: 60px; /* Ancho fino */
+        height: auto; 
+        right: auto; /* Importante: borrar el 'right: 0' de portrait */
+        background: var(--bg-sidebar); border-top: none; border-right: 1px solid var(--border);
+        justify-content: center; align-items: center; gap: 20px;
+        z-index: 150;
+    }
+    
+    /* Iconos grandes sin texto en landscape */
+    .mob-btn { width: 100%; height: auto; padding: 10px 0; }
+    .mob-btn span { display: none; }
+    .mob-btn i { font-size: 24px; }
+    .mob-btn.active { color: var(--text-primary); border-right: 2px solid var(--accent); }
 }
