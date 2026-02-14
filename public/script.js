@@ -35,8 +35,8 @@ function handleSwipe() {
         prevTrack();
     }
 }
-// ------------------------------------
 
+// --- TEMA ---
 function toggleTheme() {
     const body = document.body;
     if(body.getAttribute('data-theme') === 'kawaii') {
@@ -51,6 +51,7 @@ if(localStorage.getItem('koteifyTheme') === 'kawaii') {
     document.body.setAttribute('data-theme', 'kawaii');
 }
 
+// --- CARGA DE DATOS ---
 async function loadLibrary() {
     try {
         const res = await fetch('/api/albums');
@@ -59,9 +60,12 @@ async function loadLibrary() {
     } catch (e) { console.error("Error:", e); }
 }
 
+// --- NAVEGACIÓN ---
 function switchMode(mode) {
     currentMode = mode;
     document.querySelectorAll('.nav-btn, .mob-btn').forEach(b => b.classList.remove('active'));
+    
+    // Activar botones según modo
     if(mode === 'audio') {
         if(document.getElementById('btn-pc-audio')) document.getElementById('btn-pc-audio').classList.add('active');
         if(document.getElementById('btn-mob-audio')) document.getElementById('btn-mob-audio').classList.add('active');
@@ -75,7 +79,11 @@ function switchMode(mode) {
         if(document.getElementById('btn-mob-fav')) document.getElementById('btn-mob-fav').classList.add('active');
         document.getElementById('page-title').innerText = "Tus Favoritos ❤️";
     }
-    showGrid();
+    
+    // Si no es favoritos, mostramos grid normal. Si es favoritos, renderGrid se encarga.
+    if (mode !== 'fav') {
+        showGrid();
+    }
     renderGrid();
 }
 
@@ -91,26 +99,39 @@ function showGrid() {
 function renderGrid() {
     const container = document.getElementById('albums-container');
     container.innerHTML = '';
+    
     let albumsToRender = [];
+
     if (currentMode === 'fav') {
+        // --- LOGICA FAVORITOS ---
         let allTracks = [];
         fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
         const myFavs = allTracks.filter(t => favoriteIds.includes(t.id));
+        
         if (myFavs.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-secondary); padding:20px;">No tienes favoritos aún.</p>`;
+            // Si no hay favoritos, mostramos mensaje en el Grid
+            showGrid(); 
+            container.innerHTML = `<p style="color:var(--text-secondary); padding:20px;">No tienes favoritos aún. ¡Dale ❤️ a algo!</p>`;
             return;
         }
+        
+        // **CORRECCIÓN CLAVE:** Forzamos la vista de lista (playlist view)
+        document.getElementById('grid-view').style.display = 'none';
+        document.getElementById('playlist-view').style.display = 'block';
+        
+        // Cargamos la "Playlist Virtual" de favoritos
         openAlbum({ name: "Mis Favoritos", cover: "https://placehold.co/600?text=Favoritos", songs: myFavs }, true);
         return;
-    } else {
-        albumsToRender = fullLibraryData.map(alb => {
-            const filteredSongs = alb.songs.filter(s => currentMode === 'video' ? s.isVideo : !s.isVideo);
-            return { ...alb, songs: filteredSongs };
-        }).filter(alb => alb.songs.length > 0);
-    }
+    } 
+    
+    // --- LOGICA NORMAL (Música/Video) ---
+    albumsToRender = fullLibraryData.map(alb => {
+        const filteredSongs = alb.songs.filter(s => currentMode === 'video' ? s.isVideo : !s.isVideo);
+        return { ...alb, songs: filteredSongs };
+    }).filter(alb => alb.songs.length > 0);
 
     if(albumsToRender.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-secondary);">No hay contenido.</p>`;
+        container.innerHTML = `<p style="color:var(--text-secondary);">No hay contenido disponible aquí.</p>`;
         return;
     }
 
@@ -127,6 +148,7 @@ function renderGrid() {
     });
 }
 
+// --- ABRIR ÁLBUM / LISTA ---
 function openAlbum(album, isDirect = false) {
     if(!isDirect) {
         document.getElementById('grid-view').style.display = 'none';
@@ -143,15 +165,20 @@ function openAlbum(album, isDirect = false) {
         const isLiked = favoriteIds.includes(song.id);
         const tr = document.createElement('tr');
         tr.className = 'track-row';
+        
+        // Clic en la fila -> Reproducir
         tr.onclick = (e) => {
+            // Doble seguridad: si clicamos botón, no hacemos nada aquí
             if(e.target.closest('.btn-icon')) return;
             playTrack(album.songs, idx);
         };
+        
+        // **CORRECCIÓN CLAVE:** Pasamos 'event' al toggleLike
         tr.innerHTML = `
             <td class="track-num">${idx + 1}</td>
             <td><div class="track-title">${song.title}</div></td>
             <td style="text-align:right;">
-                <button class="btn-icon ${isLiked ? 'liked' : ''}" onclick="toggleLike('${song.id}', this)">
+                <button class="btn-icon ${isLiked ? 'liked' : ''}" onclick="toggleLike('${song.id}', this, event)">
                     <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                 </button>
             </td>
@@ -160,6 +187,7 @@ function openAlbum(album, isDirect = false) {
     });
 }
 
+// --- REPRODUCTOR ---
 function playTrack(playlist, index) {
     currentPlaylist = playlist;
     currentIndex = index;
@@ -260,7 +288,13 @@ document.getElementById('vol-slider').addEventListener('input', (e) => {
     videoEl.volume = e.target.value;
 });
 
-function toggleLike(id, btn) {
+// --- FAVORITOS (CORREGIDO) ---
+function toggleLike(id, btn, event) {
+    // 🛡️ DETENER PROPAGACIÓN: Evita que el clic llegue al <tr> y reproduzca la canción
+    if(event) {
+        event.stopPropagation();
+    }
+
     if (favoriteIds.includes(id)) {
         favoriteIds = favoriteIds.filter(f => f !== id);
         btn.classList.remove('liked');
@@ -271,6 +305,8 @@ function toggleLike(id, btn) {
         btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
     }
     localStorage.setItem('koteifyLikes', JSON.stringify(favoriteIds));
+    
+    // Si estamos en la pantalla de favoritos, recargamos para que desaparezca/aparezca al instante
     if(currentMode === 'fav') renderGrid();
 }
 
