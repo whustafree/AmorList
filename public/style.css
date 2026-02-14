@@ -12,8 +12,10 @@
     --accent: #ff4d6d;
     --border: #282828;
     --active-ctrl: #1ed760;
-    --radius: 8px;
+    --radius: 12px; /* Radio suavizado */
     --player-height: 90px;
+    --h-player-mob-port: 170px; /* Altura corregida para evitar montaje */
+    --h-player-mob-land: 65px;
 }
 
 [data-theme="kawaii"] {
@@ -34,14 +36,13 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-main); color: var(--text-primary); font-family: 'Montserrat', sans-serif; height: 100vh; overflow: hidden; transition: background 0.5s ease; }
 
-/* FONDO CAMALEÓN - Optimizado */
+/* FONDO CAMALEÓN - Optimizado para TV */
 #dynamic-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(circle at 50% -20%, transparent, var(--bg-main));
     z-index: -1; opacity: 0.3; transition: background 1s ease;
     pointer-events: none;
-    /* Optimización de rendimiento para TV */
-    will-change: opacity, background; 
+    will-change: opacity, background; /* Aceleración */
     transform: translateZ(0);
 }
 
@@ -51,7 +52,7 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 [data-theme="kawaii"] .img-dark { display: none !important; }
 [data-theme="kawaii"] .img-kawaii { display: block !important; }
 
-/* LAYOUT */
+/* LAYOUT GENERAL */
 .app-container { display: grid; grid-template-areas: "sidebar main" "player player"; grid-template-columns: 240px 1fr; grid-template-rows: 1fr var(--player-height); height: 100vh; }
 .sidebar { grid-area: sidebar; background: var(--bg-sidebar); padding: 24px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); }
 
@@ -108,7 +109,7 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 .playlist-view { display: none; padding-bottom: 40px; }
 .hero { display: flex; align-items: flex-end; gap: 32px; margin-bottom: 32px; position: relative; }
 
-/* CAJA DE IMAGEN NORMAL (PC) */
+/* CAJA DE IMAGEN (PC) */
 .hero-img-box { 
     width: 232px; height: 232px; 
     box-shadow: 0 4px 60px rgba(0,0,0,0.5); border-radius: var(--radius); 
@@ -116,26 +117,21 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     position: relative; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); 
 }
 
-/* --- VIDEO MODE (OPTIMIZADO PARA TV) --- */
+/* VIDEO MODE - OPTIMIZADO PARA TV */
 .hero-img-box.video-mode { 
     width: 100% !important; /* Forzar ancho */
     max-width: 800px; 
     height: auto !important; 
     aspect-ratio: 16/9; 
-    /* ELIMINAMOS EFECTOS PESADOS EN VIDEO PARA QUE NO SE PEGUE */
+    /* Eliminar efectos pesados en video */
     box-shadow: none !important; 
-    border-radius: 0 !important; /* Bordes cuadrados son más rápidos de procesar */
+    border-radius: var(--radius);
     background: #000;
-    transform: translateZ(0); /* Aceleración GPU */
-    will-change: transform;
+    transform: translateZ(0); will-change: transform; /* Aceleración */
 }
 
 .hero-img-box img { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 2; }
-/* Video con aceleración */
-.hero-img-box video { 
-    width: 100%; height: 100%; object-fit: contain; display: none; z-index: 3;
-    will-change: transform; transform: translateZ(0); 
-}
+.hero-img-box video { width: 100%; height: 100%; object-fit: contain; display: none; z-index: 3; will-change: transform; transform: translateZ(0); }
 
 /* VISUALIZADOR */
 #visualizer { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.6; mix-blend-mode: overlay; pointer-events: none; }
@@ -194,13 +190,13 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 .mobile-nav { display: none; }
 
 /* ------------------------------------------------------------------ */
-/* --- RESPONSIVE / MÓVIL PORTRAIT (Vertical) - FIX MONTAJE --- */
+/* --- RESPONSIVE / MÓVIL PORTRAIT (Vertical) --- */
 /* ------------------------------------------------------------------ */
 @media (max-width: 768px) and (orientation: portrait) {
-    /* ALTURA OPTIMIZADA: 170px para que quepa todo sin montarse */
+    /* ALTURA OPTIMIZADA (170px) para que no se monten botones */
     .app-container { grid-template-rows: 1fr 170px; } 
     .sidebar { display: none; }
-    .main-content { padding: 16px; padding-bottom: 200px; } /* Más espacio abajo */
+    .main-content { padding: 16px; padding-bottom: 200px; } 
     
     .top-bar { flex-direction: row; gap: 10px; }
     .mobile-logo { display: block; }
@@ -211,26 +207,18 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .hero { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
     
     .hero-img-box { width: 180px; height: 180px; }
-    
     /* VIDEO MOVIL - Expandido y Optimizado */
-    .hero-img-box.video-mode { 
-        width: 100% !important; 
-        max-width: none !important;
-        height: auto !important; 
-        aspect-ratio: 16/9; 
-        box-shadow: none !important; border-radius: 0 !important;
-    }
+    .hero-img-box.video-mode { width: 100% !important; max-width: none !important; height: auto !important; aspect-ratio: 16/9; box-shadow: none !important; }
 
-    /* PLAYER BAR ALTO */
+    /* Player Vertical 3 Pisos */
     .player-bar { 
         position: fixed; bottom: 55px; left: 0; right: 0; 
-        height: 170px; 
-        background: var(--bg-card); border-top: 1px solid var(--border); 
+        height: 170px; background: var(--bg-card); border-top: 1px solid var(--border); 
         padding: 0 15px; border-radius: 12px 12px 0 0; 
-        display: block; /* Para usar coordenadas absolutas */
+        display: block; /* Para usar absolutos */
     }
     
-    /* PISO 1 (Arriba) */
+    /* Piso 1 (Info y Botones Extra) */
     .player-left { 
         position: absolute; top: 15px; left: 15px; width: calc(100% - 90px); 
         display: flex; align-items: center; gap: 10px;
@@ -238,16 +226,13 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .player-right { position: absolute; top: 15px; right: 15px; width: auto; gap: 10px; display: flex; }
     .player-right .vol-range, .player-right .fa-volume-high { display: none; }
     
-    /* PISO 2 (Centro) */
-    .player-center { 
-        position: absolute; bottom: 25px; left: 0; width: 100%; 
-        display: flex; flex-direction: column; justify-content: flex-end; 
-    }
+    /* Piso 2 (Controles) */
+    .player-center { position: absolute; bottom: 25px; left: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
     .player-controls { margin: 0; width: 100%; justify-content: center; gap: 25px; padding-bottom: 5px; }
     .ctrl-btn { font-size: 28px !important; }
     .play-btn { font-size: 52px !important; }
     
-    /* PISO 3 (Barra abajo) */
+    /* Piso 3 (Barra) */
     .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.1); padding: 0; border-radius: 0; }
     .progress-bar-container span { display: none; }
     .progress-range { border-radius: 0; background-image: linear-gradient(90deg, var(--accent), var(--accent)); }
@@ -258,15 +243,14 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
         background: var(--bg-sidebar); border-top: 1px solid var(--border); 
         display: flex; justify-content: space-around; align-items: center; z-index: 200; 
     }
-    .mob-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: none; border: none; color: var(--text-secondary); }
+    .mob-btn { background: none; border: none; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; font-size: 10px; gap: 4px; flex: 1; height: 100%; justify-content: center; }
     .mob-btn i { font-size: 22px !important; margin-bottom: 2px; }
-    .mob-btn span { display: block; font-size: 10px; }
     .mob-btn.active { color: var(--text-primary); }
     [data-theme="kawaii"] .mob-btn.active { color: var(--accent); }
 }
 
 /* -------------------------------------------------------------------- */
-/* --- RESPONSIVE / MÓVIL LANDSCAPE (Horizontal) - FIX MENU --- */
+/* --- RESPONSIVE / MÓVIL LANDSCAPE (Horizontal) --- */
 /* -------------------------------------------------------------------- */
 @media (max-width: 950px) and (orientation: landscape) {
     .app-container { 
@@ -275,7 +259,7 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
         grid-template-rows: 1fr 65px; 
     }
     .sidebar { display: none; }
-    /* Padding para no tapar contenido */
+    /* Padding-left para dejar espacio al dock lateral */
     .main-content { padding: 12px; padding-left: 80px; padding-bottom: 80px; }
     
     .top-bar { margin-bottom: 12px; }
@@ -288,12 +272,10 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .hero { flex-direction: row; align-items: flex-end; gap: 20px; margin-bottom: 20px; }
     .hero-img-box { width: 140px; height: 140px; }
     
-    /* VIDEO HORIZONTAL */
+    /* VIDEO HORIZONTAL - Optimizado */
     .hero-img-box.video-mode { 
-        width: auto !important; 
-        height: auto !important; 
-        max-width: 50vw; 
-        aspect-ratio: 16/9; 
+        width: auto !important; height: auto !important; 
+        max-width: 50vw; aspect-ratio: 16/9; 
         box-shadow: none !important; border-radius: 0 !important;
     }
 
@@ -322,46 +304,35 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .player-right { width: 25%; gap: 8px; position: static; }
     .vol-range { display: none; } .fa-volume-high { display: none; }
 
-    /* MENU LATERAL VISIBLE EN HORIZONTAL */
+    /* MENU LATERAL VISIBLE EN HORIZONTAL (DOCK) */
     .mobile-nav { 
         display: flex; flex-direction: column; 
         position: fixed; top: 0; bottom: 65px; left: 0; 
         width: 70px; height: auto; right: auto; 
         background: var(--bg-sidebar); border-top: none; border-right: 1px solid var(--border);
-        justify-content: center; align-items: center; gap: 20px;
+        justify-content: center; align-items: center; gap: 15px; padding: 10px 0;
         z-index: 150;
     }
-    .mob-btn { width: 100%; height: auto; padding: 10px 0; }
+    /* BOTONES ARMONICOS (Cápsula) */
+    .mob-btn { 
+        width: 50px; height: 50px; border-radius: 12px;
+        padding: 0; margin: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; transition: all 0.3s ease;
+    }
     .mob-btn span { display: none; } 
-    .mob-btn i { font-size: 28px !important; }
-    .mob-btn.active { color: var(--text-primary); border-right: 3px solid var(--accent); }
+    .mob-btn i { font-size: 24px !important; margin: 0 !important; color: var(--text-secondary); }
+    
+    /* Estado Activo Cápsula */
+    .mob-btn.active { background: var(--bg-card-hover); color: var(--text-primary); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .mob-btn.active i { color: var(--accent); transform: scale(1.1); }
+    [data-theme="kawaii"] .mob-btn.active { background: #ffe4e1; }
 }
+
 /* =========================================
    7. MODO TV / D-PAD (Navegación por Teclado)
    ========================================= */
-
-/* Indicador visual de dónde estás (Foco) */
-:focus-visible {
-    outline: 4px solid var(--accent);
-    outline-offset: 4px;
-    transform: scale(1.05);
-    z-index: 50;
-}
-
-/* Ajuste específico para las tarjetas de álbumes en foco */
-.album-card:focus-visible {
-    background-color: var(--bg-card-hover);
-    transform: translateY(-6px) scale(1.02);
-}
-
-/* Ajuste para filas de canciones */
-.track-row:focus-visible {
-    background-color: rgba(255, 255, 255, 0.2);
-    outline: none; /* En listas se ve mejor solo el fondo */
-    border-left: 4px solid var(--accent);
-}
-
-/* Asegurar que los inputs de rango (volumen/tiempo) se vean seleccionados */
-input[type=range]:focus-visible {
-    outline: 2px solid var(--accent);
-}
+:focus-visible { outline: 4px solid var(--accent); outline-offset: 4px; transform: scale(1.05); z-index: 50; }
+.album-card:focus-visible { background-color: var(--bg-card-hover); transform: translateY(-6px) scale(1.02); }
+.track-row:focus-visible { background-color: rgba(255, 255, 255, 0.2); outline: none; border-left: 4px solid var(--accent); }
+input[type=range]:focus-visible { outline: 2px solid var(--accent); }
