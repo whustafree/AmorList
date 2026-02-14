@@ -1,5 +1,3 @@
-/* public/style.css */
-
 /* --- VARIABLES --- */
 :root {
     --bg-main: #121212;
@@ -114,9 +112,8 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 }
 
 /* --- ESTADO VIDEO (RECUPERADO) --- */
-/* Esta clase se añade con JS y fuerza la expansión */
 .hero-img-box.video-mode { 
-    width: 100% !important; /* Forzar ancho */
+    width: 100% !important; /* Expandir a todo el ancho disponible */
     max-width: 800px; 
     height: auto !important; 
     aspect-ratio: 16/9; 
@@ -196,15 +193,10 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .album-card { padding: 12px; }
     .hero { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
     
-    /* IMAGEN NORMAL */
     .hero-img-box { width: 180px; height: 180px; }
     
-    /* VIDEO EXPANDIDO EN MOVIL */
-    .hero-img-box.video-mode { 
-        width: 100% !important; /* Ocupar todo el ancho */
-        height: auto !important; 
-        aspect-ratio: 16/9; 
-    }
+    /* VIDEO MOVIL */
+    .hero-img-box.video-mode { width: 100% !important; height: auto !important; aspect-ratio: 16/9; }
 
     /* Player Vertical 3 Pisos */
     .player-bar { 
@@ -254,7 +246,7 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .hero { flex-direction: row; align-items: flex-end; gap: 20px; margin-bottom: 20px; }
     .hero-img-box { width: 140px; height: 140px; }
     
-    /* VIDEO TAMBIEN EXPANDIDO EN HORIZONTAL */
+    /* VIDEO HORIZONTAL */
     .hero-img-box.video-mode { width: 300px !important; height: auto !important; aspect-ratio: 16/9; }
 
     .hero-info h1 { font-size: 24px; margin: 5px 0; }
