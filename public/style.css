@@ -131,7 +131,7 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 .btn-icon:hover { color: var(--text-primary); transform: scale(1.1); }
 .btn-icon.liked { color: var(--accent); }
 
-/* --- PLAYER BAR --- */
+/* --- PLAYER BAR (PC) --- */
 .player-bar { grid-area: player; background: var(--bg-player); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 100; transition: background 0.3s; }
 .player-left { display: flex; align-items: center; gap: 16px; width: 30%; }
 .player-left img { width: 56px; height: 56px; border-radius: 4px; object-fit: cover; }
@@ -162,11 +162,17 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 
 .mobile-nav { display: none; }
 
-/* RESPONSIVE */
+/* --- RESPONSIVE / MÓVIL --- */
 @media (max-width: 768px) {
-    .app-container { grid-template-areas: "main" "player"; grid-template-columns: 1fr; grid-template-rows: 1fr 140px; }
+    /* Ajuste de Grilla: Hacemos el footer más alto para que quepa todo */
+    .app-container { 
+        grid-template-areas: "main" "player"; 
+        grid-template-columns: 1fr; 
+        grid-template-rows: 1fr 140px; /* Altura total del footer reservada */
+    }
     .sidebar { display: none; }
-    .main-content { padding: 16px; padding-bottom: 160px; }
+    .main-content { padding: 16px; padding-bottom: 160px; /* Padding extra para no tapar contenido */ }
+    
     .top-bar { flex-direction: row; gap: 10px; }
     .mobile-logo { display: block; }
     .search-container { flex: 1; font-size: 14px; width: auto; }
@@ -179,28 +185,97 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .hero-img-box { width: 180px; height: 180px; }
     .hero-info h1 { font-size: 26px; }
 
+    /* --- PLAYER BAR MÓVIL (CORREGIDO) --- */
     .player-bar { 
-        position: fixed; bottom: 55px; left: 0; right: 0; 
-        height: 85px; 
-        background: var(--bg-card); border-top: 1px solid var(--border); padding: 0 12px; 
-        border-radius: 12px 12px 0 0; padding-bottom: 10px; 
+        position: fixed; 
+        bottom: 55px; /* Encima del menú de navegación */
+        left: 0; right: 0; 
+        height: 110px; /* ALTURA AUMENTADA PARA EVITAR SUPERPOSICIÓN */
+        background: var(--bg-card); 
+        border-top: 1px solid var(--border); 
+        padding: 0; /* Quitamos padding general para controlar con absolute */
+        border-radius: 12px 12px 0 0; 
     }
-    .player-center { width: auto; flex: 0; position: static; } 
     
-    .progress-bar-container { display: flex; position: absolute; bottom: 10px; left: 5%; width: 90%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; z-index: 20; overflow: hidden; }
+    /* 1. INFORMACIÓN DE CANCIÓN (ARRIBA IZQUIERDA) */
+    .player-left { 
+        position: absolute;
+        top: 12px;
+        left: 15px;
+        width: calc(100% - 100px); /* Dejar espacio a los botones derechos */
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .player-left img { width: 40px; height: 40px; } /* Imagen más pequeña */
+    .player-info div { max-width: 100%; } /* Texto adaptable */
+    
+    /* 2. BOTONES EXTRA (ARRIBA DERECHA) */
+    .player-right { 
+        position: absolute; 
+        top: 12px; 
+        right: 10px; 
+        width: auto; 
+        gap: 8px; 
+        display: flex;
+    }
+    .player-right .vol-range, .player-right .fa-volume-high { display: none; } /* Ocultar volumen */
+    
+    /* 3. CONTROLES DE REPRODUCCIÓN (ABAJO CENTRO) */
+    .player-center { 
+        position: absolute;
+        bottom: 15px; /* Pegado abajo pero encima de la barra de progreso */
+        left: 0; 
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+    
+    .player-controls { 
+        margin: 0; 
+        gap: 15px; 
+        width: 100%; 
+        justify-content: center; 
+        padding-bottom: 10px; /* Espacio para no pegar con la barra */
+    }
+    .ctrl-btn { font-size: 20px; }
+    .play-btn { font-size: 36px; }
+
+    /* 4. BARRA DE PROGRESO (AL BORDE INFERIOR) */
+    .progress-bar-container { 
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 4px; /* Barra fina */
+        background: rgba(255,255,255,0.1); 
+        border-radius: 0; 
+        z-index: 20; 
+        padding: 0;
+    }
     .progress-bar-container span { display: none; }
-    .progress-range { width: 100%; height: 100%; background: transparent; background-image: linear-gradient(90deg, var(--accent), var(--accent)); background-repeat: no-repeat; background-size: 0% 100%; border-radius: 10px; }
-    .progress-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 0; height: 0; display: block; }
+    .progress-range { 
+        width: 100%; height: 100%; 
+        background: transparent; 
+        background-image: linear-gradient(90deg, var(--accent), var(--accent)); 
+        background-repeat: no-repeat; 
+        background-size: 0% 100%; 
+        border-radius: 0; 
+    }
+    .progress-range::-webkit-slider-thumb { 
+        -webkit-appearance: none; appearance: none; 
+        width: 0; height: 0; display: block; 
+    }
 
-    .player-right { display: flex; position: absolute; top: 10px; right: 10px; width: auto; gap: 8px; }
-    .player-right .vol-range, .player-right .fa-volume-high { display: none; }
-    
-    .player-left { flex: 1; margin-bottom: 25px; }
-    .ctrl-btn { font-size: 22px; }
-    .play-btn { font-size: 38px; }
-    .player-controls { margin: 0; gap: 12px; margin-bottom: 25px; justify-content: center; width: 100%; position: absolute; bottom: 15px; left: 0; }
-
-    .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: var(--bg-sidebar); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 200; }
+    /* MENÚ DE NAVEGACIÓN INFERIOR */
+    .mobile-nav { 
+        position: fixed; bottom: 0; left: 0; right: 0; height: 55px; 
+        background: var(--bg-sidebar); border-top: 1px solid var(--border); 
+        display: flex; justify-content: space-around; align-items: center; 
+        z-index: 200; 
+    }
     .mob-btn { background: none; border: none; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; font-size: 9px; gap: 4px; flex: 1; height: 100%; justify-content: center; }
     .mob-btn i { font-size: 18px; }
     .mob-btn.active { color: var(--text-primary); }
