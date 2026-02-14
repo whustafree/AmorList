@@ -88,7 +88,6 @@ function drawVisualizer() {
 
 // --- COLOR CAMALEÓN (Simulado) ---
 function updateAmbientColor(str) {
-    // Generar un color pastel único basado en el título
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -161,7 +160,6 @@ function switchMode(mode) {
     const buttons = document.querySelectorAll('.nav-btn, .mob-btn');
     buttons.forEach(b => b.classList.remove('active'));
     
-    // Activar botones
     const map = {
         'audio': ['btn-pc-audio', 'btn-mob-audio', 'Tu Música'],
         'video': ['btn-pc-video', 'btn-mob-video', 'Tus Videos'],
@@ -191,7 +189,6 @@ function showGrid() {
     if(playlistView) playlistView.style.display = 'none';
     if(monthly) monthly.style.display = currentMode === 'audio' ? 'block' : 'none';
     
-    // Reset video/img
     if(heroImgBox) heroImgBox.classList.remove('video-mode');
     if(videoEl) { videoEl.style.display = 'none'; videoEl.pause(); }
     if(heroImg) heroImg.style.display = 'block';
@@ -203,7 +200,6 @@ function renderGrid() {
     if (!container) return;
     container.innerHTML = '';
     
-    // 1. FAVORITOS
     if (currentMode === 'fav') {
         let allTracks = [];
         if(fullLibraryData) fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
@@ -220,7 +216,6 @@ function renderGrid() {
         return;
     } 
 
-    // 2. HISTORIAL
     if (currentMode === 'history') {
         if (historyList.length === 0) {
             showGrid();
@@ -229,12 +224,10 @@ function renderGrid() {
         }
         document.getElementById('grid-view').style.display = 'none';
         document.getElementById('playlist-view').style.display = 'block';
-        // Invertimos para ver lo más reciente arriba
         openAlbum({ name: "Historial", cover: "https://placehold.co/600?text=Historial", songs: [...historyList].reverse() }, true);
         return;
     }
     
-    // 3. NORMAL
     let albumsToRender = [];
     if(fullLibraryData) {
         albumsToRender = fullLibraryData.map(alb => {
@@ -313,16 +306,12 @@ function playTrack(playlist, index) {
     currentIndex = index;
     const track = currentPlaylist[index];
 
-    // UI
     document.getElementById('player-img').src = track.cover;
     document.getElementById('player-title').innerText = track.title;
     document.getElementById('player-artist').innerText = track.artist;
     document.getElementById('play-icon').className = "fa-solid fa-pause";
     
-    // Cambiar color de fondo (Camaleón)
     updateAmbientColor(track.title);
-    
-    // Agregar al historial
     addToHistory(track);
 
     if(track.isVideo) {
@@ -343,7 +332,6 @@ function playTrack(playlist, index) {
         
         audioEl.src = track.src;
         audioEl.play().then(() => {
-            // Iniciar visualizador solo cuando empieza a sonar
             if(!isVisualizerSetup) setupVisualizer();
         }).catch(e => console.log("Play error:", e));
     }
@@ -359,7 +347,7 @@ function togglePlay() {
     if(player.paused) {
         player.play();
         playIcon.className = "fa-solid fa-pause";
-        if(!isVideoPlaying) setupVisualizer(); // Reintentar visualizador
+        if(!isVideoPlaying) setupVisualizer();
     } else {
         player.pause();
         playIcon.className = "fa-solid fa-play";
@@ -439,11 +427,9 @@ function toggleLyrics() {
 
 // --- HISTORIAL ---
 function addToHistory(track) {
-    // Evitar duplicados seguidos
     if(historyList.length > 0 && historyList[historyList.length-1].id === track.id) return;
-    
     historyList.push(track);
-    if(historyList.length > 20) historyList.shift(); // Max 20
+    if(historyList.length > 20) historyList.shift();
     localStorage.setItem('koteifyHistory', JSON.stringify(historyList));
 }
 
@@ -541,7 +527,14 @@ function loadLastPosition() {
     } catch(e){}
 }
 
-// Monthly Mockup
+// FUNCIÓN MEJORADA: Reproducir Historial
 function playMonthlyTop() {
-    alert("Aquí reproducirías una lista especial (puedes crearla manualmente en la base de datos)");
+    if(historyList.length > 0) {
+        // Reproducir historial como si fuera el "top"
+        openAlbum({ name: "Top Reciente", cover: "https://placehold.co/600?text=Top+Mes", songs: [...historyList].reverse() }, false);
+        // Reproducir la primera
+        setTimeout(() => playTrack([...historyList].reverse(), 0), 500);
+    } else {
+        alert("¡Escucha más música para generar tu Top del Mes!");
+    }
 }
