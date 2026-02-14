@@ -19,7 +19,7 @@
     <style>
         /* --- VARIABLES DE TEMA --- */
         :root {
-            /* TEMA DARK (Default) */
+            /* TEMA DARK */
             --bg-main: #121212;
             --bg-sidebar: #000000;
             --bg-card: #181818;
@@ -33,7 +33,7 @@
             --player-height: 90px;
         }
 
-        /* TEMA KAWAII (Rosa) */
+        /* TEMA KAWAII */
         [data-theme="kawaii"] {
             --bg-main: #fff0f5;
             --bg-sidebar: #ffe4e1;
@@ -51,7 +51,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-main); color: var(--text-primary); font-family: 'Montserrat', sans-serif; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
         
-        /* --- LAYOUT GRID --- */
+        /* --- LAYOUT --- */
         .app-container {
             display: grid;
             grid-template-areas: "sidebar main" "player player";
@@ -63,7 +63,7 @@
         /* --- SIDEBAR --- */
         .sidebar { grid-area: sidebar; background: var(--bg-sidebar); padding: 24px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); }
         .logo { color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
-        .logo img { width: 30px; height: 30px; } 
+        .logo img { width: 30px; height: 30px; }
         
         .nav-btn {
             background: transparent; border: none; color: var(--text-secondary);
@@ -87,8 +87,6 @@
         }
         
         .top-bar { display: flex; justify-content: flex-end; margin-bottom: 24px; align-items: center; }
-        
-        /* LOGO MÓVIL */
         .mobile-logo { display: none; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--accent); }
         .mobile-logo img { width: 28px; height: 28px; }
 
@@ -100,7 +98,7 @@
         }
         .theme-toggle:hover { transform: scale(1.1); }
 
-        /* GRID ÁLBUMES (Escritorio) */
+        /* GRID */
         .grid-header { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
         .albums-container {
             display: grid;
@@ -146,7 +144,6 @@
         .track-num { width: 40px; text-align: center; }
         .track-title { color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 12px; }
         .track-row.active .track-title, .track-row.active .track-num { color: var(--accent); }
-        
         .btn-icon { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; transition: transform 0.2s; }
         .btn-icon:hover { color: var(--text-primary); transform: scale(1.1); }
         .btn-icon.liked { color: var(--accent); }
@@ -171,7 +168,6 @@
         .play-btn:hover { transform: scale(1.05); }
         [data-theme="kawaii"] .play-btn { background: var(--accent); color: white; }
 
-        /* FIX ADVERTENCIAS CSS */
         .progress-bar-container { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
         .progress-range { 
             flex: 1; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; 
@@ -202,11 +198,9 @@
             .main-content { padding: 16px; padding-bottom: 140px; }
             .grid-header { font-size: 20px; }
 
-            /* ACTIVAR LOGO MÓVIL */
             .top-bar { justify-content: space-between; } 
             .mobile-logo { display: flex; } 
 
-            /* GRID 2 COLUMNAS */
             .albums-container {
                 display: grid;
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -221,33 +215,51 @@
 
             .player-bar { 
                 position: fixed; bottom: 55px; left: 0; right: 0; 
-                height: 64px; background: var(--bg-card); 
+                height: 70px; background: var(--bg-card); /* Más alto para que quepa todo */
                 border-top: 1px solid var(--border); padding: 0 12px;
-                border-radius: 8px 8px 0 0;
+                border-radius: 12px 12px 0 0;
+                padding-bottom: 10px; /* Espacio extra abajo para la barra */
             }
-            .player-center { width: auto; flex: 0; position: static; } /* Static para que el absolute funcione respecto a la barra */
+            .player-center { width: auto; flex: 0; position: static; } 
             
-            /* --- BARRA DE PROGRESO MÓVIL (VISIBLE ABAJO) --- */
+            /* --- BARRA FLOTANTE CENTRADA CON AUTO-FILL --- */
             .progress-bar-container { 
-                display: flex; /* La hacemos visible */
+                display: flex;
                 position: absolute;
-                bottom: 0; left: 0; right: 0; width: 100%;
-                height: 4px; /* Un poco más gruesa para tocar fácil */
-                gap: 0; padding: 0;
+                bottom: 8px; 
+                left: 5%;
+                width: 90%;
+                height: 6px; 
+                background: rgba(255,255,255,0.1); 
+                border-radius: 10px; 
+                z-index: 20;
+                overflow: hidden; /* Importante para que el fill no se salga */
             }
-            .progress-bar-container span { display: none; } /* Ocultamos los números */
+            .progress-bar-container span { display: none; } /* Ocultar números */
+            
             .progress-range {
-                border-radius: 0;
+                width: 100%;
                 height: 100%;
-                background: rgba(255,255,255,0.1);
+                background: transparent;
+                /* El color de relleno se hará con gradiente JS */
+                background-image: linear-gradient(90deg, var(--accent), var(--accent));
+                background-repeat: no-repeat;
+                background-size: 0% 100%; /* Empieza vacío */
+                border-radius: 10px;
+            }
+            /* Thumb visible para poder arrastrar, pero sutil */
+            .progress-range::-webkit-slider-thumb {
+                -webkit-appearance: none; appearance: none;
+                width: 0; height: 0; /* Oculto visualmente pero arrastrable */
+                display: block; 
             }
             /* ----------------------------------------------- */
 
             .player-right { display: none; }
-            .player-left { flex: 1; }
+            .player-left { flex: 1; margin-bottom: 8px; /* Espacio para que no choque con la barra */ }
             .ctrl-btn { font-size: 24px; }
             .play-btn { width: 40px; height: 40px; font-size: 20px; }
-            .player-controls { margin: 0; gap: 16px; }
+            .player-controls { margin: 0; gap: 16px; margin-bottom: 8px; }
 
             .mobile-nav {
                 position: fixed; bottom: 0; left: 0; right: 0; height: 55px;
@@ -523,7 +535,11 @@
             document.getElementById('player-title').innerText = track.title;
             document.getElementById('player-artist').innerText = track.artist;
             document.getElementById('play-icon').className = "fa-solid fa-pause";
-            document.getElementById('seek-slider').value = 0;
+            
+            // Reset Barra
+            const slider = document.getElementById('seek-slider');
+            slider.value = 0;
+            slider.style.backgroundSize = "0% 100%";
 
             if(track.isVideo) {
                 isVideoPlaying = true;
@@ -570,9 +586,15 @@
             if(isDragging) return;
             const { duration, currentTime } = e.srcElement;
             if(!duration) return;
+            
             const slider = document.getElementById('seek-slider');
             slider.max = duration;
             slider.value = currentTime;
+            
+            // ACTUALIZAR FILL VISUAL
+            const percent = (currentTime / duration) * 100;
+            slider.style.backgroundSize = `${percent}% 100%`;
+
             document.getElementById('curr-time').innerText = formatTime(currentTime);
             document.getElementById('total-time').innerText = formatTime(duration);
         }
@@ -589,7 +611,14 @@
         });
 
         const seekSlider = document.getElementById('seek-slider');
-        seekSlider.addEventListener('input', () => isDragging = true);
+        seekSlider.addEventListener('input', (e) => {
+            isDragging = true;
+            // Actualizar fill mientras arrastras
+            const val = e.target.value;
+            const max = e.target.max;
+            const percent = (val / max) * 100;
+            e.target.style.backgroundSize = `${percent}% 100%`;
+        });
         seekSlider.addEventListener('change', (e) => {
             isDragging = false;
             const player = isVideoPlaying ? videoEl : audioEl;
