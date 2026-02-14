@@ -60,19 +60,23 @@ async function scanDrive() {
         });
 
         if (mediaRes.data.files.length > 0) {
-            // Buscar portada
+            // Buscar portada (SOLUCIÓN PROXY DE IMÁGENES)
             const coverRes = await drive.files.list({
                 q: `'${folder.id}' in parents and mimeType contains 'image/' and trashed = false`,
-                fields: 'files(thumbnailLink)',
+                fields: 'files(id, thumbnailLink)', // Pedimos el ID también
                 pageSize: 1
             });
 
             let albumCover = null;
             if (coverRes.data.files.length > 0) {
-                albumCover = coverRes.data.files[0].thumbnailLink.replace('=s220', '=s600');
+                // CAMBIO CLAVE: Usamos nuestro propio servidor para la imagen
+                // Así nunca caduca el link
+                albumCover = `/api/image/${coverRes.data.files[0].id}`;
             } else {
                 albumCover = await findCoverOnItunes(folder.name);
             }
+            
+            // Si no hay nada, imagen por defecto
             if (!albumCover) albumCover = "https://placehold.co/600?text=" + encodeURIComponent(folder.name);
 
             const tracks = mediaRes.data.files.map(file => ({
@@ -102,16 +106,15 @@ async function scanDrive() {
 
 // --- ENDPOINTS ---
 
-// 1. Obtener Biblioteca (Rápido: lee del archivo)
+// 1. Obtener Biblioteca
 app.get('/api/albums', async (req, res) => {
     try {
-        // Si existe el archivo de caché, lo usamos
         if (fs.existsSync(CACHE_FILE)) {
             console.log("⚡ Cargando desde caché...");
             const data = fs.readFileSync(CACHE_FILE);
             res.json(JSON.parse(data));
         } else {
-            // Si no existe, escaneamos por primera vez
+            console.log("⚠️ No hay caché, escaneando Drive...");
             const data = await scanDrive();
             res.json(data);
         }
@@ -121,17 +124,18 @@ app.get('/api/albums', async (req, res) => {
     }
 });
 
-// 2. Forzar Actualización (Botón de Refresh)
+// 2. Forzar Actualización
 app.get('/api/refresh', async (req, res) => {
     try {
-        const data = await scanDrive(); // Fuerza el escaneo
+        console.log("🔄 Usuario solicitó actualización manual...");
+        const data = await scanDrive();
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 3. Streaming (Igual que antes)
+// 3. Streaming de Audio/Video
 app.get('/api/stream/:id', async (req, res) => {
     try {
         const fileId = req.params.id;
@@ -169,6 +173,39 @@ app.get('/api/stream/:id', async (req, res) => {
         }
     } catch (error) { if (error.code !== 'ECONNRESET') console.error("Stream error", error.message); res.end(); }
 });
+
+// 4. NUEVO: Proxy de Imágenes (Para que no fallen nunca)
+app.get('/api/image/:id', async (req, res) => {
+    try {
+        const fileId = req.params.id;
+        
+        // 1. Averiguar qué tipo de imagen es (jpg, png)
+        const metadata = await drive.files.get({ fileId: fileId, fields: 'mimeType' });
+        const contentType = metadata.data.mimeType;
+
+        // 2. Descargar y enviar al navegador
+        const driveStream = await drive.files.get(
+            { fileId: fileId, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        res.setHeader('Content-Type', contentType);
+        // Cachear la imagen en el navegador por 1 hora para que sea rápido
+        res.setHeader('Cache-Control', 'public, max-age=3600'); 
+        driveStream.data.pipe(res);
+
+    } catch (error) {
+        console.error("Error cargando imagen:", error.message);
+        res.status(404).send("Imagen no encontrada");
+    }
+});
+
+// --- AUTO-PING (Para mantener despierto) ---
+const MY_RENDER_URL = "https://koteify.onrender.com"; // Cambia esto si tu URL es diferente
+setInterval(() => {
+    // Solo un ping ligero para que no se duerma
+    axios.get(MY_RENDER_URL).catch(() => {});
+}, 14 * 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor listo en puerto ${PORT}`));
