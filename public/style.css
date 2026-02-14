@@ -104,7 +104,25 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 /* VISTA DETALLE */
 .playlist-view { display: none; padding-bottom: 40px; }
 .hero { display: flex; align-items: flex-end; gap: 32px; margin-bottom: 32px; position: relative; }
-.hero-img-box { width: 232px; height: 232px; box-shadow: 0 4px 60px rgba(0,0,0,0.5); border-radius: var(--radius); overflow: hidden; flex-shrink: 0; background: #000; position: relative; transition: all 0.5s; }
+
+/* CAJA DE IMAGEN NORMAL */
+.hero-img-box { 
+    width: 232px; height: 232px; 
+    box-shadow: 0 4px 60px rgba(0,0,0,0.5); border-radius: var(--radius); 
+    overflow: hidden; flex-shrink: 0; background: #000; 
+    position: relative; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); 
+}
+
+/* --- ESTADO VIDEO (RECUPERADO) --- */
+/* Esta clase se añade con JS y fuerza la expansión */
+.hero-img-box.video-mode { 
+    width: 100% !important; /* Forzar ancho */
+    max-width: 800px; 
+    height: auto !important; 
+    aspect-ratio: 16/9; 
+    border-radius: var(--radius);
+}
+
 .hero-img-box img { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 2; }
 .hero-img-box video { width: 100%; height: 100%; object-fit: contain; display: none; z-index: 3; }
 
@@ -166,41 +184,53 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 
 /* --- RESPONSIVE / MÓVIL PORTRAIT (Vertical) --- */
 @media (max-width: 768px) and (orientation: portrait) {
-    .app-container { grid-template-areas: "main" "player"; grid-template-columns: 1fr; grid-template-rows: 1fr 140px; }
+    .app-container { grid-template-rows: 1fr 140px; }
     .sidebar { display: none; }
-    .main-content { padding: 16px; padding-bottom: 160px; }
+    .main-content { padding: 16px; padding-bottom: 170px; }
+    
     .top-bar { flex-direction: row; gap: 10px; }
     .mobile-logo { display: block; }
     .search-container { flex: 1; font-size: 14px; width: auto; }
     
     .albums-container { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px; }
     .album-card { padding: 12px; }
-    
     .hero { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+    
+    /* IMAGEN NORMAL */
     .hero-img-box { width: 180px; height: 180px; }
+    
+    /* VIDEO EXPANDIDO EN MOVIL */
+    .hero-img-box.video-mode { 
+        width: 100% !important; /* Ocupar todo el ancho */
+        height: auto !important; 
+        aspect-ratio: 16/9; 
+    }
 
     /* Player Vertical 3 Pisos */
     .player-bar { 
         position: fixed; bottom: 55px; left: 0; right: 0; 
-        height: 110px; background: var(--bg-card); border-top: 1px solid var(--border); 
-        padding: 0; border-radius: 12px 12px 0 0; 
+        height: 140px; background: var(--bg-card); border-top: 1px solid var(--border); 
+        padding: 0 15px; border-radius: 12px 12px 0 0; 
     }
+    
     .player-left { 
-        position: absolute; top: 12px; left: 15px; width: calc(100% - 100px); 
+        position: absolute; top: 15px; left: 15px; width: calc(100% - 90px); 
         display: flex; align-items: center; gap: 10px;
     }
-    .player-right { position: absolute; top: 12px; right: 10px; width: auto; gap: 8px; display: flex; }
+    .player-right { position: absolute; top: 15px; right: 15px; width: auto; gap: 8px; display: flex; }
     .player-right .vol-range, .player-right .fa-volume-high { display: none; }
     
-    .player-center { position: absolute; bottom: 15px; left: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
-    .player-controls { margin: 0; gap: 15px; width: 100%; justify-content: center; padding-bottom: 10px; }
+    .player-center { position: absolute; bottom: 12px; left: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+    .player-controls { margin: 0; width: 100%; justify-content: center; gap: 20px; padding-bottom: 12px; }
+    .ctrl-btn { font-size: 28px; }
+    .play-btn { font-size: 56px; }
     
-    .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); padding: 0; }
+    .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: rgba(255,255,255,0.1); padding: 0; border-radius: 0; }
     .progress-bar-container span { display: none; }
     .progress-range { border-radius: 0; background-image: linear-gradient(90deg, var(--accent), var(--accent)); }
 
     .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: var(--bg-sidebar); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 200; }
-    .mob-btn { background: none; border: none; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; font-size: 9px; gap: 4px; flex: 1; height: 100%; justify-content: center; }
+    .mob-btn { background: none; border: none; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; font-size: 10px; gap: 4px; flex: 1; height: 100%; justify-content: center; }
     .mob-btn.active { color: var(--text-primary); }
     [data-theme="kawaii"] .mob-btn.active { color: var(--accent); }
 }
@@ -210,73 +240,60 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .app-container { 
         grid-template-areas: "main" "player"; 
         grid-template-columns: 1fr; 
-        grid-template-rows: 1fr 65px; /* Player muy compacto */
+        grid-template-rows: 1fr 65px; 
     }
     .sidebar { display: none; }
-    
-    /* Espacio a la izquierda para el menú lateral */
     .main-content { padding: 12px; padding-left: 72px; padding-bottom: 80px; }
-    
     .top-bar { margin-bottom: 12px; }
     .mobile-logo { display: block; } .mobile-logo img { height: 40px; width: auto; }
-    
     .search-container { flex: 1; padding: 6px 12px; font-size: 13px; }
     .greeting-msg { font-size: 18px; margin-bottom: 10px; }
 
-    /* Más columnas en horizontal */
     .albums-container { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important; gap: 10px; }
     .album-card { padding: 10px; } .album-card img { margin-bottom: 8px; }
-
-    /* Hero lado a lado */
     .hero { flex-direction: row; align-items: flex-end; gap: 20px; margin-bottom: 20px; }
     .hero-img-box { width: 140px; height: 140px; }
+    
+    /* VIDEO TAMBIEN EXPANDIDO EN HORIZONTAL */
+    .hero-img-box.video-mode { width: 300px !important; height: auto !important; aspect-ratio: 16/9; }
+
     .hero-info h1 { font-size: 24px; margin: 5px 0; }
 
-    /* Player Horizontal Compacto */
+    /* Player Horizontal */
     .player-bar { 
         position: fixed; bottom: 0; left: 0; right: 0; height: 65px; 
         background: var(--bg-card); border-top: 1px solid var(--border); 
         padding: 0 10px; display: flex; align-items: center; justify-content: space-between;
         z-index: 300; 
     }
-    
-    /* 1. Info izquierda compacta */
     .player-left { width: 25%; gap: 8px; }
     .player-left img { width: 40px; height: 40px; }
     .player-title { font-size: 13px; } .player-artist { font-size: 10px; }
     .player-left .ctrl-btn { display: none; } 
 
-    /* 2. Controles centro lineales */
     .player-center { width: 50%; gap: 2px; }
     .player-controls { margin: 0; gap: 15px; margin-bottom: 4px; }
-    /* ICONOS MÁS GRANDES EN HORIZONTAL */
     .ctrl-btn { font-size: 22px; } 
     .play-btn { font-size: 40px; }
     
-    /* Barra progreso pequeña */
     .progress-bar-container { width: 80%; height: 3px; gap: 5px; font-size: 10px; }
     .progress-range { height: 3px; }
 
-    /* 3. Derecha */
     .player-right { width: 25%; gap: 8px; }
     .vol-range { display: none; } .fa-volume-high { display: none; }
 
-    /* === NAV LATERAL PARA LANDSCAPE (MENU VISIBLE) === */
+    /* MENU LATERAL VISIBLE EN HORIZONTAL */
     .mobile-nav { 
-        display: flex; /* ¡Ahora sí visible! */
+        display: flex; 
         flex-direction: column; 
         position: fixed; top: 0; bottom: 65px; left: 0; 
-        width: 60px; 
-        height: auto; 
-        right: auto; 
+        width: 60px; height: auto; right: auto; 
         background: var(--bg-sidebar); border-top: none; border-right: 1px solid var(--border);
         justify-content: center; align-items: center; gap: 20px;
         z-index: 150;
     }
-    
-    /* Estilo de botones del dock lateral */
     .mob-btn { width: 100%; height: auto; padding: 10px 0; }
-    .mob-btn span { display: none; } /* Solo iconos */
+    .mob-btn span { display: none; }
     .mob-btn i { font-size: 24px; }
     .mob-btn.active { color: var(--text-primary); border-right: 2px solid var(--accent); }
 }
