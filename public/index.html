@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -146,6 +147,32 @@
         const heroImg = document.getElementById('hero-img');
         const heroBox = document.getElementById('hero-img-box');
         
+        // --- GESTOS (SWIPE) PARA MÓVIL ---
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        heroBox.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        heroBox.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const threshold = 50; // Distancia mínima para considerar swipe
+            if (touchEndX < touchStartX - threshold) {
+                // Deslizó a la izquierda -> Siguiente
+                nextTrack();
+            }
+            if (touchEndX > touchStartX + threshold) {
+                // Deslizó a la derecha -> Anterior
+                prevTrack();
+            }
+        }
+        // ------------------------------------
+
         function toggleTheme() {
             const body = document.body;
             if(body.getAttribute('data-theme') === 'kawaii') {
