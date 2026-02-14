@@ -15,7 +15,6 @@
     <title>Para la Kote ❤️</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
@@ -52,6 +51,11 @@
                     <img src="/logokawai.png" alt="Koteify Kawaii" class="img-kawaii">
                 </div>
 
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="¿Qué quieres escuchar hoy, mi amor?">
+                </div>
+
                 <div style="flex:1;"></div>
                 
                 <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar Tema">
@@ -60,6 +64,8 @@
             </div>
 
             <div id="grid-view">
+                <h2 class="greeting-msg" id="greeting-msg">Hola ❤️</h2>
+                
                 <h2 class="grid-header" id="page-title">Tu Música</h2>
                 <div class="albums-container" id="albums-container">
                     <p style="color:var(--text-secondary)">Cargando tu colección...</p>
@@ -96,15 +102,28 @@
                     <div class="player-title" id="player-title">Koteify</div>
                     <div class="player-artist" id="player-artist">Selecciona algo</div>
                 </div>
+                <button class="ctrl-btn dedication-btn" onclick="showDedication()" title="Dedicatoria">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                </button>
             </div>
             
             <div class="player-center">
                 <div class="player-controls">
+                    <button class="ctrl-btn" id="btn-shuffle" onclick="toggleShuffle()" title="Aleatorio">
+                        <i class="fa-solid fa-shuffle"></i>
+                    </button>
+
                     <button class="ctrl-btn" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+                    
                     <button class="play-btn" onclick="togglePlay()">
                         <i class="fa-solid fa-play" id="play-icon"></i>
                     </button>
+                    
                     <button class="ctrl-btn" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
+
+                    <button class="ctrl-btn" id="btn-repeat" onclick="toggleRepeat()" title="Repetir">
+                        <i class="fa-solid fa-repeat"></i>
+                    </button>
                 </div>
                 <div class="progress-bar-container">
                     <span id="curr-time">0:00</span>
