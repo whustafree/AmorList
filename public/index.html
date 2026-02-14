@@ -15,6 +15,7 @@
     <title>Para la Kote ❤️</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
@@ -84,7 +85,8 @@
 
                 <h2 class="grid-header" id="page-title">Tu Colección</h2>
                 <div class="albums-container" id="albums-container">
-                    </div>
+                    <p style="color:var(--text-secondary)">Cargando...</p>
+                </div>
             </div>
 
             <div id="playlist-view" class="playlist-view">
@@ -94,7 +96,8 @@
 
                 <div class="hero">
                     <div class="hero-img-box" id="hero-img-box">
-                        <img src="" id="hero-img" crossorigin="anonymous"> <video id="hero-video" controls playsinline></video>
+                        <img src="" id="hero-img" crossorigin="anonymous">
+                        <video id="hero-video" controls playsinline></video>
                         <canvas id="visualizer"></canvas>
                     </div>
                     <div class="hero-info">
@@ -152,7 +155,8 @@
                     <i class="fa-solid fa-moon"></i>
                 </button>
                 
-                <div style="width:10px;"></div> <i class="fa-solid fa-volume-high" style="font-size:12px; opacity:0.7;"></i>
+                <div style="width:10px;"></div> 
+                <i class="fa-solid fa-volume-high" style="font-size:12px; opacity:0.7;"></i>
                 <input type="range" class="vol-range" id="vol-slider" min="0" max="1" step="0.01" value="1">
             </div>
         </div>
