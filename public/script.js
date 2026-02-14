@@ -44,15 +44,33 @@ window.onload = async () => {
     loadLastPosition(); 
 };
 
-// --- FUNCIÓN RECUPERADA: REFRESCAR BIBLIOTECA ---
+// --- FUNCIÓN CORREGIDA: REFRESCAR DESDE DRIVE ---
 async function refreshLibrary() {
     const icon = document.getElementById('refresh-icon');
     if (icon) icon.classList.add('fa-spin'); // Efecto visual de giro
     
-    await loadLibrary();
+    try {
+        console.log("Forzando actualización desde Drive...");
+        // CAMBIO IMPORTANTE: Llamamos a /api/refresh en lugar de loadLibrary
+        // Esto obliga al servidor a escanear Drive de nuevo
+        const res = await fetch('/api/refresh'); 
+        
+        if (!res.ok) throw new Error('Error en la actualización');
+        
+        // Actualizamos los datos locales con lo nuevo que llegó
+        fullLibraryData = await res.json();
+        
+        // Volvemos a pintar la grilla con los datos nuevos
+        renderGrid();
+        
+        console.log("¡Biblioteca actualizada con éxito!");
+    } catch (e) {
+        console.error("Error al actualizar:", e);
+        alert("No se pudo actualizar desde Drive. Revisa la conexión del servidor.");
+    }
     
-    // Quitar animación después de un momento
-    if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+    // Quitar animación
+    if (icon) icon.classList.remove('fa-spin');
 }
 
 // --- VISUALIZADOR DE AUDIO (DESACTIVADO PARA RENDIMIENTO TV) ---
@@ -122,9 +140,10 @@ function setupSearch() {
     });
 }
 
-// --- CARGA ---
+// --- CARGA INICIAL ---
 async function loadLibrary() {
     try {
+        // Carga normal (usa caché si existe para ser rápido al inicio)
         const res = await fetch('/api/albums');
         if (!res.ok) throw new Error('Error');
         fullLibraryData = await res.json();
