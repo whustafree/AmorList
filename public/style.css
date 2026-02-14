@@ -1,3 +1,5 @@
+/* public/style.css */
+
 /* --- VARIABLES --- */
 :root {
     --bg-main: #121212;
@@ -211,8 +213,10 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
         grid-template-rows: 1fr 65px; /* Player muy compacto */
     }
     .sidebar { display: none; }
-    /* Padding-left extra para dejar espacio al menú lateral */
+    
+    /* Espacio a la izquierda para el menú lateral */
     .main-content { padding: 12px; padding-left: 72px; padding-bottom: 80px; }
+    
     .top-bar { margin-bottom: 12px; }
     .mobile-logo { display: block; } .mobile-logo img { height: 40px; width: auto; }
     
@@ -245,7 +249,9 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     /* 2. Controles centro lineales */
     .player-center { width: 50%; gap: 2px; }
     .player-controls { margin: 0; gap: 15px; margin-bottom: 4px; }
-    .ctrl-btn { font-size: 18px; } .play-btn { font-size: 32px; }
+    /* ICONOS MÁS GRANDES EN HORIZONTAL */
+    .ctrl-btn { font-size: 22px; } 
+    .play-btn { font-size: 40px; }
     
     /* Barra progreso pequeña */
     .progress-bar-container { width: 80%; height: 3px; gap: 5px; font-size: 10px; }
@@ -255,22 +261,22 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
     .player-right { width: 25%; gap: 8px; }
     .vol-range { display: none; } .fa-volume-high { display: none; }
 
-    /* === NAV LATERAL PARA LANDSCAPE === */
+    /* === NAV LATERAL PARA LANDSCAPE (MENU VISIBLE) === */
     .mobile-nav { 
-        display: flex; /* Mostrarla */
-        flex-direction: column; /* Vertical */
-        position: fixed; top: 0; bottom: 65px; left: 0; /* Anclada a la izquierda */
-        width: 60px; /* Ancho fino */
+        display: flex; /* ¡Ahora sí visible! */
+        flex-direction: column; 
+        position: fixed; top: 0; bottom: 65px; left: 0; 
+        width: 60px; 
         height: auto; 
-        right: auto; /* Importante: borrar el 'right: 0' de portrait */
+        right: auto; 
         background: var(--bg-sidebar); border-top: none; border-right: 1px solid var(--border);
         justify-content: center; align-items: center; gap: 20px;
         z-index: 150;
     }
     
-    /* Iconos grandes sin texto en landscape */
+    /* Estilo de botones del dock lateral */
     .mob-btn { width: 100%; height: auto; padding: 10px 0; }
-    .mob-btn span { display: none; }
+    .mob-btn span { display: none; } /* Solo iconos */
     .mob-btn i { font-size: 24px; }
     .mob-btn.active { color: var(--text-primary); border-right: 2px solid var(--accent); }
 }
