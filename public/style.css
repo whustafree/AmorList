@@ -1,5 +1,3 @@
-/* public/style.css */
-
 /* --- VARIABLES DE TEMA --- */
 :root {
     /* TEMA DARK (Default) */
@@ -33,6 +31,14 @@
 /* --- RESET --- */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-main); color: var(--text-primary); font-family: 'Montserrat', sans-serif; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+/* --- LOGICA PARA CAMBIAR DE LOGO --- */
+.img-kawaii { display: none !important; } /* Oculto por defecto */
+.img-dark { display: block; }
+
+/* Cuando es tema Kawaii, invertimos */
+[data-theme="kawaii"] .img-dark { display: none !important; }
+[data-theme="kawaii"] .img-kawaii { display: block !important; }
 
 /* --- LAYOUT GRID --- */
 .app-container {
@@ -87,8 +93,8 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 /* LOGO MÓVIL (Por defecto oculto en PC) */
 .mobile-logo { display: none; }
 .mobile-logo img { 
-    /* AUMENTADO EL TAMAÑO PARA MÓVIL */
-    height: 80px; 
+    /* AUMENTADO GIGANTE PARA MÓVIL */
+    height: 100px;  /* Antes era 60px, ahora 100px */
     width: auto; 
     max-width: 280px;
     object-fit: contain;
@@ -189,14 +195,6 @@ body { background-color: var(--bg-main); color: var(--text-primary); font-family
 }
 .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--text-primary); border-radius: 50%; cursor: pointer; }
 [data-theme="kawaii"] .vol-range::-webkit-slider-thumb { background: var(--accent); }
-
-/* --- REGLAS ESPECÍFICAS PARA EL TEMA KAWAII (LOGO) --- */
-[data-theme="kawaii"] .logo img,
-[data-theme="kawaii"] .mobile-logo img {
-    border: 3px solid #000000; /* Borde negro sólido */
-    border-radius: 12px;       /* Bordes redondeados */
-    background: rgba(255, 255, 255, 0.6); /* Fondo blanco sutil para contraste */
-}
 
 .mobile-nav { display: none; }
 
