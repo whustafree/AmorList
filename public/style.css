@@ -389,4 +389,49 @@ input[type=range]:focus-visible { outline: 2px solid var(--accent); }
     height: 60px !important;
     line-height: 60px !important;
     font-size: 30px !important;
+}/* =========================================
+   FIX VISUAL DEFINITIVO PARA VIDEO.JS
+   ========================================= */
+
+/* 1. La caja del video debe tener prioridad absoluta (Z-INDEX ALTO) */
+.hero-img-box .video-js {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    z-index: 999 !important; /* ¡Encima de todo! */
+    background-color: #000;  /* Fondo negro solido */
+    border-radius: var(--radius);
+    display: block; /* Aseguramos que se muestre */
+}
+
+/* 2. El video real dentro del reproductor debe llenar el espacio */
+.hero-img-box .vjs-tech {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain; 
+}
+
+/* 3. ¡IMPORTANTE! Si está en modo video, la imagen DEBE DESAPARECER */
+.hero-img-box.video-mode img {
+    display: none !important; /* Quitarla del mapa */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: -100 !important; /* Mandarla al fondo del abismo */
+}
+
+/* 4. Estilo del botón Play gigante */
+.vjs-big-play-button {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%);
+    border-radius: 50% !important;
+    width: 2em !important;
+    height: 2em !important;
+    line-height: 2em !important;
+    font-size: 3em !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border: 2px solid var(--accent) !important;
+    color: var(--accent) !important;
 }

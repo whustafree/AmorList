@@ -135,15 +135,23 @@ app.get('/api/refresh', async (req, res) => {
     }
 });
 
-// 3. Streaming de Audio/Video
+// 3. Streaming de Audio/Video (CON TRUCO DE COMPATIBILIDAD)
 app.get('/api/stream/:id', async (req, res) => {
     try {
         const fileId = req.params.id;
         const range = req.headers.range;
 
+        // 1. Obtenemos datos reales del archivo
         const metadata = await drive.files.get({ fileId: fileId, fields: 'size, mimeType' });
         const fileSize = parseInt(metadata.data.size);
-        const contentType = metadata.data.mimeType;
+        
+        // --- EL TRUCO MAESTRO ---
+        // Si Drive nos dice que es MKV o AVI, le mentimos al navegador
+        // diciéndole que es WebM o MP4 para que se atreva a reproducirlo.
+        let contentType = metadata.data.mimeType;
+        if (contentType === 'video/x-matroska') contentType = 'video/webm';
+        if (contentType === 'video/avi') contentType = 'video/mp4';
+        // ------------------------
 
         if (range) {
             const parts = range.replace(/bytes=/, "").split("-");
@@ -160,7 +168,7 @@ app.get('/api/stream/:id', async (req, res) => {
                 'Content-Range': `bytes ${start}-${end}/${fileSize}`,
                 'Accept-Ranges': 'bytes',
                 'Content-Length': chunksize,
-                'Content-Type': contentType,
+                'Content-Type': contentType, // Usamos el tipo "mentiroso"
             });
             driveStream.data.pipe(res);
         } else {
@@ -171,7 +179,10 @@ app.get('/api/stream/:id', async (req, res) => {
             res.writeHead(200, { 'Content-Length': fileSize, 'Content-Type': contentType });
             driveStream.data.pipe(res);
         }
-    } catch (error) { if (error.code !== 'ECONNRESET') console.error("Stream error", error.message); res.end(); }
+    } catch (error) { 
+        if (error.code !== 'ECONNRESET') console.error("Stream error", error.message); 
+        res.end(); 
+    }
 });
 
 // 4. NUEVO: Proxy de Imágenes (Para que no fallen nunca)
