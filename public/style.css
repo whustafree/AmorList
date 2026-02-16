@@ -1,5 +1,5 @@
 /**
- * AmorList v2.0 - Estilos Mejorados (Corregido Final)
+ * AmorList v2.0 - Estilos Mejorados (Corrección Definitiva)
  * Tema oscuro + Kawaii con animaciones premium
  */
 
@@ -18,7 +18,7 @@
     --active-ctrl: #1ed760;
     --radius: 12px;
     --player-height: 90px;
-    --h-player-mob-port: 140px; /* Ajuste para evitar franjas */
+    --h-player-mob-port: 140px; 
     --h-player-mob-land: 65px;
     
     /* Colores para toast */
@@ -149,11 +149,12 @@ body {
 [data-theme="kawaii"] .img-dark { display: none !important; }
 [data-theme="kawaii"] .img-kawaii { display: block !important; }
 
-/* ==================== LAYOUT ==================== */
+/* ==================== LAYOUT (PC POR DEFECTO) ==================== */
 .app-container { 
     display: grid; 
     grid-template-areas: "sidebar main" "player player"; 
-    grid-template-columns:  1fr; 
+    /* ESTO ES PARA PC: 240px de barra lateral */
+    grid-template-columns: 240px 1fr; 
     grid-template-rows: 1fr var(--player-height); 
     height: 100vh; 
 }
@@ -1329,12 +1330,12 @@ button:focus-visible {
 
 /* ==================== RESPONSIVE - MÓVIL PORTRAIT ==================== */
 @media (max-width: 768px) and (orientation: portrait) {
-    /* CORRECCIÓN: Usamos 1fr solo. No reservamos espacio fijo para el player 
-       aquí porque el player es 'fixed' (flotante). El espacio lo damos con padding. */
+    /* CORRECCIÓN: Sobrescribimos el grid de PC aquí.
+       Usamos 1fr en columnas y filas para eliminar franjas. */
     .app-container { 
         grid-template-areas: "main" "player";
-        grid-template-columns: 1fr; /* FIX: Elimina franja izquierda */
-        grid-template-rows: 1fr;    /* FIX: Elimina franja inferior */
+        grid-template-columns: 1fr !important; /* MATA LA FRANJA IZQUIERDA */
+        grid-template-rows: 1fr !important;    /* MATA LA FRANJA INFERIOR */
     }
     
     .sidebar { display: none; }
@@ -1342,7 +1343,7 @@ button:focus-visible {
     /* Damos espacio suficiente abajo para que el último item no quede tapado por el player */
     .main-content { 
         padding: 16px; 
-        padding-bottom: 200px; /* Espacio para no tapar contenido */
+        padding-bottom: 220px; /* Colchón para scroll */
     } 
     
     /* Ocultar visualizador en móvil */
@@ -1376,19 +1377,20 @@ button:focus-visible {
         bottom: 55px; /* Altura del menú de navegación */
         left: 0; 
         right: 0; 
-        height: var(--h-player-mob-port); /* Usamos la variable ajustada */
+        height: var(--h-player-mob-port); /* 140px */
         background: var(--bg-card); 
         border-top: 1px solid var(--border); 
         padding: 0 15px; 
-        border-radius: 16px 16px 0 0; 
+        border-radius: 16px 16px 0 0; /* Bordes más suaves */
         display: block; 
         z-index: 100;
-        box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.3); /* Sombra */
     }
     
+    /* Ajuste de posiciones internas */
     .player-left { 
         position: absolute; 
-        top: 15px; 
+        top: 12px; 
         left: 15px; 
         width: calc(100% - 80px); 
         display: flex; 
@@ -1398,7 +1400,7 @@ button:focus-visible {
     
     .player-right { 
         position: absolute; 
-        top: 15px; 
+        top: 12px; 
         right: 15px; 
         width: auto; 
         gap: 10px; 
@@ -1436,6 +1438,7 @@ button:focus-visible {
     .progress-bar-container span { display: none; }
     .progress-range { border-radius: 0; }
 
+    /* Navegación Inferior */
     .mobile-nav { 
         position: fixed; 
         bottom: 0; 
@@ -1467,34 +1470,12 @@ button:focus-visible {
     .mob-btn.active { color: var(--text-primary); }
     [data-theme="kawaii"] .mob-btn.active { color: var(--accent); }
     
-    /* Queue panel móvil */
-    .queue-panel {
-        width: 100%;
-        bottom: 225px;
-    }
-    
-    /* Toast móvil */
-    #toast-container {
-        left: 16px;
-        right: 16px;
-        bottom: 230px;
-    }
-    
-    .toast {
-        min-width: auto;
-    }
-    
-    /* Modal móvil */
-    .modal-content {
-        width: 95%;
-        padding: 24px;
-        margin: 16px;
-    }
-    
-    .hero-actions {
-        justify-content: center;
-    }
-    
+    /* Ajustes varios para móvil */
+    .queue-panel { width: 100%; bottom: 200px; }
+    #toast-container { left: 16px; right: 16px; bottom: 200px; }
+    .toast { min-width: auto; }
+    .modal-content { width: 95%; padding: 24px; margin: 16px; }
+    .hero-actions { justify-content: center; }
     .greeting-msg { font-size: 24px; }
     .hero-info h1 { font-size: 28px; }
 }
