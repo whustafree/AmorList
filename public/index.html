@@ -16,9 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <link href="https://unpkg.com/@videojs/themes@1/dist/forest/index.css" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
@@ -62,7 +59,7 @@
 
                 <div class="search-container">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="search-input" placeholder="Buscar canción o artista...">
+                    <input type="text" id="search-input" placeholder="Buscar...">
                 </div>
 
                 <div style="flex:1;"></div>
@@ -100,10 +97,8 @@
                 <div class="hero">
                     <div class="hero-img-box" id="hero-img-box">
                         <img src="" id="hero-img" crossorigin="anonymous">
-                        
-                        <video id="hero-video" class="video-js vjs-theme-forest vjs-big-play-centered" controls preload="auto" style="display:none;"></video>
-                        
-                        </div>
+                        <video id="hero-video" controls playsinline preload="metadata" style="display:none;"></video>
+                    </div>
                     <div class="hero-info">
                         <span class="hero-type">ÁLBUM</span>
                         <h1 id="hero-title">Título</h1>
@@ -120,14 +115,14 @@
             </div>
         </main>
 
-        <div class="player-bar" id="audio-player-bar">
+        <div class="player-bar" id="player-bar">
             <div class="player-left">
                 <img src="https://placehold.co/56" id="player-img">
                 <div class="player-info">
                     <div class="player-title" id="player-title">Koteify</div>
                     <div class="player-artist" id="player-artist">Selecciona algo</div>
                 </div>
-                <button class="ctrl-btn" onclick="toggleLyrics()" title="Dedicatoria/Letra">
+                <button class="ctrl-btn" onclick="toggleLyrics()" title="Letra">
                     <i class="fa-solid fa-microphone-lines"></i>
                 </button>
             </div>
@@ -152,10 +147,10 @@
             </div>
 
             <div class="player-right">
-                <button class="ctrl-btn" id="btn-cassette" onclick="toggleCassetteMode()" title="Modo Cassette">
+                <button class="ctrl-btn" id="btn-cassette" onclick="toggleCassetteMode()" title="Cassette">
                     <i class="fa-solid fa-compact-disc"></i>
                 </button>
-                <button class="ctrl-btn" id="btn-sleep" onclick="toggleSleepTimer()" title="Temporizador">
+                <button class="ctrl-btn" id="btn-sleep" onclick="toggleSleepTimer()" title="Sleep">
                     <i class="fa-solid fa-moon"></i>
                 </button>
                 
@@ -181,7 +176,6 @@
         </button>
     </nav>
 
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

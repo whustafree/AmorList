@@ -19,19 +19,10 @@ let isCassetteMode = false;
 
 // Elementos DOM
 const audioEl = new Audio();
-// IMPORTANTE: Permitir que el audio se lea para el visualizador
 audioEl.crossOrigin = "anonymous"; 
 
+const videoEl = document.getElementById('hero-video');
 const heroImgBox = document.getElementById('hero-img-box');
-
-// VARIABLE PARA EL PLAYER VIDEO.JS (NUEVO)
-let videoPlayer = null;
-
-// Visualizador (Desactivado por defecto para TV)
-let audioContext;
-let analyser;
-let source;
-let isVisualizerSetup = false;
 
 // --- INICIALIZACIÓN ---
 window.onload = async () => {
@@ -39,18 +30,9 @@ window.onload = async () => {
     loadTheme();
     setupSearch();
     setupKeyboard();
-    setupRemoteControl(); // Control remoto TV
+    setupRemoteControl();
     setupMediaSession();
     
-    // INICIALIZAR VIDEO.JS AQUÍ (NUEVO)
-    // Buscamos el elemento de video y lo convertimos en un player pro
-    videoPlayer = videojs('hero-video', {
-        controls: true,
-        autoplay: false,
-        preload: 'auto',
-        fluid: true // Se adapta al tamaño del contenedor
-    });
-
     await loadLibrary();
     loadLastPosition(); 
 };
@@ -58,58 +40,38 @@ window.onload = async () => {
 // --- FUNCIÓN CORREGIDA: REFRESCAR DESDE DRIVE ---
 async function refreshLibrary() {
     const icon = document.getElementById('refresh-icon');
-    if (icon) icon.classList.add('fa-spin'); // Efecto visual de giro
+    if (icon) icon.classList.add('fa-spin');
     
     try {
         console.log("Forzando actualización desde Drive...");
-        // CAMBIO IMPORTANTE: Llamamos a /api/refresh en lugar de loadLibrary
-        // Esto obliga al servidor a escanear Drive de nuevo
+        // ESTA ES LA CLAVE: Llamar a /api/refresh
         const res = await fetch('/api/refresh'); 
         
         if (!res.ok) throw new Error('Error en la actualización');
         
-        // Actualizamos los datos locales con lo nuevo que llegó
         fullLibraryData = await res.json();
-        
-        // Volvemos a pintar la grilla con los datos nuevos
         renderGrid();
-        
-        console.log("¡Biblioteca actualizada con éxito!");
+        console.log("¡Actualizado!");
     } catch (e) {
         console.error("Error al actualizar:", e);
-        alert("No se pudo actualizar desde Drive. Revisa la conexión del servidor.");
+        alert("Error al conectar con Drive.");
     }
     
-    // Quitar animación
     if (icon) icon.classList.remove('fa-spin');
 }
 
-// --- VISUALIZADOR DE AUDIO (DESACTIVADO PARA RENDIMIENTO TV) ---
-function setupVisualizer() {
-    // Se deja desactivado para evitar que la TV se congele
-    console.log("Visualizador desactivado para optimizar rendimiento en TV");
-}
-
-function drawVisualizer() {
-    // Función vacía para evitar errores
-}
-
-// --- COLOR CAMALEÓN (Simulado) ---
+// --- COLOR AMBIENTAL ---
 function updateAmbientColor(str) {
-    if(isVideoPlaying) return; // No calcular si es video
-    
+    if(isVideoPlaying) return;
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
     const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
     const hex = "#" + "00000".substring(0, 6 - c.length) + c;
-    
     const bg = document.getElementById('dynamic-bg');
     if(bg) bg.style.background = `radial-gradient(circle at 50% -20%, ${hex}66, var(--bg-main))`;
 }
 
-// --- BIENVENIDA ---
+// --- INTERFAZ ---
 function setGreeting() {
     const hour = new Date().getHours();
     const msgEl = document.getElementById('greeting-msg');
@@ -120,7 +82,6 @@ function setGreeting() {
     if(msgEl) msgEl.innerText = greeting;
 }
 
-// --- TEMA ---
 function toggleTheme() {
     const body = document.body;
     if(body.getAttribute('data-theme') === 'kawaii') {
@@ -137,7 +98,6 @@ function loadTheme() {
     }
 }
 
-// --- BÚSQUEDA ---
 function setupSearch() {
     const input = document.getElementById('search-input');
     if (!input) return;
@@ -151,21 +111,19 @@ function setupSearch() {
     });
 }
 
-// --- CARGA INICIAL ---
+// --- CARGA INICIAL (USA CACHÉ) ---
 async function loadLibrary() {
     try {
-        // Carga normal (usa caché si existe para ser rápido al inicio)
         const res = await fetch('/api/albums');
         if (!res.ok) throw new Error('Error');
         fullLibraryData = await res.json();
         renderGrid();
     } catch (e) { 
         const container = document.getElementById('albums-container');
-        if(container) container.innerHTML = '<p style="padding:20px;">Cargando... (Si tarda, actualiza la página)</p>';
+        if(container) container.innerHTML = '<p style="padding:20px;">Cargando...</p>';
     }
 }
 
-// --- NAVEGACIÓN ---
 function switchMode(mode) {
     currentMode = mode;
     const buttons = document.querySelectorAll('.nav-btn, .mob-btn');
@@ -202,62 +160,42 @@ function showGrid() {
     
     if(heroImgBox) heroImgBox.classList.remove('video-mode');
     
-    // DETENER VIDEO.JS AL VOLVER AL GRID
-    if(videoPlayer) {
-        videoPlayer.pause();
-        // Ocultamos el contenedor de Video.js
-        const videoContainer = document.querySelector('.video-js');
-        if(videoContainer) videoContainer.style.display = 'none';
+    // Resetear video
+    if(videoEl) { 
+        videoEl.style.display = 'none'; 
+        videoEl.pause(); 
     }
     
     if(heroImg) heroImg.style.display = 'block';
-    
-    // Mostramos la barra de audio de nuevo
-    const playerBar = document.querySelector('.player-bar');
-    if(playerBar) playerBar.style.display = 'flex';
-    
-    // Enfocar primer elemento para TV
-    setTimeout(() => {
-        const firstCard = document.querySelector('.album-card');
-        if(firstCard) firstCard.focus();
-    }, 100);
+    // Mostrar barra audio siempre en grid
+    const pb = document.getElementById('player-bar');
+    if(pb) pb.style.display = 'flex';
 }
 
-// --- RENDER ---
 function renderGrid() {
     const container = document.getElementById('albums-container');
     if (!container) return;
     container.innerHTML = '';
     
+    let albumsToRender = [];
     if (currentMode === 'fav') {
         let allTracks = [];
         if(fullLibraryData) fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
         const myFavs = allTracks.filter(t => favoriteIds.includes(t.id));
-        
-        if (myFavs.length === 0) {
-            showGrid();
-            container.innerHTML = `<p style="opacity:0.6; padding:20px;">No tienes favoritos aún.</p>`;
-            return;
-        }
+        if (myFavs.length === 0) { showGrid(); container.innerHTML = `<p style="opacity:0.6; padding:20px;">Sin favoritos.</p>`; return; }
         document.getElementById('grid-view').style.display = 'none';
         document.getElementById('playlist-view').style.display = 'block';
         openAlbum({ name: "Mis Favoritos", cover: "https://placehold.co/600?text=Favoritos", songs: myFavs }, true);
         return;
     } 
-
     if (currentMode === 'history') {
-        if (historyList.length === 0) {
-            showGrid();
-            container.innerHTML = `<p style="opacity:0.6; padding:20px;">Aún no has escuchado nada.</p>`;
-            return;
-        }
+        if (historyList.length === 0) { showGrid(); container.innerHTML = `<p style="opacity:0.6; padding:20px;">Historial vacío.</p>`; return; }
         document.getElementById('grid-view').style.display = 'none';
         document.getElementById('playlist-view').style.display = 'block';
         openAlbum({ name: "Historial", cover: "https://placehold.co/600?text=Historial", songs: [...historyList].reverse() }, true);
         return;
     }
     
-    let albumsToRender = [];
     if(fullLibraryData) {
         albumsToRender = fullLibraryData.map(alb => {
             const filteredSongs = alb.songs.filter(s => currentMode === 'video' ? s.isVideo : !s.isVideo);
@@ -266,21 +204,16 @@ function renderGrid() {
     }
 
     if(albumsToRender.length === 0) {
-        container.innerHTML = `<p style="opacity:0.6;">No hay contenido disponible.</p>`;
+        container.innerHTML = `<p style="opacity:0.6;">Sin contenido.</p>`;
         return;
     }
 
     albumsToRender.forEach(album => {
         const card = document.createElement('div');
         card.className = 'album-card';
-        // *** IMPORTANTE PARA TV: Hacer focusable ***
         card.setAttribute('tabindex', '0'); 
-        
         card.onclick = () => openAlbum(album);
-        // Soporte tecla Enter en TV
-        card.onkeydown = (e) => {
-            if(e.key === 'Enter') openAlbum(album);
-        };
+        card.onkeydown = (e) => { if(e.key === 'Enter') openAlbum(album); };
         
         const titleDiv = document.createElement('div');
         titleDiv.className = 'album-title';
@@ -318,16 +251,12 @@ function openAlbum(album, isDirect = false) {
         const isLiked = favoriteIds.includes(song.id);
         const tr = document.createElement('tr');
         tr.className = 'track-row';
-        // *** IMPORTANTE PARA TV ***
         tr.setAttribute('tabindex', '0');
-        
         tr.onclick = (e) => {
             if(e.target.closest('.btn-icon')) return;
             originalPlaylist = [...album.songs];
             playTrack(album.songs, idx);
         };
-        
-        // Enter en la canción
         tr.onkeydown = (e) => {
             if(e.key === 'Enter') {
                 if(e.target.closest('.btn-icon')) return;
@@ -335,7 +264,6 @@ function openAlbum(album, isDirect = false) {
                 playTrack(album.songs, idx);
             }
         };
-
         tr.innerHTML = `
             <td class="track-num">${idx + 1}</td>
             <td><div class="track-title">${song.title}</div></td>
@@ -347,15 +275,10 @@ function openAlbum(album, isDirect = false) {
         `;
         tbody.appendChild(tr);
     });
-    
-    // Poner foco en la primera canción
-    setTimeout(() => {
-        const firstRow = document.querySelector('.track-row');
-        if(firstRow) firstRow.focus();
-    }, 100);
+    setTimeout(() => { const r = document.querySelector('.track-row'); if(r) r.focus(); }, 100);
 }
 
-// --- FUNCIÓN PLAYTRACK MODIFICADA (SOPORTE HÍBRIDO) ---
+// --- CORE REPRODUCTOR ---
 function playTrack(playlist, index) {
     currentPlaylist = playlist;
     currentIndex = index;
@@ -369,53 +292,38 @@ function playTrack(playlist, index) {
     updateAmbientColor(track.title);
     addToHistory(track);
 
-    const heroImg = document.getElementById('hero-img');
-    const heroBox = document.getElementById('hero-img-box');
-
+    // MODO VIDEO
     if(track.isVideo) {
-        // --- MODO VIDEO ---
         isVideoPlaying = true;
         audioEl.pause();
         
-        // 1. Ocultar imagen DE INMEDIATO
-        if(heroImg) heroImg.style.display = 'none';
-        if(heroBox) heroBox.classList.add('video-mode');
+        // Ocultar imagen, mostrar video
+        document.getElementById('hero-img').style.display = 'none';
+        videoEl.style.display = 'block';
         
-        // 2. Ocultar barra de audio
-        const playerBar = document.querySelector('.player-bar');
-        if(playerBar) playerBar.style.display = 'none';
+        if(heroImgBox) heroImgBox.classList.add('video-mode');
         
-        // 3. Cargar Video.js
-        if(videoPlayer) {
-            // Mostrar el contenedor del player explícitamente
-            const playerEl = document.querySelector('.video-js');
-            if(playerEl) playerEl.style.display = 'block';
-
-            videoPlayer.src({ type: 'video/mp4', src: track.src });
-            videoPlayer.show(); // Forzar mostrar
-            videoPlayer.play();
-        }
+        videoEl.src = track.src;
+        videoEl.play();
+        
+        // Ocultar barra audio porque el video tiene sus controles
+        const pb = document.getElementById('player-bar');
+        if(pb) pb.style.display = 'none';
 
         if(window.innerWidth < 768) window.scrollTo({top:0, behavior:'smooth'});
-    } else {
-        // --- MODO AUDIO ---
+    } 
+    // MODO AUDIO
+    else {
         isVideoPlaying = false;
+        videoEl.pause();
+        videoEl.style.display = 'none';
         
-        // 1. Pausar y Ocultar Video
-        if(videoPlayer) {
-            videoPlayer.pause();
-            videoPlayer.hide();
-            const playerEl = document.querySelector('.video-js');
-            if(playerEl) playerEl.style.display = 'none';
-        }
-
-        // 2. Restaurar imagen
-        if(heroBox) heroBox.classList.remove('video-mode');
-        if(heroImg) heroImg.style.display = 'block';
+        if(heroImgBox) heroImgBox.classList.remove('video-mode');
+        document.getElementById('hero-img').style.display = 'block';
         
-        // 3. Restaurar barra de audio
-        const playerBar = document.querySelector('.player-bar');
-        if(playerBar) playerBar.style.display = 'flex';
+        // Mostrar barra audio
+        const pb = document.getElementById('player-bar');
+        if(pb) pb.style.display = 'flex';
         
         audioEl.src = track.src;
         audioEl.play().catch(e => console.log("Play error:", e));
@@ -425,23 +333,14 @@ function playTrack(playlist, index) {
     saveState();
 }
 
-// --- FUNCIÓN TOGGLE PLAY HÍBRIDA ---
 function togglePlay() {
-    if (isVideoPlaying) {
-        // Si estamos viendo video, controlar Video.js
-        if(videoPlayer) {
-            videoPlayer.paused() ? videoPlayer.play() : videoPlayer.pause();
-        }
+    const player = isVideoPlaying ? videoEl : audioEl;
+    if(player.paused) {
+        player.play();
+        document.getElementById('play-icon').className = "fa-solid fa-pause";
     } else {
-        // Si estamos oyendo música, controlar Audio nativo
-        if(audioEl.paused) {
-            audioEl.play();
-            document.getElementById('play-icon').className = "fa-solid fa-pause";
-            setupVisualizer();
-        } else {
-            audioEl.pause();
-            document.getElementById('play-icon').className = "fa-solid fa-play";
-        }
+        player.pause();
+        document.getElementById('play-icon').className = "fa-solid fa-play";
     }
 }
 
@@ -455,7 +354,6 @@ function prevTrack() {
     playTrack(currentPlaylist, prev);
 }
 
-// --- FEATURES EXTRA ---
 function toggleShuffle() {
     isShuffle = !isShuffle;
     document.getElementById('btn-shuffle').classList.toggle('is-active', isShuffle);
@@ -492,31 +390,25 @@ function toggleSleepTimer() {
         clearTimeout(sleepTimer);
         sleepTimer = null;
         btn.classList.remove('is-active');
-        alert("🌙 Temporizador cancelado.");
+        alert("🌙 Cancelado.");
     } else {
-        const mins = prompt("¿En cuántos minutos apago la música?", "30");
+        const mins = prompt("Minutos para apagar:", "30");
         if(mins && !isNaN(mins)) {
             sleepTimer = setTimeout(() => {
                 audioEl.pause();
-                if(videoPlayer) videoPlayer.pause(); // Pausar video también
-                alert("💤 Buenas noches...");
+                videoEl.pause();
             }, mins * 60000);
             btn.classList.add('is-active');
-            alert(`🌙 Temporizador configurado para ${mins} minutos.`);
+            alert(`🌙 Apagando en ${mins} min.`);
         }
     }
 }
 
 function toggleLyrics() {
-    const lyricsBox = document.getElementById('lyrics-container');
-    if(lyricsBox.style.display === 'none') {
-        lyricsBox.style.display = 'block';
-    } else {
-        lyricsBox.style.display = 'none';
-    }
+    const box = document.getElementById('lyrics-container');
+    if(box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
 }
 
-// --- HISTORIAL ---
 function addToHistory(track) {
     if(historyList.length > 0 && historyList[historyList.length-1].id === track.id) return;
     historyList.push(track);
@@ -524,7 +416,6 @@ function addToHistory(track) {
     localStorage.setItem('koteifyHistory', JSON.stringify(historyList));
 }
 
-// --- UTILS ---
 function toggleLike(id, btn, event) {
     if(event) event.stopPropagation();
     if (favoriteIds.includes(id)) {
@@ -550,30 +441,18 @@ function updateProgress(e) {
     document.getElementById('total-time').innerText = formatTime(duration);
     if (Math.floor(currentTime) % 5 === 0) saveState();
 }
+function formatTime(s) { const m = Math.floor(s/60); const sec=Math.floor(s%60); return `${m}:${sec<10?'0'+sec:sec}`; }
 
-function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec < 10 ? '0'+sec : sec}`;
-}
-
-// --- EVENTOS ---
-[audioEl].forEach(media => {
+[audioEl, videoEl].forEach(media => {
     media.addEventListener('timeupdate', updateProgress);
-    media.addEventListener('ended', () => {
-        if (repeatMode === 2) {
-            media.currentTime = 0; media.play();
-        } else { nextTrack(); }
-    });
+    media.addEventListener('ended', () => { if(repeatMode===2){media.currentTime=0;media.play();}else{nextTrack();} });
 });
 
 const seek = document.getElementById('seek-slider');
 seek.addEventListener('input', (e) => { isDragging=true; e.target.style.backgroundSize = `${(e.target.value/e.target.max)*100}% 100%`; });
 seek.addEventListener('change', (e) => { isDragging=false; (isVideoPlaying?videoEl:audioEl).currentTime = e.target.value; });
+document.getElementById('vol-slider').addEventListener('input', (e) => { audioEl.volume = e.target.value; videoEl.volume = e.target.value; });
 
-document.getElementById('vol-slider').addEventListener('input', (e) => { audioEl.volume = e.target.value; });
-
-// Media Session y Teclado
 function setupMediaSession() {
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', togglePlay);
@@ -594,30 +473,20 @@ function setupKeyboard() {
         else if(e.code==='ArrowLeft') prevTrack();
     });
 }
-
-// --- LOGICA CONTROL REMOTO (BACK BUTTON) ---
 function setupRemoteControl() {
     document.addEventListener('keydown', (e) => {
-        // Detectar tecla 'Atrás' o 'Escape' en TV
-        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 10009 || e.keyCode === 461) {
-            // Si estamos en playlist, volver a Grid
-            const playlistView = document.getElementById('playlist-view');
-            if (playlistView && playlistView.style.display !== 'none') {
-                e.preventDefault();
-                showGrid();
-                // Devolver foco al grid
-                setTimeout(() => {
-                    const firstCard = document.querySelector('.album-card');
-                    if(firstCard) firstCard.focus();
-                }, 100);
+        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 10009) {
+            const pv = document.getElementById('playlist-view');
+            if (pv && pv.style.display !== 'none') {
+                e.preventDefault(); showGrid();
+                setTimeout(() => { const c = document.querySelector('.album-card'); if(c) c.focus(); }, 100);
             }
         }
     });
 }
-
 function saveState() {
     if(!currentPlaylist[currentIndex]) return;
-    const s = { track: currentPlaylist[currentIndex], time: (isVideoPlaying && videoPlayer) ? videoPlayer.currentTime() : audioEl.currentTime, playlist: currentPlaylist, index: currentIndex };
+    const s = { track: currentPlaylist[currentIndex], time: (isVideoPlaying?videoEl:audioEl).currentTime, playlist: currentPlaylist, index: currentIndex };
     localStorage.setItem('koteifyState', JSON.stringify(s));
 }
 function loadLastPosition() {
@@ -629,22 +498,14 @@ function loadLastPosition() {
             document.getElementById('player-img').src = s.track.cover;
             document.getElementById('player-title').innerText = s.track.title;
             document.getElementById('player-artist').innerText = s.track.artist;
-            if(s.track.isVideo) { 
-                // Restaurar video no automático para no asustar
-            }
+            if(s.track.isVideo) { /* No autoplay al cargar */ }
             else { audioEl.src = s.track.src; audioEl.currentTime = s.time; }
         }
     } catch(e){}
 }
-
-// FUNCIÓN MEJORADA: Reproducir Historial
 function playMonthlyTop() {
     if(historyList.length > 0) {
-        // Reproducir historial como si fuera el "top"
         openAlbum({ name: "Top Reciente", cover: "https://placehold.co/600?text=Top+Mes", songs: [...historyList].reverse() }, false);
-        // Reproducir la primera
         setTimeout(() => playTrack([...historyList].reverse(), 0), 500);
-    } else {
-        alert("¡Escucha más música para generar tu Top del Mes!");
-    }
+    } else { alert("¡Escucha más música para generar tu Top del Mes!"); }
 }
