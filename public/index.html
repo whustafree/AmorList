@@ -5,61 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#121212">
     
+    <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/logo.png">
-    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AmorList">
+    
+    <!-- SEO -->
+    <meta name="description" content="Tu colección de música y videos favoritos, con amor ❤️">
+    <meta name="author" content="Para Kote">
 
-    <title>Para la Kote ❤️</title>
+    <title>AmorList ❤️ Para Kote</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- Fondo Dinámico -->
     <div id="dynamic-bg"></div>
+    
+    <!-- Canvas para Visualizador de Audio -->
+    <canvas id="visualizer-canvas"></canvas>
 
     <div class="app-container">
+        <!-- ==================== SIDEBAR ==================== -->
         <aside class="sidebar">
             <div class="logo">
-                <img src="/logo.png" alt="Koteify" class="img-dark">
-                <img src="/logokawai.png" alt="Koteify Kawaii" class="img-kawaii">
+                <img src="/logo.png" alt="AmorList" class="img-dark">
+                <img src="/logokawai.png" alt="AmorList Kawaii" class="img-kawaii">
             </div>
             
-            <button onclick="switchMode('audio')" class="nav-btn active" id="btn-pc-audio">
-                <i class="fa-solid fa-music"></i> Música
-            </button>
-            <button onclick="switchMode('video')" class="nav-btn" id="btn-pc-video">
-                <i class="fa-solid fa-film"></i> Videos
-            </button>
-            <button onclick="switchMode('fav')" class="nav-btn" id="btn-pc-fav">
-                <i class="fa-solid fa-heart"></i> Favoritos
-            </button>
-            <button onclick="switchMode('history')" class="nav-btn" id="btn-pc-history">
-                <i class="fa-solid fa-clock-rotate-left"></i> Historial
-            </button>
+            <div class="nav-section">
+                <div class="nav-label">BIBLIOTECA</div>
+                <button onclick="switchMode('audio')" class="nav-btn active" id="btn-pc-audio">
+                    <i class="fa-solid fa-music"></i> Música
+                </button>
+                <button onclick="switchMode('video')" class="nav-btn" id="btn-pc-video">
+                    <i class="fa-solid fa-film"></i> Videos
+                </button>
+                <button onclick="switchMode('fav')" class="nav-btn" id="btn-pc-fav">
+                    <i class="fa-solid fa-heart"></i> Favoritos
+                    <span class="badge" id="fav-badge-pc" style="display:none;">0</span>
+                </button>
+                <button onclick="switchMode('history')" class="nav-btn" id="btn-pc-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Historial
+                </button>
+            </div>
 
             <div class="sidebar-divider"></div>
-            <div class="playlist-label">ACCIONES</div>
+            
+            <div class="nav-section">
+                <div class="nav-label">PLAYLISTS</div>
+                <button onclick="openPlaylistManager()" class="nav-btn" id="btn-playlists">
+                    <i class="fa-solid fa-list"></i> Mis Playlists
+                </button>
+                <button onclick="openQueuePanel()" class="nav-btn" id="btn-queue">
+                    <i class="fa-solid fa-layer-group"></i> Cola
+                    <span class="badge" id="queue-badge-pc" style="display:none;">0</span>
+                </button>
+            </div>
 
-            <button onclick="refreshLibrary()" class="nav-btn" id="btn-refresh">
-                <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar
-            </button>
+            <div class="sidebar-divider"></div>
+            
+            <div class="nav-section">
+                <div class="nav-label">ACCIONES</div>
+                <button onclick="refreshLibrary()" class="nav-btn" id="btn-refresh">
+                    <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualizar
+                </button>
+                <button onclick="showStats()" class="nav-btn" id="btn-stats">
+                    <i class="fa-solid fa-chart-simple"></i> Estadísticas
+                </button>
+            </div>
         </aside>
 
+        <!-- ==================== MAIN CONTENT ==================== -->
         <main class="main-content">
+            <!-- Top Bar -->
             <div class="top-bar">
                 <div class="mobile-logo">
-                    <img src="/logo.png" alt="Koteify" class="img-dark">
-                    <img src="/logokawai.png" alt="Koteify Kawaii" class="img-kawaii">
+                    <img src="/logo.png" alt="AmorList" class="img-dark">
+                    <img src="/logokawai.png" alt="AmorList Kawaii" class="img-kawaii">
                 </div>
 
                 <div class="search-container">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="search-input" placeholder="Buscar...">
+                    <input type="text" id="search-input" placeholder="Buscar canciones, álbumes...">
                 </div>
 
                 <div style="flex:1;"></div>
@@ -67,16 +105,29 @@
                 <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar Tema">
                     <i class="fa-solid fa-palette"></i>
                 </button>
+                
+                <button class="queue-toggle" onclick="openQueuePanel()" title="Ver Cola">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span class="badge" id="queue-badge-top" style="display:none;">0</span>
+                </button>
             </div>
 
-            <div id="grid-view">
+            <!-- Grid View (Álbumes) -->
+            <div id="grid-view" class="fade-in">
                 <h2 class="greeting-msg" id="greeting-msg">Hola ❤️</h2>
                 
+                <!-- Top Escuchadas -->
+                <div id="top-played-section" class="featured-section" style="display:none;">
+                    <h3 class="section-title">🔥 Top Escuchadas</h3>
+                    <div class="top-played-grid" id="top-played-grid"></div>
+                </div>
+
+                <!-- Especial del Mes -->
                 <div id="monthly-featured" class="featured-section" style="display:none;">
                     <h3 class="section-title">✨ Especial del Mes</h3>
                     <div class="featured-card" onclick="playMonthlyTop()">
                         <div class="featured-info">
-                            <h4>Lo Mejor de Febrero</h4>
+                            <h4>Lo Mejor de Este Mes</h4>
                             <p>Canciones seleccionadas para ti 🌹</p>
                         </div>
                         <div class="play-circle"><i class="fa-solid fa-play"></i></div>
@@ -84,13 +135,26 @@
                 </div>
 
                 <h2 class="grid-header" id="page-title">Tu Colección</h2>
+                
+                <!-- Skeleton Loader -->
+                <div class="albums-container skeleton-grid" id="skeleton-container" style="display:none;">
+                    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                </div>
+                
+                <!-- Álbumes -->
                 <div class="albums-container" id="albums-container">
                     <p style="color:var(--text-secondary)">Cargando...</p>
                 </div>
             </div>
 
+            <!-- Playlist View (Canciones de un álbum) -->
             <div id="playlist-view" class="playlist-view">
-                <div onclick="showGrid()" style="cursor:pointer; margin-bottom:20px; display:inline-flex; align-items:center; gap:8px; font-weight:700; color:var(--text-primary); opacity:0.8;">
+                <div class="back-btn" onclick="showGrid()">
                     <i class="fa-solid fa-chevron-left"></i> Volver
                 </div>
 
@@ -103,25 +167,72 @@
                         <span class="hero-type">ÁLBUM</span>
                         <h1 id="hero-title">Título</h1>
                         <p id="hero-meta">Artista • 0 canciones</p>
-                        <div id="lyrics-container" style="display:none; margin-top:10px; font-size:14px; font-style:italic; color:var(--accent);">
-                            🎵 "Eres la casualidad más bonita de mi vida..."
+                        <div class="hero-actions">
+                            <button class="hero-btn" onclick="playAllAlbum()">
+                                <i class="fa-solid fa-play"></i> Reproducir
+                            </button>
+                            <button class="hero-btn secondary" onclick="shuffleAllAlbum()">
+                                <i class="fa-solid fa-shuffle"></i> Aleatorio
+                            </button>
+                            <button class="hero-btn secondary" onclick="addToQueueAll()">
+                                <i class="fa-solid fa-plus"></i> Añadir a cola
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <table class="track-list">
+                    <thead>
+                        <tr>
+                            <th class="track-num">#</th>
+                            <th>Título</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
                     <tbody id="track-table-body"></tbody>
                 </table>
             </div>
+            
+            <!-- Playlists Manager View -->
+            <div id="playlists-view" class="playlist-view" style="display:none;">
+                <div class="back-btn" onclick="showGrid()">
+                    <i class="fa-solid fa-chevron-left"></i> Volver
+                </div>
+                
+                <div class="playlists-header">
+                    <h2 class="grid-header">Mis Playlists</h2>
+                    <button class="hero-btn" onclick="createNewPlaylist()">
+                        <i class="fa-solid fa-plus"></i> Nueva Playlist
+                    </button>
+                </div>
+                
+                <div class="playlists-grid" id="playlists-container"></div>
+            </div>
+            
+            <!-- Queue Panel -->
+            <div id="queue-panel" class="queue-panel" style="display:none;">
+                <div class="queue-header">
+                    <h3><i class="fa-solid fa-layer-group"></i> Cola de Reproducción</h3>
+                    <button class="clear-queue-btn" onclick="clearQueue()">Limpiar</button>
+                </div>
+                <div class="queue-list" id="queue-list">
+                    <p class="empty-queue">La cola está vacía</p>
+                </div>
+            </div>
         </main>
 
+        <!-- ==================== PLAYER BAR ==================== -->
         <div class="player-bar" id="player-bar">
             <div class="player-left">
                 <img src="https://placehold.co/56" id="player-img">
                 <div class="player-info">
-                    <div class="player-title" id="player-title">Koteify</div>
-                    <div class="player-artist" id="player-artist">Selecciona algo</div>
+                    <div class="player-title" id="player-title">AmorList</div>
+                    <div class="player-artist" id="player-artist">Selecciona algo bonito ❤️</div>
                 </div>
+                <button class="ctrl-btn" onclick="toggleLikeCurrent()" title="Me gusta" id="btn-like-current">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
                 <button class="ctrl-btn" onclick="toggleLyrics()" title="Letra">
                     <i class="fa-solid fa-microphone-lines"></i>
                 </button>
@@ -129,15 +240,23 @@
             
             <div class="player-center">
                 <div class="player-controls">
-                    <button class="ctrl-btn" id="btn-shuffle" onclick="toggleShuffle()"><i class="fa-solid fa-shuffle"></i></button>
-                    <button class="ctrl-btn" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+                    <button class="ctrl-btn" id="btn-shuffle" onclick="toggleShuffle()" title="Aleatorio">
+                        <i class="fa-solid fa-shuffle"></i>
+                    </button>
+                    <button class="ctrl-btn" onclick="prevTrack()" title="Anterior">
+                        <i class="fa-solid fa-backward-step"></i>
+                    </button>
                     
-                    <button class="play-btn" onclick="togglePlay()">
+                    <button class="play-btn" onclick="togglePlay()" title="Reproducir/Pausar">
                         <i class="fa-solid fa-play" id="play-icon"></i>
                     </button>
                     
-                    <button class="ctrl-btn" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
-                    <button class="ctrl-btn" id="btn-repeat" onclick="toggleRepeat()"><i class="fa-solid fa-repeat"></i></button>
+                    <button class="ctrl-btn" onclick="nextTrack()" title="Siguiente">
+                        <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                    <button class="ctrl-btn" id="btn-repeat" onclick="toggleRepeat()" title="Repetir">
+                        <i class="fa-solid fa-repeat"></i>
+                    </button>
                 </div>
                 <div class="progress-bar-container">
                     <span id="curr-time">0:00</span>
@@ -147,10 +266,13 @@
             </div>
 
             <div class="player-right">
+                <button class="ctrl-btn" id="btn-visualizer" onclick="toggleVisualizer()" title="Visualizador">
+                    <i class="fa-solid fa-wave-square"></i>
+                </button>
                 <button class="ctrl-btn" id="btn-cassette" onclick="toggleCassetteMode()" title="Cassette">
                     <i class="fa-solid fa-compact-disc"></i>
                 </button>
-                <button class="ctrl-btn" id="btn-sleep" onclick="toggleSleepTimer()" title="Sleep">
+                <button class="ctrl-btn" id="btn-sleep" onclick="toggleSleepTimer()" title="Sleep Timer">
                     <i class="fa-solid fa-moon"></i>
                 </button>
                 
@@ -161,6 +283,7 @@
         </div>
     </div>
 
+    <!-- ==================== MOBILE NAV ==================== -->
     <nav class="mobile-nav">
         <button class="mob-btn active" onclick="switchMode('audio')" id="btn-mob-audio">
             <i class="fa-solid fa-music"></i> <span>Música</span>
@@ -176,6 +299,53 @@
         </button>
     </nav>
 
+    <!-- ==================== MODALS & OVERLAYS ==================== -->
+    
+    <!-- Lyrics Modal -->
+    <div id="lyrics-modal" class="modal" style="display:none;">
+        <div class="modal-content lyrics-content">
+            <button class="modal-close" onclick="closeLyricsModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 id="lyrics-song-title">Canción</h3>
+            <div class="lyrics-scroll" id="lyrics-text">
+                <p class="lyrics-loading">Buscando letra...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Playlist Create Modal -->
+    <div id="playlist-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePlaylistModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3>Crear Nueva Playlist</h3>
+            <input type="text" id="new-playlist-name" placeholder="Nombre de la playlist..." maxlength="50">
+            <div class="modal-actions">
+                <button class="hero-btn secondary" onclick="closePlaylistModal()">Cancelar</button>
+                <button class="hero-btn" onclick="saveNewPlaylist()">Crear</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal" style="display:none;">
+        <div class="modal-content stats-content">
+            <button class="modal-close" onclick="closeStatsModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3><i class="fa-solid fa-chart-simple"></i> Estadísticas</h3>
+            <div id="stats-container">
+                <p class="stats-loading">Cargando estadísticas...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- ==================== SCRIPTS ==================== -->
     <script src="script.js"></script>
 </body>
 </html>
