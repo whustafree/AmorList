@@ -1485,120 +1485,156 @@ button:focus-visible {
     .hero-info h1 { font-size: 28px; }
 }
 
-/* ==================== RESPONSIVE - MÓVIL LANDSCAPE ==================== */
-@media (max-width: 950px) and (orientation: landscape) {
+/* ==================== RESPONSIVE - MÓVIL PORTRAIT ==================== */
+@media (max-width: 768px) and (orientation: portrait) {
+    /* CORRECCIÓN: Usamos 1fr solo. No reservamos espacio fijo para el player 
+       aquí porque el player es 'fixed' (flotante). El espacio lo damos con padding. */
     .app-container { 
-        grid-template-areas: "main" "player"; 
-        grid-template-columns: 1fr; 
-        grid-template-rows: 1fr 65px; 
+        grid-template-areas: "main" "player"; /* Mantenemos áreas lógicas */
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr; /* SOLUCIÓN: Quitamos los 170px fijos de aquí */
     }
     
     .sidebar { display: none; }
-    .main-content { padding: 12px; padding-left: 80px; padding-bottom: 80px; }
     
-    /* Ocultar visualizador en móvil landscape */
+    /* Damos espacio suficiente abajo para que el último item no quede tapado por el player */
+    .main-content { 
+        padding: 16px; 
+        padding-bottom: calc(var(--h-player-mob-port) + 80px); 
+    } 
+    
+    /* Ocultar visualizador en móvil */
     #visualizer-canvas { display: none !important; }
     #btn-visualizer { display: none !important; }
     
-    .top-bar { margin-bottom: 12px; }
+    .top-bar { flex-direction: row; gap: 10px; }
     .mobile-logo { display: block; }
-    .mobile-logo img { height: 40px; width: auto; }
-    .search-container { flex: 1; padding: 6px 12px; font-size: 13px; }
-    .greeting-msg { font-size: 18px; margin-bottom: 10px; }
-
-    .albums-container { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important; gap: 10px; }
-    .album-card { padding: 10px; }
-    .album-card img { margin-bottom: 8px; }
+    .search-container { flex: 1; font-size: 14px; width: auto; }
+    .queue-toggle { display: none; }
     
-    .hero { flex-direction: row; align-items: flex-end; gap: 20px; margin-bottom: 20px; }
-    .hero-img-box { width: 140px; height: 140px; }
+    .albums-container { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px; }
+    .skeleton-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    
+    .album-card { padding: 12px; }
+    .hero { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+    
+    .hero-img-box { width: 180px; height: 180px; }
     .hero-img-box.video-mode { 
-        width: auto !important; 
+        width: 100% !important; 
+        max-width: none !important; 
         height: auto !important; 
-        max-width: 50vw; 
         aspect-ratio: 16/9; 
         box-shadow: none !important; 
         border-radius: 0 !important; 
     }
 
+    /* Player Vertical - Altura Corregida */
     .player-bar { 
+        position: fixed; 
+        bottom: 55px; /* Altura del menú de navegación */
+        left: 0; 
+        right: 0; 
+        height: var(--h-player-mob-port); /* Usamos la variable (130px) */
+        background: var(--bg-card); 
+        border-top: 1px solid var(--border); 
+        padding: 0 15px; 
+        border-radius: 16px 16px 0 0; /* Bordes más suaves */
+        display: block; 
+        z-index: 100;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.3); /* Sombra para separar del contenido */
+    }
+    
+    /* Ajuste de posiciones internas para la nueva altura */
+    .player-left { 
+        position: absolute; 
+        top: 12px; 
+        left: 15px; 
+        width: calc(100% - 80px); 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+    }
+    
+    .player-right { 
+        position: absolute; 
+        top: 12px; 
+        right: 15px; 
+        width: auto; 
+        gap: 10px; 
+        display: flex; 
+    }
+    
+    .player-right .vol-range, 
+    .player-right .fa-volume-high { display: none; }
+    
+    .player-center { 
+        position: absolute; 
+        bottom: 25px; /* Subido un poco para dar aire */
+        left: 0; 
+        width: 100%; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: flex-end; 
+    }
+    
+    .player-controls { margin: 0; width: 100%; justify-content: center; gap: 20px; padding-bottom: 5px; }
+    .ctrl-btn { font-size: 24px !important; }
+    .play-btn { font-size: 48px !important; } /* Un poco más chico para que no se vea gigante */
+    
+    .progress-bar-container { 
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 4px; /* Barra más fina */
+        background: rgba(255,255,255,0.1); 
+        padding: 0; 
+        border-radius: 0; 
+    }
+    
+    .progress-bar-container span { display: none; }
+    .progress-range { border-radius: 0; }
+
+    /* Navegación Inferior */
+    .mobile-nav { 
         position: fixed; 
         bottom: 0; 
         left: 0; 
         right: 0; 
-        height: 65px; 
-        background: var(--bg-card); 
-        border-top: 1px solid var(--border); 
-        padding: 0 10px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: space-between; 
-        z-index: 300; 
-    }
-    
-    .player-left { width: 25%; gap: 8px; position: static; }
-    .player-left img { width: 40px; height: 40px; }
-    .player-title { font-size: 13px; }
-    .player-artist { font-size: 10px; }
-    .player-left .ctrl-btn { display: none; } 
-
-    .player-center { width: 50%; gap: 2px; position: static; }
-    .player-controls { margin: 0; gap: 15px; margin-bottom: 4px; }
-    .ctrl-btn { font-size: 20px !important; }
-    .play-btn { font-size: 36px !important; }
-    
-    .progress-bar-container { position: static; width: 80%; height: 3px; gap: 5px; font-size: 10px; }
-    .progress-range { height: 3px; }
-
-    .player-right { width: 25%; gap: 8px; position: static; }
-    .vol-range { display: none; }
-    .fa-volume-high { display: none; }
-
-    /* Menu Dock Lateral */
-    .mobile-nav { 
-        display: flex; 
-        flex-direction: column; 
-        position: fixed; 
-        top: 0; 
-        bottom: 65px; 
-        left: 0; 
-        width: 70px; 
-        height: auto; 
-        right: auto; 
+        height: 55px; 
         background: var(--bg-sidebar); 
-        border-top: none; 
-        border-right: 1px solid var(--border); 
-        justify-content: center; 
+        border-top: 1px solid var(--border); 
+        display: flex; 
+        justify-content: space-around; 
         align-items: center; 
-        gap: 15px; 
-        padding: 10px 0; 
-        z-index: 150; 
+        z-index: 200; 
     }
     
     .mob-btn { 
-        width: 50px; 
-        height: 50px; 
-        border-radius: 12px; 
-        padding: 0; 
-        margin: 0; 
         display: flex; 
+        flex-direction: column; 
         align-items: center; 
         justify-content: center; 
-        background: transparent; 
-        transition: all 0.3s ease; 
+        width: 100%; 
+        height: 100%; 
+        background: none; 
+        border: none; 
+        color: var(--text-secondary); 
     }
     
-    .mob-btn span { display: none; } 
-    .mob-btn i { font-size: 22px !important; margin: 0 !important; color: var(--text-secondary); }
-    .mob-btn.active { background: var(--bg-card-hover); color: var(--text-primary); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    .mob-btn.active i { color: var(--accent); transform: scale(1.1); }
-    [data-theme="kawaii"] .mob-btn.active { background: #ffe4e1; }
+    .mob-btn i { font-size: 20px !important; margin-bottom: 2px; }
+    .mob-btn span { display: block; font-size: 10px; }
+    .mob-btn.active { color: var(--text-primary); }
+    [data-theme="kawaii"] .mob-btn.active { color: var(--accent); }
     
-    /* Queue panel landscape */
-    .queue-panel {
-        bottom: 65px;
-        width: 280px;
-    }
+    /* Ajustes varios para móvil */
+    .queue-panel { width: 100%; bottom: 200px; }
+    #toast-container { left: 16px; right: 16px; bottom: 200px; }
+    .toast { min-width: auto; }
+    .modal-content { width: 95%; padding: 24px; margin: 16px; }
+    .hero-actions { justify-content: center; }
+    .greeting-msg { font-size: 24px; }
+    .hero-info h1 { font-size: 28px; }
 }
 
 /* ==================== PRINT STYLES ==================== */
