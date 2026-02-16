@@ -22,8 +22,10 @@ const audioEl = new Audio();
 // IMPORTANTE: Permitir que el audio se lea para el visualizador
 audioEl.crossOrigin = "anonymous"; 
 
-const videoEl = document.getElementById('hero-video');
 const heroImgBox = document.getElementById('hero-img-box');
+
+// VARIABLE PARA EL PLAYER VIDEO.JS (NUEVO)
+let videoPlayer = null;
 
 // Visualizador (Desactivado por defecto para TV)
 let audioContext;
@@ -40,6 +42,15 @@ window.onload = async () => {
     setupRemoteControl(); // Control remoto TV
     setupMediaSession();
     
+    // INICIALIZAR VIDEO.JS AQUÍ (NUEVO)
+    // Buscamos el elemento de video y lo convertimos en un player pro
+    videoPlayer = videojs('hero-video', {
+        controls: true,
+        autoplay: false,
+        preload: 'auto',
+        fluid: true // Se adapta al tamaño del contenedor
+    });
+
     await loadLibrary();
     loadLastPosition(); 
 };
@@ -190,8 +201,20 @@ function showGrid() {
     if(monthly) monthly.style.display = currentMode === 'audio' ? 'block' : 'none';
     
     if(heroImgBox) heroImgBox.classList.remove('video-mode');
-    if(videoEl) { videoEl.style.display = 'none'; videoEl.pause(); }
+    
+    // DETENER VIDEO.JS AL VOLVER AL GRID
+    if(videoPlayer) {
+        videoPlayer.pause();
+        // Ocultamos el contenedor de Video.js
+        const videoContainer = document.querySelector('.video-js');
+        if(videoContainer) videoContainer.style.display = 'none';
+    }
+    
     if(heroImg) heroImg.style.display = 'block';
+    
+    // Mostramos la barra de audio de nuevo
+    const playerBar = document.querySelector('.player-bar');
+    if(playerBar) playerBar.style.display = 'flex';
     
     // Enfocar primer elemento para TV
     setTimeout(() => {
@@ -332,6 +355,7 @@ function openAlbum(album, isDirect = false) {
     }, 100);
 }
 
+// --- FUNCIÓN PLAYTRACK MODIFICADA (SOPORTE HÍBRIDO) ---
 function playTrack(playlist, index) {
     currentPlaylist = playlist;
     currentIndex = index;
@@ -346,20 +370,50 @@ function playTrack(playlist, index) {
     addToHistory(track);
 
     if(track.isVideo) {
+        // --- MODO VIDEO (Usando Video.js) ---
         isVideoPlaying = true;
+        
+        // Pausar audio normal
         audioEl.pause();
+        
+        // Ocultar imagen, mostrar video
         document.getElementById('hero-img').style.display = 'none';
-        videoEl.style.display = 'block';
+        
+        // Configurar Video.js
+        if(videoPlayer) {
+            videoPlayer.src({ type: 'video/mp4', src: track.src });
+            
+            // Mostrar contenedor de Video.js
+            const videoContainer = document.querySelector('.video-js');
+            if(videoContainer) videoContainer.style.display = 'block';
+            
+            videoPlayer.play();
+        }
+
         if(heroImgBox) heroImgBox.classList.add('video-mode');
-        videoEl.src = track.src;
-        videoEl.play();
+        
+        // Ocultar barra de audio (ya que video.js tiene sus controles)
+        const playerBar = document.querySelector('.player-bar');
+        if(playerBar) playerBar.style.display = 'none';
+
         if(window.innerWidth < 768) window.scrollTo({top:0, behavior:'smooth'});
     } else {
+        // --- MODO AUDIO (Normal) ---
         isVideoPlaying = false;
-        videoEl.pause();
+        
+        // Pausar video
+        if(videoPlayer) {
+            videoPlayer.pause();
+            const videoContainer = document.querySelector('.video-js');
+            if(videoContainer) videoContainer.style.display = 'none';
+        }
+
         if(heroImgBox) heroImgBox.classList.remove('video-mode');
         document.getElementById('hero-img').style.display = 'block';
-        videoEl.style.display = 'none';
+        
+        // Mostrar barra de audio
+        const playerBar = document.querySelector('.player-bar');
+        if(playerBar) playerBar.style.display = 'flex';
         
         audioEl.src = track.src;
         audioEl.play().then(() => {
@@ -371,17 +425,23 @@ function playTrack(playlist, index) {
     saveState();
 }
 
+// --- FUNCIÓN TOGGLE PLAY HÍBRIDA ---
 function togglePlay() {
-    const player = isVideoPlaying ? videoEl : audioEl;
-    const playIcon = document.getElementById('play-icon');
-    
-    if(player.paused) {
-        player.play();
-        playIcon.className = "fa-solid fa-pause";
-        setupVisualizer();
+    if (isVideoPlaying) {
+        // Si estamos viendo video, controlar Video.js
+        if(videoPlayer) {
+            videoPlayer.paused() ? videoPlayer.play() : videoPlayer.pause();
+        }
     } else {
-        player.pause();
-        playIcon.className = "fa-solid fa-play";
+        // Si estamos oyendo música, controlar Audio nativo
+        if(audioEl.paused) {
+            audioEl.play();
+            document.getElementById('play-icon').className = "fa-solid fa-pause";
+            setupVisualizer();
+        } else {
+            audioEl.pause();
+            document.getElementById('play-icon').className = "fa-solid fa-play";
+        }
     }
 }
 
@@ -438,7 +498,7 @@ function toggleSleepTimer() {
         if(mins && !isNaN(mins)) {
             sleepTimer = setTimeout(() => {
                 audioEl.pause();
-                videoEl.pause();
+                if(videoPlayer) videoPlayer.pause(); // Pausar video también
                 alert("💤 Buenas noches...");
             }, mins * 60000);
             btn.classList.add('is-active');
@@ -498,7 +558,7 @@ function formatTime(s) {
 }
 
 // --- EVENTOS ---
-[audioEl, videoEl].forEach(media => {
+[audioEl].forEach(media => {
     media.addEventListener('timeupdate', updateProgress);
     media.addEventListener('ended', () => {
         if (repeatMode === 2) {
@@ -511,7 +571,7 @@ const seek = document.getElementById('seek-slider');
 seek.addEventListener('input', (e) => { isDragging=true; e.target.style.backgroundSize = `${(e.target.value/e.target.max)*100}% 100%`; });
 seek.addEventListener('change', (e) => { isDragging=false; (isVideoPlaying?videoEl:audioEl).currentTime = e.target.value; });
 
-document.getElementById('vol-slider').addEventListener('input', (e) => { audioEl.volume = e.target.value; videoEl.volume = e.target.value; });
+document.getElementById('vol-slider').addEventListener('input', (e) => { audioEl.volume = e.target.value; });
 
 // Media Session y Teclado
 function setupMediaSession() {
@@ -557,7 +617,7 @@ function setupRemoteControl() {
 
 function saveState() {
     if(!currentPlaylist[currentIndex]) return;
-    const s = { track: currentPlaylist[currentIndex], time: (isVideoPlaying?videoEl:audioEl).currentTime, playlist: currentPlaylist, index: currentIndex };
+    const s = { track: currentPlaylist[currentIndex], time: (isVideoPlaying && videoPlayer) ? videoPlayer.currentTime() : audioEl.currentTime, playlist: currentPlaylist, index: currentIndex };
     localStorage.setItem('koteifyState', JSON.stringify(s));
 }
 function loadLastPosition() {
@@ -569,7 +629,9 @@ function loadLastPosition() {
             document.getElementById('player-img').src = s.track.cover;
             document.getElementById('player-title').innerText = s.track.title;
             document.getElementById('player-artist').innerText = s.track.artist;
-            if(s.track.isVideo) { videoEl.src = s.track.src; videoEl.currentTime = s.time; }
+            if(s.track.isVideo) { 
+                // Restaurar video no automático para no asustar
+            }
             else { audioEl.src = s.track.src; audioEl.currentTime = s.time; }
         }
     } catch(e){}
