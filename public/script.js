@@ -369,56 +369,56 @@ function playTrack(playlist, index) {
     updateAmbientColor(track.title);
     addToHistory(track);
 
+    const heroImg = document.getElementById('hero-img');
+    const heroBox = document.getElementById('hero-img-box');
+
     if(track.isVideo) {
-        // --- MODO VIDEO (Usando Video.js) ---
+        // --- MODO VIDEO ---
         isVideoPlaying = true;
-        
-        // Pausar audio normal
         audioEl.pause();
         
-        // Ocultar imagen, mostrar video
-        document.getElementById('hero-img').style.display = 'none';
+        // 1. Ocultar imagen DE INMEDIATO
+        if(heroImg) heroImg.style.display = 'none';
+        if(heroBox) heroBox.classList.add('video-mode');
         
-        // Configurar Video.js
+        // 2. Ocultar barra de audio
+        const playerBar = document.querySelector('.player-bar');
+        if(playerBar) playerBar.style.display = 'none';
+        
+        // 3. Cargar Video.js
         if(videoPlayer) {
+            // Mostrar el contenedor del player explícitamente
+            const playerEl = document.querySelector('.video-js');
+            if(playerEl) playerEl.style.display = 'block';
+
             videoPlayer.src({ type: 'video/mp4', src: track.src });
-            
-            // Mostrar contenedor de Video.js
-            const videoContainer = document.querySelector('.video-js');
-            if(videoContainer) videoContainer.style.display = 'block';
-            
+            videoPlayer.show(); // Forzar mostrar
             videoPlayer.play();
         }
 
-        if(heroImgBox) heroImgBox.classList.add('video-mode');
-        
-        // Ocultar barra de audio (ya que video.js tiene sus controles)
-        const playerBar = document.querySelector('.player-bar');
-        if(playerBar) playerBar.style.display = 'none';
-
         if(window.innerWidth < 768) window.scrollTo({top:0, behavior:'smooth'});
     } else {
-        // --- MODO AUDIO (Normal) ---
+        // --- MODO AUDIO ---
         isVideoPlaying = false;
         
-        // Pausar video
+        // 1. Pausar y Ocultar Video
         if(videoPlayer) {
             videoPlayer.pause();
-            const videoContainer = document.querySelector('.video-js');
-            if(videoContainer) videoContainer.style.display = 'none';
+            videoPlayer.hide();
+            const playerEl = document.querySelector('.video-js');
+            if(playerEl) playerEl.style.display = 'none';
         }
 
-        if(heroImgBox) heroImgBox.classList.remove('video-mode');
-        document.getElementById('hero-img').style.display = 'block';
+        // 2. Restaurar imagen
+        if(heroBox) heroBox.classList.remove('video-mode');
+        if(heroImg) heroImg.style.display = 'block';
         
-        // Mostrar barra de audio
+        // 3. Restaurar barra de audio
         const playerBar = document.querySelector('.player-bar');
         if(playerBar) playerBar.style.display = 'flex';
         
         audioEl.src = track.src;
-        audioEl.play().then(() => {
-            setupVisualizer();
-        }).catch(e => console.log("Play error:", e));
+        audioEl.play().catch(e => console.log("Play error:", e));
     }
 
     updateMediaSession(track);

@@ -352,3 +352,41 @@ input[type=range]:focus-visible { outline: 2px solid var(--accent); }
 
 /* Ocultar barra de audio cuando se ve video (opcional, para limpieza) */
 .hide-player-bar { display: none !important; }
+/* --- ARREGLO VIDEO.JS (AGREGAR AL FINAL) --- */
+
+/* 1. Forzar que el contenedor de Video.js ocupe todo el espacio */
+.hero-img-box .video-js {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    z-index: 50 !important; /* ¡Más alto que la imagen! */
+    background-color: #000; /* Fondo negro por si el video carga lento */
+    border-radius: var(--radius);
+}
+
+/* 2. Asegurar que el video real dentro del player se estire */
+.hero-img-box .vjs-tech {
+    object-fit: contain; /* Para que no se recorte */
+}
+
+/* 3. Cuando estamos en modo video, ocultar la imagen de portada SÍ o SÍ */
+.hero-img-box.video-mode img {
+    display: none !important;
+    visibility: hidden;
+    opacity: 0;
+    z-index: -1;
+}
+
+/* 4. Ajustar controles para que se vean bien en móvil */
+.vjs-big-play-button {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%);
+    border-radius: 50% !important;
+    width: 60px !important;
+    height: 60px !important;
+    line-height: 60px !important;
+    font-size: 30px !important;
+}
