@@ -1,16 +1,22 @@
 {
   "name": "amorlist-kote",
-  "version": "1.0.0",
-  "description": "Regalo para Kote",
+  "version": "2.0.0",
+  "description": "Regalo para Kote - Reproductor de música/video con mejoras premium",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "test": "echo \"Tests no configurados aún\" && exit 0"
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "googleapis": "^118.0.0"
+    "express-rate-limit": "^7.5.1",
+    "googleapis": "^118.0.0",
+    "helmet": "^7.2.0",
+    "morgan": "^1.10.1"
   }
 }
