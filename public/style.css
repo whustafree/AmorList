@@ -1333,6 +1333,10 @@ button:focus-visible {
     .sidebar { display: none; }
     .main-content { padding: 16px; padding-bottom: 200px; } 
     
+    /* Ocultar visualizador en móvil */
+    #visualizer-canvas { display: none !important; }
+    #btn-visualizer { display: none !important; }
+    
     .top-bar { flex-direction: row; gap: 10px; }
     .mobile-logo { display: block; }
     .search-container { flex: 1; font-size: 14px; width: auto; }
@@ -1491,6 +1495,10 @@ button:focus-visible {
     
     .sidebar { display: none; }
     .main-content { padding: 12px; padding-left: 80px; padding-bottom: 80px; }
+    
+    /* Ocultar visualizador en móvil landscape */
+    #visualizer-canvas { display: none !important; }
+    #btn-visualizer { display: none !important; }
     
     .top-bar { margin-bottom: 12px; }
     .mobile-logo { display: block; }
