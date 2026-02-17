@@ -234,7 +234,6 @@ function renderGrid() {
         card.className = 'album-card';
         card.setAttribute('tabindex', '0'); // CRUCIAL TV
         
-        // Usamos función flecha para evitar problemas de scope
         card.onclick = () => openAlbum(album);
         
         card.innerHTML = `
@@ -362,6 +361,159 @@ function renderTopPlayed(songs) {
     });
 }
 
+// ==================== FUNCIONES FALTANTES (PLAYLIST MANAGER & REFRESH) ====================
+
+async function refreshLibrary() {
+    const icon = document.getElementById('refresh-icon');
+    if (icon) icon.classList.add('fa-spin');
+    
+    showSkeletonLoader();
+    try {
+        const res = await fetch('/api/refresh');
+        if (!res.ok) throw new Error('Error en refresh');
+        state.fullLibraryData = await res.json();
+        renderGrid();
+        showToast('Biblioteca actualizada');
+    } catch (e) {
+        console.error(e);
+        showToast('Error al actualizar');
+    }
+    
+    if (icon) icon.classList.remove('fa-spin');
+    hideSkeletonLoader();
+}
+
+function openPlaylistManager() {
+    showPlaylistsView();
+}
+
+function showPlaylistsView() {
+    document.getElementById('grid-view').style.display = 'none';
+    document.getElementById('playlist-view').style.display = 'none';
+    document.getElementById('playlists-view').style.display = 'block';
+    document.getElementById('queue-panel').style.display = 'none';
+    renderPlaylists();
+}
+
+function renderPlaylists() {
+    const container = document.getElementById('playlists-container');
+    if (!container) return;
+    
+    if (state.customPlaylists.length === 0) {
+        container.innerHTML = '<p style="opacity:0.6; padding:20px;">No tienes playlists.</p>';
+        return;
+    }
+    
+    container.innerHTML = state.customPlaylists.map(pl => `
+        <div class="playlist-card" onclick="window.openPlaylist('${pl.id}')">
+            <div class="playlist-card-header">
+                <div class="playlist-card-cover"><i class="fa-solid fa-music"></i></div>
+                <div>
+                    <div class="playlist-card-name">${pl.name}</div>
+                    <div class="playlist-card-count">${pl.songs.length} canciones</div>
+                </div>
+            </div>
+            <button class="hero-btn secondary" onclick="window.deletePlaylist('${pl.id}'); event.stopPropagation();">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function createNewPlaylist() {
+    const modal = document.getElementById('playlist-modal');
+    if(modal) {
+        modal.style.display = 'flex';
+        const input = document.getElementById('new-playlist-name');
+        if(input) { input.value = ''; input.focus(); }
+    }
+}
+
+async function saveNewPlaylist() {
+    const input = document.getElementById('new-playlist-name');
+    const name = input?.value?.trim();
+    if (!name) return;
+    
+    const newPl = { id: `pl_${Date.now()}`, name: name, songs: [], createdAt: new Date().toISOString() };
+    
+    try {
+        await fetch('/api/playlists', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(newPl)
+        });
+        state.customPlaylists.push(newPl);
+    } catch (e) {
+        state.customPlaylists.push(newPl);
+        localStorage.setItem('koteifyPlaylists', JSON.stringify(state.customPlaylists));
+    }
+    
+    document.getElementById('playlist-modal').style.display = 'none';
+    renderPlaylists();
+    showToast(`Playlist "${name}" creada`);
+}
+
+function openPlaylist(id) {
+    const pl = state.customPlaylists.find(p => p.id === id);
+    if (pl) openAlbum(pl, true);
+}
+
+async function deletePlaylist(id) {
+    if (!confirm('¿Eliminar playlist?')) return;
+    try {
+        await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
+    } catch(e) {}
+    
+    state.customPlaylists = state.customPlaylists.filter(p => p.id !== id);
+    localStorage.setItem('koteifyPlaylists', JSON.stringify(state.customPlaylists));
+    renderPlaylists();
+    showToast('Playlist eliminada');
+}
+
+function closePlaylistModal() {
+    const modal = document.getElementById('playlist-modal');
+    if(modal) modal.style.display = 'none';
+}
+
+function closeStatsModal() {
+    const modal = document.getElementById('stats-modal');
+    if(modal) modal.style.display = 'none';
+}
+
+async function showStats() {
+    const modal = document.getElementById('stats-modal');
+    const container = document.getElementById('stats-container');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    container.innerHTML = '<p>Cargando...</p>';
+    
+    try {
+        const [statsRes, topRes] = await Promise.all([
+            fetch('/api/stats'),
+            fetch('/api/stats/top')
+        ]);
+        const stats = await statsRes.json();
+        const topSongs = await topRes.json();
+        
+        const totalPlays = Object.values(stats.plays || {}).reduce((a, b) => a + b, 0);
+        
+        container.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value">${totalPlays}</div><div>Plays</div></div>
+                <div class="stat-card"><div class="stat-value">${state.favoriteIds.length}</div><div>Favs</div></div>
+            </div>
+            <h4>🔥 Top 5</h4>
+            <div class="top-songs-list">
+                ${topSongs.slice(0, 5).map((s, i) => `
+                    <div class="top-song-item"><span>#${i + 1}</span> ${s.title} (${s.playCount})</div>
+                `).join('')}
+            </div>
+        `;
+    } catch (e) {
+        container.innerHTML = 'Error al cargar estadísticas';
+    }
+}
+
 // ==================== FEATURES AUXILIARES ====================
 
 function handleBackKey(e) {
@@ -391,7 +543,6 @@ function handleBackKey(e) {
 }
 
 // ==================== EXPONER A WINDOW (CRUCIAL PARA TV Y HTML) ====================
-// Esto hace que las funciones sean accesibles globalmente, como antes de usar módulos.
 
 window.togglePlay = togglePlay;
 window.nextTrack = nextTrack;
@@ -399,6 +550,19 @@ window.prevTrack = prevTrack;
 window.changeVolume = changeVolume;
 window.toggleMute = toggleMute;
 window.handleBackKey = handleBackKey;
+
+// Funciones del Playlist Manager
+window.openPlaylistManager = openPlaylistManager;
+window.createNewPlaylist = createNewPlaylist;
+window.saveNewPlaylist = saveNewPlaylist;
+window.deletePlaylist = deletePlaylist;
+window.openPlaylist = openPlaylist;
+window.closePlaylistModal = closePlaylistModal;
+
+// Funciones de Refresco y Stats
+window.refreshLibrary = refreshLibrary;
+window.showStats = showStats;
+window.closeStatsModal = closeStatsModal;
 
 window.switchMode = function(mode) {
     state.currentMode = mode;
@@ -585,8 +749,6 @@ window.removeFromQueue = function(i) {
     state.queueList.splice(i, 1);
     updateQueueUI();
 };
-
-window.refreshLibrary = refreshLibrary;
 
 // ==================== HELPERS ====================
 
