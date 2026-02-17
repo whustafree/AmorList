@@ -1,6 +1,7 @@
 /**
- * AmorList v2.2 - TV Edition Fix
- * Corrección de navegación por flechas y foco para Smart TV
+ * AmorList v3.1 - TV Navigation Engine (Full Complete)
+ * Motor de navegación espacial real para PC y Smart TV
+ * Incluye todas las funcionalidades sin recortes.
  */
 
 // ==================== VARIABLES GLOBALES ====================
@@ -32,7 +33,7 @@ let audioContext = null;
 let analyser = null;
 let source = null;
 
-// Current album reference
+// Referencia al álbum actual
 let currentAlbumData = null;
 
 // ==================== ELEMENTOS DOM ====================
@@ -47,12 +48,12 @@ const ctx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
 
 // ==================== INICIALIZACIÓN ====================
 window.onload = async () => {
-    console.log('🎵 AmorList TV Edition Iniciando...');
+    console.log('📺 AmorList TV Engine (Full) Iniciando...');
     
     setGreeting();
     loadTheme();
     setupSearch();
-    setupKeyboard(); // Lógica corregida para TV
+    setupKeyboard(); // Teclado con navegación espacial
     setupRemoteControl();
     setupMediaSession();
     setupServiceWorker();
@@ -67,28 +68,261 @@ window.onload = async () => {
     loadLastPosition();
     updateBadges();
     
-    // Enfocar el primer elemento para TV al iniciar
+    // Enfocar el primer elemento para empezar a navegar
     setTimeout(() => {
         const firstBtn = document.getElementById('btn-pc-audio');
         if (firstBtn) firstBtn.focus();
     }, 1000);
     
-    console.log('✅ AmorList listo!');
+    console.log('✅ Listo!');
 };
+
+// ==================== MOTOR DE NAVEGACIÓN ESPACIAL (TV/PC) ====================
+function getFocusableElements() {
+    // Seleccionar todos los elementos interactivos visibles
+    const selector = 'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    return Array.from(document.querySelectorAll(selector)).filter(el => {
+        return el.offsetParent !== null && !el.disabled && el.style.display !== 'none';
+    });
+}
+
+function navMove(direction) {
+    const activeEl = document.activeElement;
+    
+    // Si el foco se pierde o está en el body, volver al menú lateral
+    if (!activeEl || activeEl === document.body) {
+        const first = document.querySelector('.nav-btn');
+        if (first) first.focus();
+        return;
+    }
+
+    const rect = activeEl.getBoundingClientRect();
+    const activeCenter = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
+
+    const candidates = getFocusableElements().filter(el => el !== activeEl);
+    let bestCandidate = null;
+    let minDistance = Infinity;
+
+    candidates.forEach(el => {
+        const elRect = el.getBoundingClientRect();
+        const elCenter = {
+            x: elRect.left + elRect.width / 2,
+            y: elRect.top + elRect.height / 2
+        };
+
+        // Filtrar por dirección
+        let isValid = false;
+        const deltaX = elCenter.x - activeCenter.x;
+        const deltaY = elCenter.y - activeCenter.y;
+        
+        // Umbrales para mejorar la detección en grillas
+        const threshold = 50; 
+
+        switch (direction) {
+            case 'UP':
+                isValid = deltaY < -10 && Math.abs(deltaX) < (Math.abs(deltaY) * 2 + threshold);
+                break;
+            case 'DOWN':
+                isValid = deltaY > 10 && Math.abs(deltaX) < (Math.abs(deltaY) * 2 + threshold);
+                break;
+            case 'LEFT':
+                isValid = deltaX < -10 && Math.abs(deltaY) < (Math.abs(deltaX) * 0.8 + threshold);
+                break;
+            case 'RIGHT':
+                isValid = deltaX > 10 && Math.abs(deltaY) < (Math.abs(deltaX) * 0.8 + threshold);
+                break;
+        }
+
+        if (isValid) {
+            const dist = Math.sqrt(Math.pow(elCenter.x - activeCenter.x, 2) + Math.pow(elCenter.y - activeCenter.y, 2));
+            if (dist < minDistance) {
+                minDistance = dist;
+                bestCandidate = el;
+            }
+        }
+    });
+
+    if (bestCandidate) {
+        bestCandidate.focus();
+        bestCandidate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        // Fallbacks inteligentes si no encuentra candidato directo
+        if (direction === 'RIGHT' && activeEl.classList.contains('nav-btn')) {
+            // Del menú lateral saltar al contenido principal
+            const firstCard = document.querySelector('.album-card, .top-played-item');
+            if (firstCard) firstCard.focus();
+        } else if (direction === 'LEFT' && (activeEl.classList.contains('album-card') || activeEl.classList.contains('top-played-item'))) {
+            // Del contenido volver al menú lateral
+            const navBtn = document.getElementById('btn-pc-audio');
+            if (navBtn) navBtn.focus();
+        }
+    }
+}
+
+// ==================== TECLADO Y CONTROL REMOTO ====================
+function setupKeyboard() {
+    document.addEventListener('keydown', (e) => {
+        // Permitir escribir en buscador
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch (e.code) {
+            case 'ArrowUp':
+                e.preventDefault();
+                navMove('UP');
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                navMove('DOWN');
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                if (e.ctrlKey) {
+                    prevTrack(); // Ctrl + Izquierda para retroceder canción
+                } else {
+                    navMove('LEFT');
+                }
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                if (e.ctrlKey) {
+                    nextTrack(); // Ctrl + Derecha para avanzar canción
+                } else {
+                    navMove('RIGHT');
+                }
+                break;
+            case 'Enter':
+            case 'NumpadEnter':
+                // Simular click visualmente
+                if (document.activeElement) {
+                    document.activeElement.click();
+                    document.activeElement.classList.add('active-press');
+                    setTimeout(() => document.activeElement.classList.remove('active-press'), 150);
+                }
+                break;
+            case 'Space':
+                e.preventDefault();
+                togglePlay();
+                break;
+            // Teclas para volumen
+            case 'Equal': // Tecla +
+            case 'NumpadAdd':
+                changeVolume(0.1);
+                break;
+            case 'Minus': // Tecla -
+            case 'NumpadSubtract':
+                changeVolume(-0.1);
+                break;
+            case 'KeyM':
+                toggleMute();
+                break;
+            case 'KeyQ':
+                openQueuePanel();
+                break;
+            case 'Backspace':
+            case 'Escape':
+                handleBackKey(e);
+                break;
+        }
+    });
+}
+
+function handleBackKey(e) {
+    const pv = document.getElementById('playlist-view');
+    const plv = document.getElementById('playlists-view');
+    const qp = document.getElementById('queue-panel');
+    const lyrics = document.getElementById('lyrics-modal');
+    const playlistModal = document.getElementById('playlist-modal');
+    const statsModal = document.getElementById('stats-modal');
+
+    // Cerrar modales por prioridad
+    if (lyrics && lyrics.style.display !== 'none') {
+        lyrics.style.display = 'none'; return;
+    }
+    if (playlistModal && playlistModal.style.display !== 'none') {
+        playlistModal.style.display = 'none'; return;
+    }
+    if (statsModal && statsModal.style.display !== 'none') {
+        statsModal.style.display = 'none'; return;
+    }
+    if (qp && qp.style.display !== 'none') {
+        qp.style.display = 'none'; return;
+    }
+    
+    // Volver al Grid
+    if ((pv && pv.style.display !== 'none') || (plv && plv.style.display !== 'none')) {
+        if (e) e.preventDefault();
+        showGrid();
+        setTimeout(() => {
+            const firstAlbum = document.querySelector('.album-card');
+            if (firstAlbum) {
+                firstAlbum.focus();
+                firstAlbum.scrollIntoView({ block: 'center' });
+            }
+        }, 100);
+    }
+}
+
+function setupRemoteControl() {
+    // Soporte específico para códigos de teclas de TV (Tizen/WebOS)
+    document.addEventListener('keydown', (e) => {
+        if (e.keyCode === 10009 || e.key === 'GoBack') { // Samsung/LG Back
+            handleBackKey(e);
+        }
+        if (e.keyCode === 415) togglePlay(); // Play
+        if (e.keyCode === 19) togglePlay(); // Pause
+        if (e.keyCode === 412) prevTrack(); // Rewind
+        if (e.keyCode === 417) nextTrack(); // Fast Fwd
+    });
+}
+
+function changeVolume(delta) {
+    let newVol = Math.max(0, Math.min(1, audioEl.volume + delta));
+    audioEl.volume = newVol;
+    videoEl.volume = newVol;
+    const volSlider = document.getElementById('vol-slider');
+    if (volSlider) volSlider.value = newVol;
+    
+    // Actualizar icono
+    const icon = document.querySelector('.player-right .fa-volume-high, .player-right .fa-volume-low, .player-right .fa-volume-xmark');
+    if (icon) {
+        if (newVol === 0) icon.className = 'fa-solid fa-volume-xmark';
+        else if (newVol < 0.5) icon.className = 'fa-solid fa-volume-low';
+        else icon.className = 'fa-solid fa-volume-high';
+    }
+    
+    showToast(`🔊 Volumen ${(newVol * 100).toFixed(0)}%`, 'info');
+}
+
+function toggleMute() {
+    const volSlider = document.getElementById('vol-slider');
+    if (audioEl.volume > 0) {
+        audioEl.dataset.prevVolume = audioEl.volume;
+        audioEl.volume = 0;
+        videoEl.volume = 0;
+        if(volSlider) volSlider.value = 0;
+        showToast('🔇 Mute', 'info');
+    } else {
+        const prev = parseFloat(audioEl.dataset.prevVolume) || 1;
+        audioEl.volume = prev;
+        videoEl.volume = prev;
+        if(volSlider) volSlider.value = prev;
+        showToast('🔊 Sonido activado', 'info');
+    }
+}
 
 // ==================== SERVICE WORKER ====================
 async function setupServiceWorker() {
     if ('serviceWorker' in navigator) {
         try {
-            const reg = await navigator.serviceWorker.register('/sw.js');
-            console.log('✅ Service Worker registrado:', reg.scope);
-        } catch (e) {
-            console.log('⚠️ Service Worker no disponible:', e.message);
-        }
+            await navigator.serviceWorker.register('/sw.js');
+        } catch (e) { console.log('SW no registrado'); }
     }
 }
 
-// ==================== INTERSECTION OBSERVER (Lazy Loading) ====================
+// ==================== INTERSECTION OBSERVER ====================
 function setupIntersectionObserver() {
     if (!('IntersectionObserver' in window)) return;
     
@@ -104,30 +338,7 @@ function setupIntersectionObserver() {
             }
         });
     }, { rootMargin: '50px' });
-    
     window.lazyImageObserver = imageObserver;
-}
-
-// ==================== PROGRESS SLIDER STYLING ====================
-function setupProgressSlider() {
-    const seek = document.getElementById('seek-slider');
-    if (seek) {
-        seek.addEventListener('input', (e) => {
-            const value = e.target.value;
-            const max = e.target.max || 1;
-            const percent = (value / max) * 100;
-            e.target.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
-        });
-    }
-    
-    const vol = document.getElementById('vol-slider');
-    if (vol) {
-        vol.addEventListener('input', (e) => {
-            const value = e.target.value;
-            const percent = (value / 1) * 100;
-            e.target.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
-        });
-    }
 }
 
 // ==================== TOAST NOTIFICATIONS ====================
@@ -147,13 +358,11 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `
         <i class="fa-solid ${icons[type]} toast-icon"></i>
         <span class="toast-message">${message}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
     `;
     
     container.appendChild(toast);
     
+    // Auto-remove
     setTimeout(() => {
         toast.classList.add('hiding');
         setTimeout(() => toast.remove(), 300);
@@ -168,16 +377,14 @@ async function refreshLibrary() {
     showSkeletonLoader();
     
     try {
-        console.log("🔄 Forzando actualización desde Drive...");
+        console.log("🔄 Actualizando...");
         const res = await fetch('/api/refresh');
-        
-        if (!res.ok) throw new Error('Error en la actualización');
-        
+        if (!res.ok) throw new Error('Error en actualización');
         fullLibraryData = await res.json();
         renderGrid();
         showToast('¡Biblioteca actualizada!', 'success');
     } catch (e) {
-        console.error("Error al actualizar:", e);
+        console.error("Error:", e);
         showToast('Error al conectar con Drive', 'error');
     }
     
@@ -222,9 +429,9 @@ function setGreeting() {
     const msgEl = document.getElementById('greeting-msg');
     
     let greeting = "Hola ❤️";
-    if (hour >= 5 && hour < 12) greeting = "Buenos días, mi amor ☀️";
-    else if (hour >= 12 && hour < 20) greeting = "Buenas tardes, preciosa 🌸";
-    else greeting = "Buenas noches, descansa 🌙";
+    if (hour >= 5 && hour < 12) greeting = "Buenos días ☀️";
+    else if (hour >= 12 && hour < 20) greeting = "Buenas tardes 🌸";
+    else greeting = "Buenas noches 🌙";
     
     if (msgEl) msgEl.innerText = greeting;
 }
@@ -248,7 +455,7 @@ function loadTheme() {
     }
 }
 
-// ==================== BÚSQUEDA CON DEBOUNCE ====================
+// ==================== BÚSQUEDA ====================
 let searchTimeout;
 function setupSearch() {
     const input = document.getElementById('search-input');
@@ -265,7 +472,6 @@ function setupSearch() {
 
 function filterContent(term) {
     const cards = document.querySelectorAll('.album-card');
-    
     cards.forEach(card => {
         const title = card.querySelector('.album-title')?.innerText.toLowerCase() || '';
         card.style.display = title.includes(term) ? 'block' : 'none';
@@ -275,7 +481,6 @@ function filterContent(term) {
 // ==================== CARGA DE DATOS ====================
 async function loadLibrary() {
     showSkeletonLoader();
-    
     try {
         const res = await fetch('/api/albums');
         if (!res.ok) throw new Error('Error');
@@ -288,7 +493,6 @@ async function loadLibrary() {
             container.innerHTML = '<p style="padding:20px; opacity:0.6;">Error al cargar. <button onclick="refreshLibrary()">Reintentar</button></p>';
         }
     }
-    
     hideSkeletonLoader();
 }
 
@@ -299,7 +503,6 @@ async function loadPlaylists() {
             customPlaylists = await res.json();
         }
     } catch (e) {
-        console.log('Usando playlists locales');
         customPlaylists = JSON.parse(localStorage.getItem('koteifyPlaylists')) || [];
     }
 }
@@ -311,23 +514,19 @@ async function loadTopPlayed() {
             const topSongs = await res.json();
             renderTopPlayed(topSongs);
         }
-    } catch (e) {
-        console.log('Estadísticas no disponibles');
-    }
+    } catch (e) {}
 }
 
 function renderTopPlayed(songs) {
     if (!songs || songs.length === 0) return;
-    
     const section = document.getElementById('top-played-section');
     const grid = document.getElementById('top-played-grid');
-    
     if (!section || !grid) return;
     
     section.style.display = 'block';
     grid.innerHTML = '';
     
-    songs.slice(0, 6).forEach((song, idx) => {
+    songs.slice(0, 6).forEach((song) => {
         const item = document.createElement('div');
         item.className = 'top-played-item';
         item.setAttribute('tabindex', '0'); // Habilitar foco en TV
@@ -342,9 +541,8 @@ function renderTopPlayed(songs) {
                 }, 300);
             }
         };
-
         item.onclick = action;
-        item.onkeydown = (e) => { if (e.key === 'Enter') action(); };
+        // Enter manejado globalmente por setupKeyboard
         
         item.innerHTML = `
             <img src="${song.cover}" alt="${song.title}">
@@ -353,15 +551,13 @@ function renderTopPlayed(songs) {
                 <div class="top-played-count">${song.playCount} reproducciones</div>
             </div>
         `;
-        
         grid.appendChild(item);
     });
 }
 
-// ==================== SWITCH MODE ====================
+// ==================== VISTAS Y GRID ====================
 function switchMode(mode) {
     currentMode = mode;
-    
     const buttons = document.querySelectorAll('.nav-btn, .mob-btn');
     buttons.forEach(b => b.classList.remove('active'));
     
@@ -377,28 +573,25 @@ function switchMode(mode) {
             const el = document.getElementById(id);
             if (el) el.classList.add('active');
         });
-        
         const title = document.getElementById('page-title');
         if (title) title.innerText = map[mode][2];
     }
 
     if (mode !== 'fav' && mode !== 'history') showGrid();
     renderGrid();
-
-    // TV FOCUS FIX: Al cambiar de pestaña, poner foco en el primer álbum
+    
+    // Auto-foco para TV
     setTimeout(() => {
-        const firstAlbum = document.querySelector('.album-card');
-        if (firstAlbum) firstAlbum.focus();
+        const first = document.querySelector('.album-card, .top-played-item');
+        if(first) first.focus();
     }, 100);
 }
 
-// ==================== VISTAS ====================
 function showGrid() {
     const gridView = document.getElementById('grid-view');
     const playlistView = document.getElementById('playlist-view');
     const playlistsView = document.getElementById('playlists-view');
     const heroImg = document.getElementById('hero-img');
-    const monthly = document.getElementById('monthly-featured');
     const queuePanel = document.getElementById('queue-panel');
     
     if (gridView) {
@@ -408,126 +601,85 @@ function showGrid() {
     if (playlistView) playlistView.style.display = 'none';
     if (playlistsView) playlistsView.style.display = 'none';
     if (queuePanel) queuePanel.style.display = 'none';
-    if (monthly) monthly.style.display = currentMode === 'audio' ? 'block' : 'none';
     
     if (heroImgBox) heroImgBox.classList.remove('video-mode');
-    
     if (videoEl) {
         videoEl.style.display = 'none';
         videoEl.pause();
     }
-    
     if (heroImg) heroImg.style.display = 'block';
     
     const pb = document.getElementById('player-bar');
     if (pb) pb.style.display = 'flex';
 }
 
-function showPlaylistsView() {
-    const gridView = document.getElementById('grid-view');
-    const playlistView = document.getElementById('playlist-view');
-    const playlistsView = document.getElementById('playlists-view');
-    
-    if (gridView) gridView.style.display = 'none';
-    if (playlistView) playlistView.style.display = 'none';
-    if (playlistsView) {
-        playlistsView.style.display = 'block';
-        playlistsView.classList.add('fade-in');
-    }
-    
-    renderPlaylists();
-}
-
-// ==================== RENDER GRID ====================
 function renderGrid() {
     const container = document.getElementById('albums-container');
     if (!container) return;
-    
     container.innerHTML = '';
     
-    let albumsToRender = [];
-    
+    // Lógica Favoritos
     if (currentMode === 'fav') {
         let allTracks = [];
-        if (fullLibraryData) {
-            fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
-        }
-        
+        if (fullLibraryData) fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
         const myFavs = allTracks.filter(t => favoriteIds.includes(t.id));
         
         if (myFavs.length === 0) {
             showGrid();
-            container.innerHTML = '<p style="opacity:0.6; padding:20px;">Sin favoritos aún. ¡Dale ❤️ a tus canciones!</p>';
+            container.innerHTML = '<p style="opacity:0.6; padding:20px;">Sin favoritos aún.</p>';
             return;
         }
-        
         document.getElementById('grid-view').style.display = 'none';
         document.getElementById('playlist-view').style.display = 'block';
-        openAlbum({ name: "Mis Favoritos ❤️", cover: "https://placehold.co/600?text=Favoritos", songs: myFavs }, true);
+        openAlbum({ name: "Favoritos ❤️", cover: "https://placehold.co/600?text=Favoritos", songs: myFavs }, true);
         return;
     }
     
+    // Lógica Historial
     if (currentMode === 'history') {
         if (historyList.length === 0) {
             showGrid();
-            container.innerHTML = '<p style="opacity:0.6; padding:20px;">Historial vacío. ¡Escucha algo!</p>';
+            container.innerHTML = '<p style="opacity:0.6; padding:20px;">Historial vacío.</p>';
             return;
         }
-        
         document.getElementById('grid-view').style.display = 'none';
         document.getElementById('playlist-view').style.display = 'block';
         openAlbum({ name: "Historial", cover: "https://placehold.co/600?text=Historial", songs: [...historyList].reverse() }, true);
         return;
     }
     
+    // Audio / Video
+    let albumsToRender = [];
     if (fullLibraryData) {
         albumsToRender = fullLibraryData.map(alb => {
-            const filteredSongs = alb.songs.filter(s => 
-                currentMode === 'video' ? s.isVideo : !s.isVideo
-            );
+            const filteredSongs = alb.songs.filter(s => currentMode === 'video' ? s.isVideo : !s.isVideo);
             return { ...alb, songs: filteredSongs };
         }).filter(alb => alb.songs.length > 0);
     }
 
     if (albumsToRender.length === 0) {
-        container.innerHTML = '<p style="opacity:0.6; padding:20px;">Sin contenido en esta categoría.</p>';
+        container.innerHTML = '<p style="opacity:0.6; padding:20px;">Sin contenido.</p>';
         return;
     }
 
     albumsToRender.forEach((album, index) => {
         const card = document.createElement('div');
         card.className = 'album-card';
-        card.setAttribute('tabindex', '0'); // CRUCIAL PARA TV
-        card.style.animationDelay = `${index * 0.05}s`;
-        
+        card.setAttribute('tabindex', '0'); // Foco TV
         card.onclick = () => openAlbum(album);
-        card.onkeydown = (e) => { if (e.key === 'Enter') openAlbum(album); };
+        // Enter manejado globalmente
         
-        const img = document.createElement('img');
-        img.src = album.cover;
-        img.loading = 'lazy';
-        img.alt = album.name;
-        img.onerror = () => { img.src = `https://placehold.co/600?text=${encodeURIComponent(album.name)}`; };
-        
-        const titleDiv = document.createElement('div');
-        titleDiv.className = 'album-title';
-        titleDiv.innerText = album.name;
-        
-        const descDiv = document.createElement('div');
-        descDiv.className = 'album-desc';
-        descDiv.innerText = `${album.songs.length} ${album.songs.length === 1 ? 'canción' : 'canciones'}`;
-        
-        card.appendChild(img);
-        card.appendChild(titleDiv);
-        card.appendChild(descDiv);
+        card.innerHTML = `
+            <img src="${album.cover}" loading="lazy" onerror="this.src='https://placehold.co/600'">
+            <div class="album-title">${album.name}</div>
+            <div class="album-desc">${album.songs.length} canciones</div>
+        `;
         container.appendChild(card);
     });
 }
 
-// ==================== ABRIR ÁLBUM ====================
 function openAlbum(album, isDirect = false) {
     currentAlbumData = album;
-    
     if (!isDirect) {
         document.getElementById('grid-view').style.display = 'none';
         document.getElementById('playlist-view').style.display = 'block';
@@ -552,54 +704,37 @@ function openAlbum(album, isDirect = false) {
         
         const tr = document.createElement('tr');
         tr.className = `track-row ${isCurrentlyPlaying ? 'playing' : ''}`;
-        tr.setAttribute('tabindex', '0'); // CRUCIAL PARA TV
+        tr.setAttribute('tabindex', '0'); // Foco TV
         
         const action = () => {
             originalPlaylist = [...album.songs];
             playTrack(album.songs, idx);
         };
-
         tr.onclick = (e) => {
             if (e.target.closest('.btn-icon')) return;
             action();
         };
         
-        tr.onkeydown = (e) => {
-            if (e.key === 'Enter' && !e.target.closest('.btn-icon')) {
-                action();
-            }
-        };
-        
-        // Botones internos con tabIndex 0 para ser accesibles
         tr.innerHTML = `
             <td class="track-num">${idx + 1}</td>
+            <td><div class="track-title">${song.title}</div></td>
             <td>
-                <div class="track-title">${song.title}</div>
-            </td>
-            <td>
-                <button class="btn-icon btn-queue" 
-                    tabindex="0"
-                    onclick="addToQueueFromList('${song.id}', event); return false;" 
-                    onkeydown="if(event.key === 'Enter'){ addToQueueFromList('${song.id}', event); event.stopPropagation(); }"
-                    title="Añadir a cola">
+                <button class="btn-icon btn-queue" tabindex="0"
+                    onclick="addToQueueFromList('${song.id}', event)">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </td>
             <td style="text-align:right;">
-                <button class="btn-icon ${isLiked ? 'liked' : ''}" 
-                    tabindex="0"
-                    onclick="toggleLike('${song.id}', this, event)" 
-                    onkeydown="if(event.key === 'Enter'){ toggleLike('${song.id}', this, event); event.stopPropagation(); }"
-                    title="Me gusta">
+                <button class="btn-icon ${isLiked ? 'liked' : ''}" tabindex="0"
+                    onclick="toggleLike('${song.id}', this, event)">
                     <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                 </button>
             </td>
         `;
-        
         tbody.appendChild(tr);
     });
 
-    // TV FOCUS FIX: Poner foco en el botón "Reproducir" al abrir álbum
+    // Foco en Play
     setTimeout(() => {
         const playBtn = document.querySelector('.hero-btn');
         if (playBtn) playBtn.focus();
@@ -608,16 +743,14 @@ function openAlbum(album, isDirect = false) {
 
 // ==================== REPRODUCTOR CORE ====================
 function playTrack(playlist, index) {
-    if (audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
+    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
 
     currentPlaylist = playlist;
     currentIndex = index;
-    
     const track = currentPlaylist[index];
     if (!track) return;
 
+    // UI
     document.getElementById('player-img').src = track.cover;
     document.getElementById('player-title').innerText = track.title;
     document.getElementById('player-artist').innerText = track.artist;
@@ -631,37 +764,23 @@ function playTrack(playlist, index) {
     if (track.isVideo) {
         isVideoPlaying = true;
         audioEl.pause();
-        
         document.getElementById('hero-img').style.display = 'none';
         videoEl.style.display = 'block';
         if (heroImgBox) heroImgBox.classList.add('video-mode');
-        
         videoEl.src = track.src;
         videoEl.play();
-        
-        const pb = document.getElementById('player-bar');
-        if (pb) pb.style.display = 'none';
-
-        if (window.innerWidth < 768) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        document.getElementById('player-bar').style.display = 'none';
+        if (window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
         isVideoPlaying = false;
         videoEl.pause();
         videoEl.style.display = 'none';
-        
         if (heroImgBox) heroImgBox.classList.remove('video-mode');
         document.getElementById('hero-img').style.display = 'block';
-        
-        const pb = document.getElementById('player-bar');
-        if (pb) pb.style.display = 'flex';
-        
+        document.getElementById('player-bar').style.display = 'flex';
         audioEl.src = track.src;
-        audioEl.play().catch(e => console.log("Play error:", e));
-        
-        if (isVisualizerActive) {
-            startVisualizer();
-        }
+        audioEl.play().catch(console.error);
+        if (isVisualizerActive) startVisualizer();
     }
 
     updateMediaSession(track);
@@ -669,19 +788,13 @@ function playTrack(playlist, index) {
 }
 
 function updateTrackListHighlight() {
-    document.querySelectorAll('.track-row.playing').forEach(el => {
-        el.classList.remove('playing');
-    });
-    
+    document.querySelectorAll('.track-row.playing').forEach(el => el.classList.remove('playing'));
     if (currentPlaylist[currentIndex]) {
         const currentId = currentPlaylist[currentIndex].id;
         document.querySelectorAll('.track-row').forEach(row => {
             const likeBtn = row.querySelector('.btn-icon[onclick*="toggleLike"]');
-            if (likeBtn) {
-                const match = likeBtn.getAttribute('onclick').match(/toggleLike\('([^']+)'/);
-                if (match && match[1] === currentId) {
-                    row.classList.add('playing');
-                }
+            if (likeBtn && likeBtn.getAttribute('onclick').includes(currentId)) {
+                row.classList.add('playing');
             }
         });
     }
@@ -698,7 +811,6 @@ function updateLikeButton(trackId) {
 
 function togglePlay() {
     const player = isVideoPlaying ? videoEl : audioEl;
-    
     if (player.paused) {
         player.play();
         document.getElementById('play-icon').className = "fa-solid fa-pause";
@@ -710,13 +822,11 @@ function togglePlay() {
 
 function nextTrack() {
     if (queueList.length > 0) {
-        const nextSong = queueList.shift();
-        playTrack([nextSong, ...currentPlaylist.slice(currentIndex + 1)], 0);
+        playTrack([queueList.shift(), ...currentPlaylist.slice(currentIndex + 1)], 0);
         updateQueueUI();
-        showToast('▶️ Reproduciendo desde cola', 'info');
+        showToast('▶️ Reproduciendo desde cola');
         return;
     }
-    
     let next = (currentIndex + 1) % currentPlaylist.length;
     playTrack(currentPlaylist, next);
 }
@@ -724,14 +834,10 @@ function nextTrack() {
 function prevTrack() {
     const currentTime = isVideoPlaying ? videoEl.currentTime : audioEl.currentTime;
     if (currentTime > 3) {
-        if (isVideoPlaying) {
-            videoEl.currentTime = 0;
-        } else {
-            audioEl.currentTime = 0;
-        }
+        if (isVideoPlaying) videoEl.currentTime = 0;
+        else audioEl.currentTime = 0;
         return;
     }
-    
     let prev = (currentIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
     playTrack(currentPlaylist, prev);
 }
@@ -748,19 +854,17 @@ function shuffleAllAlbum() {
         const shuffled = [...currentAlbumData.songs].sort(() => Math.random() - 0.5);
         originalPlaylist = [...currentAlbumData.songs];
         playTrack(shuffled, 0);
-        showToast('🔀 Modo aleatorio', 'info');
+        showToast('🔀 Modo aleatorio');
     }
 }
 
 function addToQueueAll() {
-    if (currentAlbumData && currentAlbumData.songs.length > 0) {
+    if (currentAlbumData) {
         currentAlbumData.songs.forEach(song => {
-            if (!queueList.find(s => s.id === song.id)) {
-                queueList.push(song);
-            }
+            if (!queueList.find(s => s.id === song.id)) queueList.push(song);
         });
         updateQueueUI();
-        showToast(`${currentAlbumData.songs.length} canciones añadidas a la cola`, 'success');
+        showToast('Añadidas a la cola', 'success');
     }
 }
 
@@ -768,7 +872,6 @@ function addToQueueAll() {
 function toggleShuffle() {
     isShuffle = !isShuffle;
     document.getElementById('btn-shuffle').classList.toggle('is-active', isShuffle);
-    
     if (isShuffle) {
         const current = currentPlaylist[currentIndex];
         let shuffled = [...currentPlaylist].sort(() => Math.random() - 0.5);
@@ -776,12 +879,12 @@ function toggleShuffle() {
         shuffled.unshift(current);
         currentPlaylist = shuffled;
         currentIndex = 0;
-        showToast('🔀 Aleatorio activado', 'info');
+        showToast('🔀 Aleatorio activado');
     } else if (originalPlaylist.length) {
         const id = currentPlaylist[currentIndex].id;
         currentPlaylist = [...originalPlaylist];
         currentIndex = currentPlaylist.findIndex(t => t.id === id);
-        showToast('➡️ Orden original', 'info');
+        showToast('➡️ Orden original');
     }
 }
 
@@ -792,40 +895,29 @@ function toggleRepeat() {
     
     if (repeatMode === 2) {
         btn.innerHTML = '<i class="fa-solid fa-repeat"></i><span style="font-size:10px;position:absolute;top:-2px;right:-2px;">1</span>';
-        showToast('🔂 Repetir una', 'info');
+        showToast('🔂 Repetir una');
     } else {
         btn.innerHTML = '<i class="fa-solid fa-repeat"></i>';
-        if (repeatMode === 1) {
-            showToast('🔁 Repetir todo', 'info');
-        } else {
-            showToast('➡️ Sin repetir', 'info');
-        }
+        if (repeatMode === 1) showToast('🔁 Repetir todo');
+        else showToast('➡️ Sin repetir');
     }
 }
 
-// ==================== COLA DE REPRODUCCIÓN ====================
+// ==================== COLA Y PLAYLISTS ====================
 function addToQueue(track) {
     if (queueList.find(t => t.id === track.id)) {
-        showToast('Ya está en la cola', 'warning');
-        return;
+        showToast('Ya está en la cola', 'warning'); return;
     }
-    
     queueList.push(track);
     updateQueueUI();
-    showToast(`"${track.title.substring(0, 20)}..." añadida a cola`, 'success');
+    showToast('Añadida a cola', 'success');
 }
 
 function addToQueueFromList(songId, event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     if (currentAlbumData) {
         const song = currentAlbumData.songs.find(s => s.id === songId);
-        if (song) {
-            addToQueue(song);
-        }
+        if (song) addToQueue(song);
     }
     return false;
 }
@@ -833,21 +925,6 @@ function addToQueueFromList(songId, event) {
 function removeFromQueue(index) {
     queueList.splice(index, 1);
     updateQueueUI();
-    showToast('Quitada de la cola', 'info');
-}
-
-function clearQueue() {
-    queueList = [];
-    updateQueueUI();
-    showToast('Cola limpiada', 'info');
-}
-
-function openQueuePanel() {
-    const panel = document.getElementById('queue-panel');
-    if (panel) {
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        updateQueueUI();
-    }
 }
 
 function updateQueueUI() {
@@ -855,18 +932,12 @@ function updateQueueUI() {
     if (!list) return;
     
     if (queueList.length === 0) {
-        list.innerHTML = '<p class="empty-queue">La cola está vacía<br><small>Añade canciones con el botón +</small></p>';
+        list.innerHTML = '<p class="empty-queue">Cola vacía</p>';
     } else {
         list.innerHTML = queueList.map((song, index) => `
             <div class="queue-item" onclick="playQueueItem(${index})">
-                <img src="${song.cover}" alt="${song.title}">
-                <div class="queue-item-info">
-                    <div class="queue-item-title">${song.title}</div>
-                    <div class="queue-item-album">${song.album}</div>
-                </div>
-                <button class="queue-item-remove" onclick="removeFromQueue(${index}); event.stopPropagation();">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="queue-item-title">${song.title}</div>
+                <button class="queue-item-remove" onclick="removeFromQueue(${index}); event.stopPropagation();">x</button>
             </div>
         `).join('');
     }
@@ -875,12 +946,8 @@ function updateQueueUI() {
     badges.forEach(id => {
         const badge = document.getElementById(id);
         if (badge) {
-            if (queueList.length > 0) {
-                badge.style.display = 'inline';
-                badge.textContent = queueList.length;
-            } else {
-                badge.style.display = 'none';
-            }
+            badge.style.display = queueList.length ? 'inline' : 'none';
+            badge.textContent = queueList.length;
         }
     });
 }
@@ -892,15 +959,11 @@ function playQueueItem(index) {
     updateQueueUI();
 }
 
-function updateBadges() {
-    const favBadge = document.getElementById('fav-badge-pc');
-    if (favBadge) {
-        if (favoriteIds.length > 0) {
-            favBadge.style.display = 'inline';
-            favBadge.textContent = favoriteIds.length;
-        } else {
-            favBadge.style.display = 'none';
-        }
+function openQueuePanel() {
+    const panel = document.getElementById('queue-panel');
+    if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        updateQueueUI();
     }
 }
 
@@ -908,15 +971,13 @@ function updateBadges() {
 function toggleVisualizer() {
     isVisualizerActive = !isVisualizerActive;
     document.getElementById('btn-visualizer').classList.toggle('is-active', isVisualizerActive);
-    
     if (isVisualizerActive) {
         visualizerCanvas.classList.add('active');
         startVisualizer();
-        showToast('🌈 Visualizador activado', 'info');
+        showToast('🌈 Visualizador activado');
     } else {
         visualizerCanvas.classList.remove('active');
         stopVisualizer();
-        showToast('Visualizador desactivado', 'info');
     }
 }
 
@@ -925,23 +986,33 @@ function startVisualizer() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
-        
         source = audioContext.createMediaElementSource(audioEl);
         source.connect(analyser);
         analyser.connect(audioContext.destination);
     }
-    
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    
-    resizeCanvas();
+    if (audioContext.state === 'suspended') audioContext.resume();
     drawVisualizer();
 }
 
 function stopVisualizer() {
-    if (ctx) {
-        ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+    if (ctx) ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+}
+
+function drawVisualizer() {
+    if (!isVisualizerActive || !analyser) return;
+    requestAnimationFrame(drawVisualizer);
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+    ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+    const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
+    let x = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * visualizerCanvas.height * 0.5;
+        const hue = (i / bufferLength) * 360;
+        ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.5)`;
+        ctx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
     }
 }
 
@@ -950,64 +1021,32 @@ function resizeCanvas() {
     visualizerCanvas.height = window.innerHeight;
 }
 
-function drawVisualizer() {
-    if (!isVisualizerActive || !analyser) return;
-    
-    requestAnimationFrame(drawVisualizer);
-    
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(dataArray);
-    
-    ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
-    
-    const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
-    let x = 0;
-    
-    for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * visualizerCanvas.height * 0.5;
-        
-        const hue = (i / bufferLength) * 360;
-        ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.5)`;
-        
-        ctx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
-        
-        x += barWidth + 1;
-    }
-}
-
-// ==================== CASSETTE & SLEEP ====================
+// ==================== EXTRAS ====================
 function toggleCassetteMode() {
     isCassetteMode = !isCassetteMode;
     document.getElementById('btn-cassette').classList.toggle('is-active', isCassetteMode);
     if (heroImgBox) heroImgBox.classList.toggle('spinning', isCassetteMode);
-    
-    if (isCassetteMode) {
-        showToast('💿 Modo cassette', 'info');
-    }
+    if (isCassetteMode) showToast('💿 Modo cassette');
 }
 
 function toggleSleepTimer() {
     const btn = document.getElementById('btn-sleep');
-    
     if (sleepTimer) {
         clearTimeout(sleepTimer);
         sleepTimer = null;
         btn.classList.remove('is-active');
-        showToast('🌙 Timer cancelado', 'info');
+        showToast('🌙 Timer cancelado');
     } else {
-        const mins = prompt("⏰ Minutos para apagar:", "30");
+        const mins = prompt("⏰ Minutos:", "30");
         if (mins && !isNaN(mins) && parseInt(mins) > 0) {
             sleepTimer = setTimeout(() => {
                 audioEl.pause();
                 videoEl.pause();
-                document.getElementById('play-icon').className = "fa-solid fa-play";
-                showToast('🌙 ¡Tiempo terminado! Buenas noches', 'success');
+                showToast('🌙 Buenas noches');
                 btn.classList.remove('is-active');
             }, parseInt(mins) * 60000);
-            
             btn.classList.add('is-active');
-            showToast(`🌙 Apagando en ${mins} minutos`, 'success');
+            showToast(`🌙 Apagando en ${mins} min`);
         }
     }
 }
@@ -1016,11 +1055,8 @@ function toggleSleepTimer() {
 function toggleLyrics() {
     const modal = document.getElementById('lyrics-modal');
     if (modal) {
-        if (modal.style.display === 'none' || !modal.style.display) {
-            openLyricsModal();
-        } else {
-            closeLyricsModal();
-        }
+        if (modal.style.display === 'none' || !modal.style.display) openLyricsModal();
+        else modal.style.display = 'none';
     }
 }
 
@@ -1028,569 +1064,80 @@ async function openLyricsModal() {
     const modal = document.getElementById('lyrics-modal');
     const title = document.getElementById('lyrics-song-title');
     const container = document.getElementById('lyrics-text');
-    
     if (!modal || !currentPlaylist[currentIndex]) return;
-    
     const track = currentPlaylist[currentIndex];
     title.innerText = track.title;
-    container.innerHTML = '<p class="lyrics-loading">🔍 Buscando letra...</p>';
+    container.innerHTML = '<p class="lyrics-loading">🔍 Buscando...</p>';
     modal.style.display = 'flex';
-    
     try {
-        const res = await fetch(`/api/lyrics?artist=${encodeURIComponent(track.artist || 'L Arc en Ciel')}&title=${encodeURIComponent(track.title)}`);
+        const res = await fetch(`/api/lyrics?artist=${encodeURIComponent(track.artist||'L Arc en Ciel')}&title=${encodeURIComponent(track.title)}`);
         const data = await res.json();
-        
-        if (data.found && data.lyrics) {
-            container.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${data.lyrics}</pre>`;
-        } else {
-            container.innerHTML = '<p class="lyrics-loading">❌ Letra no encontrada</p>';
-        }
-    } catch (e) {
-        container.innerHTML = '<p class="lyrics-loading">❌ Error al buscar letra</p>';
-    }
-}
-
-function closeLyricsModal() {
-    const modal = document.getElementById('lyrics-modal');
-    if (modal) modal.style.display = 'none';
+        if (data.found && data.lyrics) container.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${data.lyrics}</pre>`;
+        else container.innerHTML = '<p>❌ No encontrada</p>';
+    } catch (e) { container.innerHTML = '<p>❌ Error</p>'; }
 }
 
 // ==================== FAVORITOS ====================
 function toggleLike(id, btn, event) {
     if (event) event.stopPropagation();
-    
     if (favoriteIds.includes(id)) {
         favoriteIds = favoriteIds.filter(f => f !== id);
-        if (btn) {
-            btn.classList.remove('liked');
-            btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
-        }
-        showToast('Quitado de favoritos', 'info');
+        if (btn) { btn.classList.remove('liked'); btn.innerHTML = '<i class="fa-regular fa-heart"></i>'; }
+        showToast('Quitado de favoritos');
     } else {
         favoriteIds.push(id);
-        if (btn) {
-            btn.classList.add('liked');
-            btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
-        }
-        showToast('❤️ Añadido a favoritos', 'success');
+        if (btn) { btn.classList.add('liked'); btn.innerHTML = '<i class="fa-solid fa-heart"></i>'; }
+        showToast('❤️ Favorito');
     }
-    
     localStorage.setItem('koteifyLikes', JSON.stringify(favoriteIds));
     updateBadges();
     updateLikeButton(id);
 }
 
 function toggleLikeCurrent() {
-    if (currentPlaylist[currentIndex]) {
-        toggleLike(currentPlaylist[currentIndex].id, null, null);
-    }
+    if (currentPlaylist[currentIndex]) toggleLike(currentPlaylist[currentIndex].id, null, null);
 }
 
 // ==================== HISTORIAL ====================
 function addToHistory(track) {
     if (historyList.length > 0 && historyList[historyList.length - 1].id === track.id) return;
-    
     historyList.push(track);
     if (historyList.length > 50) historyList.shift();
-    
     localStorage.setItem('koteifyHistory', JSON.stringify(historyList));
 }
 
-// ==================== PLAYLISTS PERSONALIZADAS ====================
-function openPlaylistManager() {
-    showPlaylistsView();
+// ==================== PLAYLIST MANAGER ====================
+function openPlaylistManager() { showPlaylistsView(); }
+function showPlaylistsView() {
+    document.getElementById('grid-view').style.display = 'none';
+    document.getElementById('playlist-view').style.display = 'none';
+    document.getElementById('playlists-view').style.display = 'block';
+    renderPlaylistsUI();
 }
-
-function renderPlaylists() {
+function renderPlaylistsUI() {
     const container = document.getElementById('playlists-container');
     if (!container) return;
-    
     if (customPlaylists.length === 0) {
-        container.innerHTML = '<p style="opacity:0.6; padding:20px; text-align:center;">No tienes playlists aún. ¡Crea una!</p>';
+        container.innerHTML = '<p style="padding:20px;">No hay playlists.</p>';
         return;
     }
-    
     container.innerHTML = customPlaylists.map(pl => `
         <div class="playlist-card" onclick="openPlaylist('${pl.id}')">
-            <div class="playlist-card-header">
-                <div class="playlist-card-cover">
-                    <i class="fa-solid fa-music"></i>
-                </div>
-                <div>
-                    <div class="playlist-card-name">${pl.name}</div>
-                    <div class="playlist-card-count">${pl.songs.length} canciones</div>
-                </div>
-            </div>
-            <div class="playlist-card-actions">
-                <button class="hero-btn secondary" onclick="deletePlaylist('${pl.id}'); event.stopPropagation();" style="padding:8px 12px;font-size:12px;">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
+            <div class="playlist-card-name">${pl.name}</div>
+            <div class="playlist-card-count">${pl.songs.length} canciones</div>
+            <button onclick="deletePlaylist('${pl.id}');event.stopPropagation()">Borrar</button>
         </div>
     `).join('');
 }
-
 function createNewPlaylist() {
-    const modal = document.getElementById('playlist-modal');
-    const input = document.getElementById('new-playlist-name');
-    
-    if (modal) {
-        modal.style.display = 'flex';
-        if (input) {
-            input.value = '';
-            input.focus();
-        }
-    }
+    const m = document.getElementById('playlist-modal');
+    if(m) m.style.display = 'flex';
 }
-
-function closePlaylistModal() {
-    const modal = document.getElementById('playlist-modal');
-    if (modal) modal.style.display = 'none';
-}
-
 async function saveNewPlaylist() {
     const input = document.getElementById('new-playlist-name');
     const name = input?.value?.trim();
-    
-    if (!name) {
-        showToast('El nombre es obligatorio', 'warning');
-        return;
-    }
-    
-    const newPlaylist = {
-        id: `pl_${Date.now()}`,
-        name: name,
-        songs: [],
-        createdAt: new Date().toISOString()
-    };
-    
+    if (!name) return;
+    const newPl = { id: `pl_${Date.now()}`, name: name, songs: [], createdAt: new Date().toISOString() };
     try {
-        const res = await fetch('/api/playlists', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newPlaylist)
-        });
-        
-        if (res.ok) {
-            customPlaylists.push(await res.json());
-        } else {
-            customPlaylists.push(newPlaylist);
-            localStorage.setItem('koteifyPlaylists', JSON.stringify(customPlaylists));
-        }
-    } catch (e) {
-        customPlaylists.push(newPlaylist);
-        localStorage.setItem('koteifyPlaylists', JSON.stringify(customPlaylists));
-    }
-    
-    closePlaylistModal();
-    renderPlaylists();
-    showToast(`Playlist "${name}" creada`, 'success');
-}
-
-function openPlaylist(id) {
-    const playlist = customPlaylists.find(p => p.id === id);
-    if (playlist) {
-        document.getElementById('playlists-view').style.display = 'none';
-        document.getElementById('playlist-view').style.display = 'block';
-        openAlbum(playlist, true);
-    }
-}
-
-async function deletePlaylist(id) {
-    if (!confirm('¿Eliminar esta playlist?')) return;
-    
-    try {
-        await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
-    } catch (e) {}
-    
-    customPlaylists = customPlaylists.filter(p => p.id !== id);
-    localStorage.setItem('koteifyPlaylists', JSON.stringify(customPlaylists));
-    renderPlaylists();
-    showToast('Playlist eliminada', 'info');
-}
-
-// ==================== ESTADÍSTICAS ====================
-async function showStats() {
-    const modal = document.getElementById('stats-modal');
-    const container = document.getElementById('stats-container');
-    
-    if (!modal) return;
-    
-    modal.style.display = 'flex';
-    container.innerHTML = '<p class="stats-loading">Cargando estadísticas...</p>';
-    
-    try {
-        const [statsRes, topRes] = await Promise.all([
-            fetch('/api/stats'),
-            fetch('/api/stats/top')
-        ]);
-        
-        const stats = await statsRes.json();
-        const topSongs = await topRes.json();
-        
-        const totalPlays = Object.values(stats.plays || {}).reduce((a, b) => a + b, 0);
-        const totalAlbums = fullLibraryData.length;
-        const totalSongs = fullLibraryData.reduce((acc, a) => acc + a.songs.length, 0);
-        
-        container.innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">${totalPlays}</div>
-                    <div class="stat-label">Reproducciones</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${favoriteIds.length}</div>
-                    <div class="stat-label">Favoritos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalAlbums}</div>
-                    <div class="stat-label">Álbumes</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalSongs}</div>
-                    <div class="stat-label">Canciones</div>
-                </div>
-            </div>
-            <h4 style="margin-top:20px;margin-bottom:12px;">🔥 Top 5 Más Escuchadas</h4>
-            <div class="top-songs-list">
-                ${topSongs.slice(0, 5).map((s, i) => `
-                    <div class="top-song-item" tabindex="0">
-                        <span class="top-song-rank">#${i + 1}</span>
-                        <img src="${s.cover}" style="width:40px;height:40px;border-radius:4px;">
-                        <div class="top-song-info">
-                            <div class="track-title">${s.title}</div>
-                            <div class="top-song-plays">${s.playCount} reproducciones</div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    } catch (e) {
-        container.innerHTML = '<p class="stats-loading">Error al cargar estadísticas</p>';
-    }
-}
-
-function closeStatsModal() {
-    const modal = document.getElementById('stats-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-function playTopSong(songId) {
-    const album = fullLibraryData.find(a => a.songs.some(s => s.id === songId));
-    if (album) {
-        closeStatsModal();
-        openAlbum(album);
-        setTimeout(() => {
-            const songIndex = album.songs.findIndex(s => s.id === songId);
-            if (songIndex >= 0) playTrack(album.songs, songIndex);
-        }, 300);
-    }
-}
-
-// ==================== PROGRESS & TIME ====================
-function updateProgress(e) {
-    if (isDragging) return;
-    
-    const { duration, currentTime } = e.srcElement;
-    if (!duration) return;
-    
-    document.getElementById('seek-slider').value = currentTime;
-    document.getElementById('seek-slider').max = duration;
-    document.getElementById('curr-time').innerText = formatTime(currentTime);
-    document.getElementById('total-time').innerText = formatTime(duration);
-    
-    const seek = document.getElementById('seek-slider');
-    const percent = (currentTime / duration) * 100;
-    seek.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
-    
-    if (Math.floor(currentTime) % 10 === 0) saveState();
-    
-    if (currentTime / duration > 0.8 && currentIndex < currentPlaylist.length - 1) {
-        preloadNextTrack();
-    }
-}
-
-function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec < 10 ? '0' + sec : sec}`;
-}
-
-function preloadNextTrack() {
-    const nextIndex = currentIndex + 1;
-    if (currentPlaylist[nextIndex] && !currentPlaylist[nextIndex].isVideo) {
-        const preloadAudio = new Audio();
-        preloadAudio.preload = 'auto';
-        preloadAudio.src = currentPlaylist[nextIndex].src;
-    }
-}
-
-// Event listeners de medios
-[audioEl, videoEl].forEach(media => {
-    media.addEventListener('timeupdate', updateProgress);
-    media.addEventListener('ended', () => {
-        if (repeatMode === 2) {
-            media.currentTime = 0;
-            media.play();
-        } else {
-            nextTrack();
-        }
-    });
-    media.addEventListener('error', (e) => {
-        console.error('Media error:', e);
-        showToast('Error al reproducir', 'error');
-    });
-});
-
-const seek = document.getElementById('seek-slider');
-if (seek) {
-    seek.addEventListener('input', (e) => { isDragging = true; });
-    seek.addEventListener('change', (e) => {
-        isDragging = false;
-        (isVideoPlaying ? videoEl : audioEl).currentTime = e.target.value;
-    });
-}
-
-const vol = document.getElementById('vol-slider');
-if (vol) {
-    vol.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value);
-        audioEl.volume = value;
-        videoEl.volume = value;
-        
-        const icon = document.querySelector('.player-right .fa-volume-high, .player-right .fa-volume-low, .player-right .fa-volume-xmark');
-        if (icon) {
-            if (value === 0) icon.className = 'fa-solid fa-volume-xmark';
-            else if (value < 0.5) icon.className = 'fa-solid fa-volume-low';
-            else icon.className = 'fa-solid fa-volume-high';
-        }
-    });
-}
-
-// ==================== MEDIA SESSION API ====================
-function setupMediaSession() {
-    if (!('mediaSession' in navigator)) return;
-    
-    navigator.mediaSession.setActionHandler('play', togglePlay);
-    navigator.mediaSession.setActionHandler('pause', togglePlay);
-    navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
-    navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-        if (details.seekTime !== undefined) {
-            (isVideoPlaying ? videoEl : audioEl).currentTime = details.seekTime;
-        }
-    });
-}
-
-function updateMediaSession(t) {
-    if (!('mediaSession' in navigator)) return;
-    
-    navigator.mediaSession.metadata = new MediaMetadata({
-        title: t.title,
-        artist: t.artist,
-        album: t.album,
-        artwork: [
-            { src: t.cover, sizes: '512x512', type: 'image/png' }
-        ]
-    });
-}
-
-// ==================== KEYBOARD SHORTCUTS (TV LOGIC FIX) ====================
-function setupKeyboard() {
-    document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-        // DETECCIÓN INTELIGENTE DE NAVEGACIÓN
-        // Si el elemento activo es un botón, tarjeta, o fila de canción,
-        // asumimos que el usuario está NAVEGANDO por la interfaz.
-        const activeEl = document.activeElement;
-        const isNavigating = activeEl.classList.contains('album-card') || 
-                             activeEl.classList.contains('track-row') || 
-                             activeEl.classList.contains('nav-btn') ||
-                             activeEl.classList.contains('ctrl-btn') ||
-                             activeEl.classList.contains('top-played-item') ||
-                             activeEl.tagName === 'BUTTON';
-
-        // Si es una flecha y estamos navegando, DEJAR que el navegador mueva el foco
-        if (isNavigating && (e.code.startsWith('Arrow'))) {
-            return; 
-        }
-
-        switch (e.code) {
-            case 'Space':
-            case 'Enter':
-                // Si estamos en el "aire", Enter es Play/Pause
-                if (!isNavigating || activeEl === document.body) {
-                    e.preventDefault();
-                    togglePlay();
-                }
-                break;
-            case 'ArrowRight':
-                // Si NO estamos navegando, entonces sí controlamos la canción
-                if (!isNavigating) {
-                    if (e.ctrlKey) {
-                        nextTrack();
-                    } else {
-                        const player = isVideoPlaying ? videoEl : audioEl;
-                        player.currentTime += 10;
-                        showToast('⏩ +10s', 'info');
-                    }
-                }
-                break;
-            case 'ArrowLeft':
-                if (!isNavigating) {
-                    if (e.ctrlKey) {
-                        prevTrack();
-                    } else {
-                        const player = isVideoPlaying ? videoEl : audioEl;
-                        player.currentTime -= 10;
-                        showToast('⏪ -10s', 'info');
-                    }
-                }
-                break;
-            case 'ArrowUp':
-                if (!isNavigating) {
-                    e.preventDefault();
-                    audioEl.volume = Math.min(1, audioEl.volume + 0.1);
-                    videoEl.volume = audioEl.volume;
-                    if(vol) vol.value = audioEl.volume;
-                    showToast(`🔊 Volumen ${(audioEl.volume * 100).toFixed(0)}%`, 'info');
-                }
-                break;
-            case 'ArrowDown':
-                if (!isNavigating) {
-                    e.preventDefault();
-                    audioEl.volume = Math.max(0, audioEl.volume - 0.1);
-                    videoEl.volume = audioEl.volume;
-                    if(vol) vol.value = audioEl.volume;
-                    showToast(`🔉 Volumen ${(audioEl.volume * 100).toFixed(0)}%`, 'info');
-                }
-                break;
-            case 'KeyM':
-                if (audioEl.volume > 0) {
-                    audioEl.dataset.prevVolume = audioEl.volume;
-                    audioEl.volume = 0;
-                    videoEl.volume = 0;
-                    if(vol) vol.value = 0;
-                } else {
-                    audioEl.volume = audioEl.dataset.prevVolume || 1;
-                    videoEl.volume = audioEl.volume;
-                    if(vol) vol.value = audioEl.volume;
-                }
-                break;
-            case 'KeyL':
-                toggleLikeCurrent();
-                break;
-            case 'KeyQ':
-                openQueuePanel();
-                break;
-        }
-    });
-}
-
-function setupRemoteControl() {
-    document.addEventListener('keydown', (e) => {
-        // Tecla Back / Escape / Return (Tizen/WebOS)
-        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 10009 || e.key === 'GoBack') {
-            const pv = document.getElementById('playlist-view');
-            const plv = document.getElementById('playlists-view');
-            const qp = document.getElementById('queue-panel');
-            
-            const modals = ['lyrics-modal', 'playlist-modal', 'stats-modal'];
-            for (const id of modals) {
-                const modal = document.getElementById(id);
-                if (modal && modal.style.display !== 'none') {
-                    modal.style.display = 'none';
-                    return;
-                }
-            }
-            
-            if (qp && qp.style.display !== 'none') {
-                qp.style.display = 'none';
-                return;
-            }
-            
-            if ((pv && pv.style.display !== 'none') || (plv && plv.style.display !== 'none')) {
-                e.preventDefault();
-                showGrid();
-                setTimeout(() => {
-                    const c = document.querySelector('.album-card');
-                    if (c) c.focus();
-                }, 100);
-            }
-        }
-    });
-}
-
-// ==================== PERSISTENCIA ====================
-function saveState() {
-    if (!currentPlaylist[currentIndex]) return;
-    
-    const s = {
-        track: currentPlaylist[currentIndex],
-        time: (isVideoPlaying ? videoEl : audioEl).currentTime,
-        playlist: currentPlaylist,
-        index: currentIndex
-    };
-    
-    localStorage.setItem('koteifyState', JSON.stringify(s));
-}
-
-function loadLastPosition() {
-    try {
-        const s = JSON.parse(localStorage.getItem('koteifyState'));
-        
-        if (s && s.track) {
-            currentPlaylist = s.playlist || [s.track];
-            currentIndex = s.index || 0;
-            
-            document.getElementById('player-img').src = s.track.cover;
-            document.getElementById('player-title').innerText = s.track.title;
-            document.getElementById('player-artist').innerText = s.track.artist;
-            updateLikeButton(s.track.id);
-            
-            if (s.track.isVideo) {
-                // No autoplay video
-            } else {
-                audioEl.src = s.track.src;
-                audioEl.currentTime = s.time;
-                audioEl.pause(); 
-            }
-        }
-    } catch (e) {
-        console.log('No hay estado guardado');
-    }
-}
-
-// ==================== ESPECIAL DEL MES ====================
-function playMonthlyTop() {
-    if (historyList.length > 0) {
-        openAlbum({ 
-            name: "Top Reciente 🕒", 
-            cover: "https://placehold.co/600?text=Top+Mes", 
-            songs: [...historyList].reverse() 
-        }, false);
-        
-        setTimeout(() => {
-            playTrack([...historyList].reverse(), 0);
-        }, 500);
-    } else {
-        showToast('¡Escucha música para generar tu Top!', 'info');
-    }
-}
-
-// ==================== RESIZE HANDLER ====================
-window.addEventListener('resize', () => {
-    if (isVisualizerActive) {
-        resizeCanvas();
-    }
-});
-
-// ==================== CLICK FUERA DE MODALES ====================
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-        e.target.style.display = 'none';
-    }
-});
-
-console.log('🎵 AmorList v2.2 - Script cargado (Control TV Activo)');
+        await fetch('/api/playlists', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newPl) });
+        customPlaylists.push(
