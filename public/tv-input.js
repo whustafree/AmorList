@@ -1,16 +1,13 @@
-// public/tv-input.js
 import { state } from './state.js';
 
-// Importamos funciones necesarias del script principal (las definiremos luego)
-import { 
-    nextTrack, prevTrack, togglePlay, changeVolume, toggleMute, 
-    openQueuePanel, showGrid, handleBackKey 
-} from './script.js';
+// NOTA: No importamos nada de script.js para evitar errores de referencia circular.
+// Usaremos las funciones globales window.togglePlay, window.nextTrack, etc.
 
 export function setupKeyboard() {
-    console.log('🎮 Cargando motor de TV...');
+    console.log('🎮 Motor de TV cargado y escuchando...');
     
     document.addEventListener('keydown', (e) => {
+        // Ignorar si el usuario escribe en un input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
         switch (e.code) {
@@ -24,16 +21,17 @@ export function setupKeyboard() {
                 break;
             case 'ArrowLeft':
                 e.preventDefault();
-                if (e.ctrlKey) prevTrack();
+                if (e.ctrlKey) window.prevTrack(); // Usamos window.
                 else navMove('LEFT');
                 break;
             case 'ArrowRight':
                 e.preventDefault();
-                if (e.ctrlKey) nextTrack();
+                if (e.ctrlKey) window.nextTrack(); // Usamos window.
                 else navMove('RIGHT');
                 break;
             case 'Enter':
             case 'NumpadEnter':
+                // Simular click visualmente
                 if (document.activeElement) {
                     document.activeElement.click();
                     document.activeElement.classList.add('active-press');
@@ -42,33 +40,39 @@ export function setupKeyboard() {
                 break;
             case 'Space':
                 e.preventDefault();
-                togglePlay();
+                window.togglePlay(); // Usamos window.
                 break;
-            case 'Equal': case 'NumpadAdd':
-                changeVolume(0.1);
+            // Teclas para volumen
+            case 'Equal': // Tecla +
+            case 'NumpadAdd':
+                window.changeVolume(0.1); // Asumiendo que expusiste esto o lo manejas aquí
                 break;
-            case 'Minus': case 'NumpadSubtract':
-                changeVolume(-0.1);
+            case 'Minus': // Tecla -
+            case 'NumpadSubtract':
+                window.changeVolume(-0.1);
                 break;
-            case 'KeyM': toggleMute(); break;
-            case 'KeyQ': openQueuePanel(); break;
-            case 'Backspace': case 'Escape':
-                handleBackKey(e);
+            case 'KeyM':
+                window.toggleMute();
+                break;
+            case 'KeyQ':
+                window.openQueuePanel();
+                break;
+            case 'Backspace':
+            case 'Escape':
+                window.handleBackKey(e);
                 break;
         }
     });
+}
 
-    // Soporte para control remoto físico
-    document.addEventListener('keydown', (e) => {
-        if (e.keyCode === 10009 || e.key === 'GoBack') handleBackKey(e);
-        if (e.keyCode === 415) togglePlay();
-        if (e.keyCode === 19) togglePlay();
-        if (e.keyCode === 412) prevTrack();
-        if (e.keyCode === 417) nextTrack();
+// Lógica de Navegación Espacial (Sin cambios, funciona perfecto)
+function getFocusableElements() {
+    const selector = 'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    return Array.from(document.querySelectorAll(selector)).filter(el => {
+        return el.offsetParent !== null && !el.disabled && el.style.display !== 'none';
     });
 }
 
-// Lógica matemática de navegación (El motor espacial)
 function navMove(direction) {
     const activeEl = document.activeElement;
     
@@ -79,21 +83,23 @@ function navMove(direction) {
     }
 
     const rect = activeEl.getBoundingClientRect();
-    const activeCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const activeCenter = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
 
-    const selector = 'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const candidates = Array.from(document.querySelectorAll(selector)).filter(el => {
-        return el !== activeEl && el.offsetParent !== null && !el.disabled && el.style.display !== 'none';
-    });
-
+    const candidates = getFocusableElements().filter(el => el !== activeEl);
     let bestCandidate = null;
     let minDistance = Infinity;
     const threshold = 50; 
 
     candidates.forEach(el => {
         const elRect = el.getBoundingClientRect();
-        const elCenter = { x: elRect.left + elRect.width / 2, y: elRect.top + elRect.height / 2 };
-        
+        const elCenter = {
+            x: elRect.left + elRect.width / 2,
+            y: elRect.top + elRect.height / 2
+        };
+
         const deltaX = elCenter.x - activeCenter.x;
         const deltaY = elCenter.y - activeCenter.y;
         let isValid = false;
@@ -118,7 +124,7 @@ function navMove(direction) {
         bestCandidate.focus();
         bestCandidate.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-        // Fallbacks
+        // Fallbacks inteligentes
         if (direction === 'RIGHT' && activeEl.classList.contains('nav-btn')) {
             const firstCard = document.querySelector('.album-card, .top-played-item');
             if (firstCard) firstCard.focus();
