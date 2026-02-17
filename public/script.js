@@ -1,6 +1,6 @@
 /**
- * AmorList v2.1 - Frontend Mejorado (TV & Mobile Fix)
- * Reproductor de música/video con soporte real para TV y Móviles
+ * AmorList v2.2 - TV Edition Fix
+ * Corrección de navegación por flechas y foco para Smart TV
  */
 
 // ==================== VARIABLES GLOBALES ====================
@@ -47,12 +47,12 @@ const ctx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
 
 // ==================== INICIALIZACIÓN ====================
 window.onload = async () => {
-    console.log('🎵 AmorList v2.1 Iniciando...');
+    console.log('🎵 AmorList TV Edition Iniciando...');
     
     setGreeting();
     loadTheme();
     setupSearch();
-    setupKeyboard(); // Nueva lógica para TV
+    setupKeyboard(); // Lógica corregida para TV
     setupRemoteControl();
     setupMediaSession();
     setupServiceWorker();
@@ -66,6 +66,12 @@ window.onload = async () => {
     
     loadLastPosition();
     updateBadges();
+    
+    // Enfocar el primer elemento para TV al iniciar
+    setTimeout(() => {
+        const firstBtn = document.getElementById('btn-pc-audio');
+        if (firstBtn) firstBtn.focus();
+    }, 1000);
     
     console.log('✅ AmorList listo!');
 };
@@ -148,7 +154,6 @@ function showToast(message, type = 'info') {
     
     container.appendChild(toast);
     
-    // Auto-remove after 4 seconds
     setTimeout(() => {
         toast.classList.add('hiding');
         setTimeout(() => toast.remove(), 300);
@@ -160,7 +165,6 @@ async function refreshLibrary() {
     const icon = document.getElementById('refresh-icon');
     if (icon) icon.classList.add('fa-spin');
     
-    // Mostrar skeleton
     showSkeletonLoader();
     
     try {
@@ -326,8 +330,9 @@ function renderTopPlayed(songs) {
     songs.slice(0, 6).forEach((song, idx) => {
         const item = document.createElement('div');
         item.className = 'top-played-item';
-        item.onclick = () => {
-            // Encontrar el álbum y reproducir
+        item.setAttribute('tabindex', '0'); // Habilitar foco en TV
+        
+        const action = () => {
             const album = fullLibraryData.find(a => a.songs.some(s => s.id === song.id));
             if (album) {
                 openAlbum(album);
@@ -337,6 +342,9 @@ function renderTopPlayed(songs) {
                 }, 300);
             }
         };
+
+        item.onclick = action;
+        item.onkeydown = (e) => { if (e.key === 'Enter') action(); };
         
         item.innerHTML = `
             <img src="${song.cover}" alt="${song.title}">
@@ -354,7 +362,6 @@ function renderTopPlayed(songs) {
 function switchMode(mode) {
     currentMode = mode;
     
-    // Actualizar botones activos
     const buttons = document.querySelectorAll('.nav-btn, .mob-btn');
     buttons.forEach(b => b.classList.remove('active'));
     
@@ -377,6 +384,12 @@ function switchMode(mode) {
 
     if (mode !== 'fav' && mode !== 'history') showGrid();
     renderGrid();
+
+    // TV FOCUS FIX: Al cambiar de pestaña, poner foco en el primer álbum
+    setTimeout(() => {
+        const firstAlbum = document.querySelector('.album-card');
+        if (firstAlbum) firstAlbum.focus();
+    }, 100);
 }
 
 // ==================== VISTAS ====================
@@ -399,7 +412,6 @@ function showGrid() {
     
     if (heroImgBox) heroImgBox.classList.remove('video-mode');
     
-    // Resetear video
     if (videoEl) {
         videoEl.style.display = 'none';
         videoEl.pause();
@@ -407,7 +419,6 @@ function showGrid() {
     
     if (heroImg) heroImg.style.display = 'block';
     
-    // Mostrar barra audio
     const pb = document.getElementById('player-bar');
     if (pb) pb.style.display = 'flex';
 }
@@ -436,7 +447,6 @@ function renderGrid() {
     
     let albumsToRender = [];
     
-    // Modo favoritos
     if (currentMode === 'fav') {
         let allTracks = [];
         if (fullLibraryData) {
@@ -457,7 +467,6 @@ function renderGrid() {
         return;
     }
     
-    // Modo historial
     if (currentMode === 'history') {
         if (historyList.length === 0) {
             showGrid();
@@ -471,7 +480,6 @@ function renderGrid() {
         return;
     }
     
-    // Modo audio/video
     if (fullLibraryData) {
         albumsToRender = fullLibraryData.map(alb => {
             const filteredSongs = alb.songs.filter(s => 
@@ -486,11 +494,10 @@ function renderGrid() {
         return;
     }
 
-    // Renderizar álbumes con animación escalonada
     albumsToRender.forEach((album, index) => {
         const card = document.createElement('div');
         card.className = 'album-card';
-        card.setAttribute('tabindex', '0');
+        card.setAttribute('tabindex', '0'); // CRUCIAL PARA TV
         card.style.animationDelay = `${index * 0.05}s`;
         
         card.onclick = () => openAlbum(album);
@@ -545,25 +552,25 @@ function openAlbum(album, isDirect = false) {
         
         const tr = document.createElement('tr');
         tr.className = `track-row ${isCurrentlyPlaying ? 'playing' : ''}`;
-        tr.setAttribute('tabindex', '0');
+        tr.setAttribute('tabindex', '0'); // CRUCIAL PARA TV
         
-        // Manejar click en la fila (reproducir)
-        tr.onclick = (e) => {
-            if (e.target.closest('.btn-icon')) return;
+        const action = () => {
             originalPlaylist = [...album.songs];
             playTrack(album.songs, idx);
         };
+
+        tr.onclick = (e) => {
+            if (e.target.closest('.btn-icon')) return;
+            action();
+        };
         
-        // Manejar enter en la fila
         tr.onkeydown = (e) => {
             if (e.key === 'Enter' && !e.target.closest('.btn-icon')) {
-                originalPlaylist = [...album.songs];
-                playTrack(album.songs, idx);
+                action();
             }
         };
         
-        // FIX: Botón de cola con stopPropagation y return false para no activar el click de la fila
-        // También onkeydown específico para TV
+        // Botones internos con tabIndex 0 para ser accesibles
         tr.innerHTML = `
             <td class="track-num">${idx + 1}</td>
             <td>
@@ -571,6 +578,7 @@ function openAlbum(album, isDirect = false) {
             </td>
             <td>
                 <button class="btn-icon btn-queue" 
+                    tabindex="0"
                     onclick="addToQueueFromList('${song.id}', event); return false;" 
                     onkeydown="if(event.key === 'Enter'){ addToQueueFromList('${song.id}', event); event.stopPropagation(); }"
                     title="Añadir a cola">
@@ -578,7 +586,11 @@ function openAlbum(album, isDirect = false) {
                 </button>
             </td>
             <td style="text-align:right;">
-                <button class="btn-icon ${isLiked ? 'liked' : ''}" onclick="toggleLike('${song.id}', this, event)" tabindex="0" title="Me gusta">
+                <button class="btn-icon ${isLiked ? 'liked' : ''}" 
+                    tabindex="0"
+                    onclick="toggleLike('${song.id}', this, event)" 
+                    onkeydown="if(event.key === 'Enter'){ toggleLike('${song.id}', this, event); event.stopPropagation(); }"
+                    title="Me gusta">
                     <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                 </button>
             </td>
@@ -586,11 +598,16 @@ function openAlbum(album, isDirect = false) {
         
         tbody.appendChild(tr);
     });
+
+    // TV FOCUS FIX: Poner foco en el botón "Reproducir" al abrir álbum
+    setTimeout(() => {
+        const playBtn = document.querySelector('.hero-btn');
+        if (playBtn) playBtn.focus();
+    }, 100);
 }
 
 // ==================== REPRODUCTOR CORE ====================
 function playTrack(playlist, index) {
-    // FIX IOS/MOBILE: Reanudar AudioContext si está suspendido (requiere gesto de usuario)
     if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
     }
@@ -601,27 +618,22 @@ function playTrack(playlist, index) {
     const track = currentPlaylist[index];
     if (!track) return;
 
-    // Actualizar UI
     document.getElementById('player-img').src = track.cover;
     document.getElementById('player-title').innerText = track.title;
     document.getElementById('player-artist').innerText = track.artist;
     document.getElementById('play-icon').className = "fa-solid fa-pause";
     
-    // Actualizar botón de like
     updateLikeButton(track.id);
-    
     updateAmbientColor(track.title);
     addToHistory(track);
     updateTrackListHighlight();
 
-    // MODO VIDEO
     if (track.isVideo) {
         isVideoPlaying = true;
         audioEl.pause();
         
         document.getElementById('hero-img').style.display = 'none';
         videoEl.style.display = 'block';
-        
         if (heroImgBox) heroImgBox.classList.add('video-mode');
         
         videoEl.src = track.src;
@@ -633,9 +645,7 @@ function playTrack(playlist, index) {
         if (window.innerWidth < 768) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    } 
-    // MODO AUDIO
-    else {
+    } else {
         isVideoPlaying = false;
         videoEl.pause();
         videoEl.style.display = 'none';
@@ -649,7 +659,6 @@ function playTrack(playlist, index) {
         audioEl.src = track.src;
         audioEl.play().catch(e => console.log("Play error:", e));
         
-        // Iniciar visualizador si está activo
         if (isVisualizerActive) {
             startVisualizer();
         }
@@ -660,12 +669,10 @@ function playTrack(playlist, index) {
 }
 
 function updateTrackListHighlight() {
-    // Remover highlight anterior
     document.querySelectorAll('.track-row.playing').forEach(el => {
         el.classList.remove('playing');
     });
     
-    // Añadir highlight a la pista actual
     if (currentPlaylist[currentIndex]) {
         const currentId = currentPlaylist[currentIndex].id;
         document.querySelectorAll('.track-row').forEach(row => {
@@ -702,7 +709,6 @@ function togglePlay() {
 }
 
 function nextTrack() {
-    // Verificar si hay canciones en la cola
     if (queueList.length > 0) {
         const nextSong = queueList.shift();
         playTrack([nextSong, ...currentPlaylist.slice(currentIndex + 1)], 0);
@@ -716,7 +722,6 @@ function nextTrack() {
 }
 
 function prevTrack() {
-    // Si ha pasado más de 3 segundos, reiniciar canción actual
     const currentTime = isVideoPlaying ? videoEl.currentTime : audioEl.currentTime;
     if (currentTime > 3) {
         if (isVideoPlaying) {
@@ -812,8 +817,8 @@ function addToQueue(track) {
 
 function addToQueueFromList(songId, event) {
     if (event) {
-        event.preventDefault(); // FIX: Evitar comportamiento por defecto
-        event.stopPropagation(); // FIX: Evitar burbujeo al row
+        event.preventDefault();
+        event.stopPropagation();
     }
     
     if (currentAlbumData) {
@@ -866,7 +871,6 @@ function updateQueueUI() {
         `).join('');
     }
     
-    // Actualizar badges
     const badges = ['queue-badge-pc', 'queue-badge-top'];
     badges.forEach(id => {
         const badge = document.getElementById(id);
@@ -889,7 +893,6 @@ function playQueueItem(index) {
 }
 
 function updateBadges() {
-    // Badge de favoritos
     const favBadge = document.getElementById('fav-badge-pc');
     if (favBadge) {
         if (favoriteIds.length > 0) {
@@ -1171,7 +1174,6 @@ async function saveNewPlaylist() {
         if (res.ok) {
             customPlaylists.push(await res.json());
         } else {
-            // Fallback a localStorage
             customPlaylists.push(newPlaylist);
             localStorage.setItem('koteifyPlaylists', JSON.stringify(customPlaylists));
         }
@@ -1252,7 +1254,7 @@ async function showStats() {
             <h4 style="margin-top:20px;margin-bottom:12px;">🔥 Top 5 Más Escuchadas</h4>
             <div class="top-songs-list">
                 ${topSongs.slice(0, 5).map((s, i) => `
-                    <div class="top-song-item" onclick="playTopSong('${s.id}')">
+                    <div class="top-song-item" tabindex="0">
                         <span class="top-song-rank">#${i + 1}</span>
                         <img src="${s.cover}" style="width:40px;height:40px;border-radius:4px;">
                         <div class="top-song-info">
@@ -1297,15 +1299,12 @@ function updateProgress(e) {
     document.getElementById('curr-time').innerText = formatTime(currentTime);
     document.getElementById('total-time').innerText = formatTime(duration);
     
-    // Actualizar estilo del slider
     const seek = document.getElementById('seek-slider');
     const percent = (currentTime / duration) * 100;
     seek.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
     
-    // Guardar estado cada 10 segundos
     if (Math.floor(currentTime) % 10 === 0) saveState();
     
-    // Preload siguiente canción al 80%
     if (currentTime / duration > 0.8 && currentIndex < currentPlaylist.length - 1) {
         preloadNextTrack();
     }
@@ -1318,7 +1317,6 @@ function formatTime(s) {
 }
 
 function preloadNextTrack() {
-    // Solo precargar, no reproducir
     const nextIndex = currentIndex + 1;
     if (currentPlaylist[nextIndex] && !currentPlaylist[nextIndex].isVideo) {
         const preloadAudio = new Audio();
@@ -1344,20 +1342,15 @@ function preloadNextTrack() {
     });
 });
 
-// Seek slider
 const seek = document.getElementById('seek-slider');
 if (seek) {
-    seek.addEventListener('input', (e) => {
-        isDragging = true;
-    });
-    
+    seek.addEventListener('input', (e) => { isDragging = true; });
     seek.addEventListener('change', (e) => {
         isDragging = false;
         (isVideoPlaying ? videoEl : audioEl).currentTime = e.target.value;
     });
 }
 
-// Volume slider
 const vol = document.getElementById('vol-slider');
 if (vol) {
     vol.addEventListener('input', (e) => {
@@ -1365,16 +1358,11 @@ if (vol) {
         audioEl.volume = value;
         videoEl.volume = value;
         
-        // Actualizar icono
         const icon = document.querySelector('.player-right .fa-volume-high, .player-right .fa-volume-low, .player-right .fa-volume-xmark');
         if (icon) {
-            if (value === 0) {
-                icon.className = 'fa-solid fa-volume-xmark';
-            } else if (value < 0.5) {
-                icon.className = 'fa-solid fa-volume-low';
-            } else {
-                icon.className = 'fa-solid fa-volume-high';
-            }
+            if (value === 0) icon.className = 'fa-solid fa-volume-xmark';
+            else if (value < 0.5) icon.className = 'fa-solid fa-volume-low';
+            else icon.className = 'fa-solid fa-volume-high';
         }
     });
 }
@@ -1407,21 +1395,20 @@ function updateMediaSession(t) {
     });
 }
 
-// ==================== KEYBOARD SHORTCUTS (TV FIX) ====================
+// ==================== KEYBOARD SHORTCUTS (TV LOGIC FIX) ====================
 function setupKeyboard() {
     document.addEventListener('keydown', (e) => {
-        // Ignorar si está escribiendo en un input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-        // DETECCIÓN INTELIGENTE DE FOCO PARA TV
+        // DETECCIÓN INTELIGENTE DE NAVEGACIÓN
+        // Si el elemento activo es un botón, tarjeta, o fila de canción,
+        // asumimos que el usuario está NAVEGANDO por la interfaz.
         const activeEl = document.activeElement;
-        
-        // Si el usuario está navegando por elementos interactivos, 
-        // NO queremos que las flechas cambien el volumen o la canción.
         const isNavigating = activeEl.classList.contains('album-card') || 
                              activeEl.classList.contains('track-row') || 
                              activeEl.classList.contains('nav-btn') ||
                              activeEl.classList.contains('ctrl-btn') ||
+                             activeEl.classList.contains('top-played-item') ||
                              activeEl.tagName === 'BUTTON';
 
         // Si es una flecha y estamos navegando, DEJAR que el navegador mueva el foco
@@ -1432,37 +1419,41 @@ function setupKeyboard() {
         switch (e.code) {
             case 'Space':
             case 'Enter':
-                // Si el foco NO está en un elemento clickeable específico, usar Enter como Play/Pause
-                if (activeEl === document.body || !isNavigating) {
+                // Si estamos en el "aire", Enter es Play/Pause
+                if (!isNavigating || activeEl === document.body) {
                     e.preventDefault();
                     togglePlay();
                 }
                 break;
             case 'ArrowRight':
-                if (e.ctrlKey) {
-                    nextTrack();
-                } else {
-                    const player = isVideoPlaying ? videoEl : audioEl;
-                    player.currentTime += 10;
-                    showToast('⏩ +10s', 'info');
+                // Si NO estamos navegando, entonces sí controlamos la canción
+                if (!isNavigating) {
+                    if (e.ctrlKey) {
+                        nextTrack();
+                    } else {
+                        const player = isVideoPlaying ? videoEl : audioEl;
+                        player.currentTime += 10;
+                        showToast('⏩ +10s', 'info');
+                    }
                 }
                 break;
             case 'ArrowLeft':
-                if (e.ctrlKey) {
-                    prevTrack();
-                } else {
-                    const player = isVideoPlaying ? videoEl : audioEl;
-                    player.currentTime -= 10;
-                    showToast('⏪ -10s', 'info');
+                if (!isNavigating) {
+                    if (e.ctrlKey) {
+                        prevTrack();
+                    } else {
+                        const player = isVideoPlaying ? videoEl : audioEl;
+                        player.currentTime -= 10;
+                        showToast('⏪ -10s', 'info');
+                    }
                 }
                 break;
             case 'ArrowUp':
-                // Solo subir volumen si NO estamos navegando
                 if (!isNavigating) {
                     e.preventDefault();
                     audioEl.volume = Math.min(1, audioEl.volume + 0.1);
                     videoEl.volume = audioEl.volume;
-                    document.getElementById('vol-slider').value = audioEl.volume;
+                    if(vol) vol.value = audioEl.volume;
                     showToast(`🔊 Volumen ${(audioEl.volume * 100).toFixed(0)}%`, 'info');
                 }
                 break;
@@ -1471,21 +1462,20 @@ function setupKeyboard() {
                     e.preventDefault();
                     audioEl.volume = Math.max(0, audioEl.volume - 0.1);
                     videoEl.volume = audioEl.volume;
-                    document.getElementById('vol-slider').value = audioEl.volume;
+                    if(vol) vol.value = audioEl.volume;
                     showToast(`🔉 Volumen ${(audioEl.volume * 100).toFixed(0)}%`, 'info');
                 }
                 break;
             case 'KeyM':
-                const vol = document.getElementById('vol-slider');
                 if (audioEl.volume > 0) {
                     audioEl.dataset.prevVolume = audioEl.volume;
                     audioEl.volume = 0;
                     videoEl.volume = 0;
-                    vol.value = 0;
+                    if(vol) vol.value = 0;
                 } else {
                     audioEl.volume = audioEl.dataset.prevVolume || 1;
                     videoEl.volume = audioEl.volume;
-                    vol.value = audioEl.volume;
+                    if(vol) vol.value = audioEl.volume;
                 }
                 break;
             case 'KeyL':
@@ -1500,12 +1490,12 @@ function setupKeyboard() {
 
 function setupRemoteControl() {
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 10009) {
+        // Tecla Back / Escape / Return (Tizen/WebOS)
+        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 10009 || e.key === 'GoBack') {
             const pv = document.getElementById('playlist-view');
             const plv = document.getElementById('playlists-view');
             const qp = document.getElementById('queue-panel');
             
-            // Cerrar modales primero
             const modals = ['lyrics-modal', 'playlist-modal', 'stats-modal'];
             for (const id of modals) {
                 const modal = document.getElementById(id);
@@ -1515,13 +1505,11 @@ function setupRemoteControl() {
                 }
             }
             
-            // Cerrar cola
             if (qp && qp.style.display !== 'none') {
                 qp.style.display = 'none';
                 return;
             }
             
-            // Volver al grid
             if ((pv && pv.style.display !== 'none') || (plv && plv.style.display !== 'none')) {
                 e.preventDefault();
                 showGrid();
@@ -1562,11 +1550,11 @@ function loadLastPosition() {
             updateLikeButton(s.track.id);
             
             if (s.track.isVideo) {
-                // No autoplay video al cargar
+                // No autoplay video
             } else {
                 audioEl.src = s.track.src;
                 audioEl.currentTime = s.time;
-                audioEl.pause(); // No autoplay
+                audioEl.pause(); 
             }
         }
     } catch (e) {
@@ -1600,10 +1588,9 @@ window.addEventListener('resize', () => {
 
 // ==================== CLICK FUERA DE MODALES ====================
 document.addEventListener('click', (e) => {
-    // Cerrar modales al hacer clic fuera
     if (e.target.classList.contains('modal')) {
         e.target.style.display = 'none';
     }
 });
 
-console.log('🎵 AmorList v2.1 - Script cargado con Fixes');
+console.log('🎵 AmorList v2.2 - Script cargado (Control TV Activo)');
