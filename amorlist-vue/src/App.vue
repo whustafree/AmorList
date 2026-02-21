@@ -1,28 +1,34 @@
 <template>
-  <div :class="['min-h-screen bg-gray-900 text-white flex overflow-hidden font-sans relative', playerStore.isVideoPlaying ? '' : 'pb-24']">
+  <div :class="['min-h-screen bg-gray-900 text-white flex overflow-hidden font-sans relative', playerStore.isVideoPlaying ? '' : 'pb-20 lg:pb-24']">
     
     <Visualizer />
-    <Sidebar class="relative z-20" />
+    
+    <Sidebar />
 
-    <main class="flex-1 p-8 overflow-y-auto relative z-10">
+    <main class="flex-1 p-4 lg:p-8 overflow-y-auto relative z-10 w-full">
       <TopBar />
-      <AlbumView v-if="playerStore.currentAlbumData" />
-      <GridView v-else-if="playerStore.currentMode === 'audio' || playerStore.currentMode === 'video'" />
-      <div v-else class="text-gray-400 mt-10">
-        Modo actual: <span class="text-pink-500 font-bold capitalize">{{ playerStore.currentMode }}</span>
+      
+      <div class="max-w-7xl mx-auto">
+        <AlbumView v-if="playerStore.currentAlbumData" />
+        <GridView v-else-if="playerStore.currentMode === 'audio' || playerStore.currentMode === 'video'" />
+        
+        <div v-else class="text-center py-20 text-gray-500">
+          <i class="fa-solid fa-layer-group text-4xl mb-4 block"></i>
+          Modo <span class="text-pink-500 font-bold capitalize">{{ playerStore.currentMode }}</span> en construcción
+        </div>
       </div>
     </main>
 
-    <QueuePanel class="z-30" />
-    <PlayerBar v-show="!playerStore.isVideoPlaying" class="z-40" />
+    <QueuePanel class="z-[60]" />
+    <PlayerBar v-show="!playerStore.isVideoPlaying" class="z-50" />
     
     <div v-if="playerStore.isVideoPlaying" class="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in">
-      <div class="p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 right-0 z-[101] transition-opacity hover:opacity-100">
-        <button @click="closeVideo" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-white flex items-center gap-2 font-bold transition-all shadow-lg backdrop-blur-md">
-          <i class="fa-solid fa-chevron-left"></i> Cerrar Video
+      <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent absolute top-0 left-0 right-0 z-[101]">
+        <button @click="closeVideo" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full text-white text-sm flex items-center gap-2 font-bold backdrop-blur-md">
+          <i class="fa-solid fa-chevron-left"></i> Volver
         </button>
-        <div class="font-bold text-xl drop-shadow-md">{{ currentTrack?.title }}</div>
-        <div class="w-32"></div>
+        <div class="font-bold text-sm lg:text-xl truncate px-4">{{ currentTrack?.title }}</div>
+        <div class="w-10"></div>
       </div>
       <video 
         :src="currentTrack?.src" 
@@ -38,7 +44,6 @@
 
 <script setup>
 import { onMounted, watch, computed } from 'vue';
-
 import Sidebar from './components/Sidebar.vue';
 import PlayerBar from './components/PlayerBar.vue';
 import TopBar from './components/TopBar.vue';
@@ -58,29 +63,27 @@ const closeVideo = () => {
 
 watch(() => playerStore.currentMode, (newMode) => {
   playerStore.searchQuery = ''; 
-  if (newMode === 'audio' || newMode === 'video') {
+  if (['audio', 'video'].includes(newMode)) {
     playerStore.currentAlbumData = null; 
   } else if (newMode === 'fav') {
     playerStore.currentAlbumData = playerStore.getFavoritesAlbum();
   } else if (newMode === 'history') {
     playerStore.currentAlbumData = playerStore.getHistoryAlbum();
   } else if (newMode === 'stats') {
-    // LLAMAMOS A LA NUEVA FUNCIÓN DEL BACKEND
     playerStore.loadTopSongs();
   }
 });
 
-onMounted(() => {
-  setupTVControls();
-});
+onMounted(() => { setupTVControls(); });
 </script>
 
 <style>
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
+.fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+/* Estilo para ocultar scrollbars pero mantener funcionalidad */
+.overflow-y-auto { scrollbar-width: none; -ms-overflow-style: none; }
+.overflow-y-auto::-webkit-scrollbar { display: none; }
 </style>

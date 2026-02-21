@@ -25,12 +25,12 @@ export const playerStore = reactive({
   isVisualizerActive: false,
   isCassetteMode: false,
   isQueueOpen: false,
+  isMobileMenuOpen: false, // NUEVO: Control para el menú móvil
 
   playTrack(playlist, index) {
     this.currentPlaylist = playlist;
     this.currentIndex = index;
     const track = this.currentPlaylist[this.currentIndex];
-    
     if (!track) return;
 
     if (track.isVideo) {
@@ -43,7 +43,6 @@ export const playerStore = reactive({
       this.audioEl.play().catch(e => console.error("Play error:", e));
       this.isPlaying = true;
     }
-    
     this.addToHistory(track);
   },
 
@@ -70,7 +69,6 @@ export const playerStore = reactive({
       this.playTrack(newList, this.currentIndex + 1);
       return;
     }
-
     if (this.currentPlaylist.length === 0) return;
     let next = (this.currentIndex + 1) % this.currentPlaylist.length;
     this.playTrack(this.currentPlaylist, next);
@@ -86,24 +84,16 @@ export const playerStore = reactive({
     this.playTrack(this.currentPlaylist, prev);
   },
 
-  setVolume(value) {
-    this.audioEl.volume = value;
-  },
-
+  setVolume(value) { this.audioEl.volume = value; },
   addToQueue(track) { this.queueList.push(track); },
   playFromQueue(index) {
     const song = this.queueList.splice(index, 1)[0];
-    if (this.currentPlaylist.length === 0) {
-      this.playTrack([song], 0);
-    } else {
-      const newList = [...this.currentPlaylist];
-      newList.splice(this.currentIndex + 1, 0, song);
-      this.playTrack(newList, this.currentIndex + 1);
-    }
+    const newList = [...this.currentPlaylist];
+    newList.splice(this.currentIndex + 1, 0, song);
+    this.playTrack(newList, this.currentIndex + 1);
   },
   removeFromQueue(index) { this.queueList.splice(index, 1); },
   clearQueue() { this.queueList = []; },
-
   addToHistory(track) {
     if (this.historyList.length > 0 && this.historyList[this.historyList.length - 1].id === track.id) return;
     this.historyList.push(track);
@@ -128,23 +118,13 @@ export const playerStore = reactive({
   getHistoryAlbum() {
     return { name: "Historial de Escucha 🕒", cover: "https://placehold.co/600/333333/ffffff?text=Historial", songs: [...this.historyList].reverse() };
   },
-
-  // NUEVO: CARGAR TOP CANCIONES DESDE TU BACKEND
   async loadTopSongs() {
     this.currentAlbumData = { name: "Cargando Top...", cover: "https://placehold.co/600/ffd700/ffffff?text=Cargando...", songs: [] };
     try {
       const res = await fetch('/api/stats/top');
       const topSongs = await res.json();
-      this.currentAlbumData = { 
-        name: "Top Canciones 🏆", 
-        cover: "https://placehold.co/600/ffd700/ffffff?text=Top+Hits", 
-        songs: topSongs 
-      };
-    } catch (error) {
-      console.error("Error cargando el top de canciones:", error);
-      this.currentAlbumData = null;
-      this.currentMode = 'audio';
-    }
+      this.currentAlbumData = { name: "Top Canciones 🏆", cover: "https://placehold.co/600/ffd700/ffffff?text=Top+Hits", songs: topSongs };
+    } catch (e) { this.currentAlbumData = null; this.currentMode = 'audio'; }
   }
 });
 
@@ -152,7 +132,5 @@ playerStore.audioEl.addEventListener('ended', () => {
   if (playerStore.repeatMode === 2) {
     playerStore.audioEl.currentTime = 0;
     playerStore.audioEl.play();
-  } else {
-    playerStore.nextTrack();
-  }
+  } else { playerStore.nextTrack(); }
 });
