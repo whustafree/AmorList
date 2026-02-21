@@ -47,7 +47,7 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error cargando biblioteca:", error);
   } finally {
-    isLoading.false = false;
+    // Solo dejamos esta línea:
     isLoading.value = false;
   }
 });
