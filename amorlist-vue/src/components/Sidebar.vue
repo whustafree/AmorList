@@ -7,25 +7,26 @@
     <div class="flex flex-col gap-2">
       <div class="text-xs text-gray-500 font-bold tracking-wider mb-2">BIBLIOTECA</div>
       
-      <button 
-        @click="playerStore.currentMode = 'audio'"
-        :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', 
-                 playerStore.currentMode === 'audio' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
-        Música
+      <button @click="playerStore.currentMode = 'audio'" :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', playerStore.currentMode === 'audio' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
+        <i class="fa-solid fa-music w-5"></i> Música
       </button>
       
-      <button 
-        @click="playerStore.currentMode = 'video'"
-        :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', 
-                 playerStore.currentMode === 'video' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
-        Videos
+      <button @click="playerStore.currentMode = 'video'" :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', playerStore.currentMode === 'video' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
+        <i class="fa-solid fa-film w-5"></i> Videos
       </button>
 
-      <button 
-        @click="playerStore.currentMode = 'fav'"
-        :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', 
-                 playerStore.currentMode === 'fav' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
-        Favoritos ❤️
+      <div class="text-xs text-gray-500 font-bold tracking-wider mb-2 mt-4">TU ACTIVIDAD</div>
+
+      <button @click="playerStore.currentMode = 'fav'" :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', playerStore.currentMode === 'fav' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
+        <i class="fa-solid fa-heart w-5"></i> Favoritos
+      </button>
+
+      <button @click="playerStore.currentMode = 'history'" :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', playerStore.currentMode === 'history' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
+        <i class="fa-solid fa-clock-rotate-left w-5"></i> Historial
+      </button>
+
+      <button @click="playerStore.currentMode = 'stats'" :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold', playerStore.currentMode === 'stats' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5']">
+        <i class="fa-solid fa-trophy w-5"></i> Top Canciones
       </button>
     </div>
 

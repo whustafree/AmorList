@@ -7,7 +7,7 @@
     </div>
 
     <div v-else-if="albumsToRender.length === 0" class="text-gray-400">
-      No hay contenido para mostrar en este modo.
+      No se encontraron resultados para esta búsqueda o modo.
     </div>
 
     <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -38,7 +38,6 @@ import { playerStore } from '../store/playerStore.js';
 
 const isLoading = ref(true);
 
-// 1. Cargar datos del backend al iniciar
 onMounted(async () => {
   try {
     const res = await fetch('/api/albums');
@@ -47,25 +46,36 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error cargando biblioteca:", error);
   } finally {
-    // Error corregido aquí:
     isLoading.value = false;
   }
 });
 
-// 2. Filtrar los discos dependiendo si estamos en Música o Video
+// Filtramos por MODO (Audio/Video) y luego por BUSCADOR
 const albumsToRender = computed(() => {
   if (!playerStore.fullLibraryData) return [];
   
+  const query = playerStore.searchQuery.toLowerCase().trim();
+
   return playerStore.fullLibraryData.map(alb => {
-    // Filtramos las canciones internas según el modo actual
+    // 1. Filtrar las canciones de este disco según si es audio o video
     const filteredSongs = alb.songs.filter(s => 
       playerStore.currentMode === 'video' ? s.isVideo : !s.isVideo
     );
     return { ...alb, songs: filteredSongs };
-  }).filter(alb => alb.songs.length > 0); // Solo mostramos discos que tengan contenido
+  })
+  .filter(alb => alb.songs.length > 0) // Que el disco no quede vacío
+  .filter(alb => {
+    // 2. Lógica del Buscador
+    if (!query) return true; // Si está vacío el buscador, mostramos todo
+    
+    const matchAlbum = alb.name.toLowerCase().includes(query);
+    const matchSongs = alb.songs.some(s => s.title.toLowerCase().includes(query));
+    
+    // Mostramos el disco si su nombre o alguna de sus canciones coincide
+    return matchAlbum || matchSongs;
+  });
 });
 
-// 3. Abrir disco: Guarda el disco en el cerebro (Store) para que se muestre la lista de canciones
 const openAlbum = (album) => {
   playerStore.currentAlbumData = album;
 };
