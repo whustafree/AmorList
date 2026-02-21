@@ -4,16 +4,19 @@ export const playerStore = reactive({
   audioEl: new Audio(),
   videoEl: document.createElement('video'),
   
+  // Listas de datos
   fullLibraryData: [],
   currentAlbumData: null,
   currentPlaylist: [],
   originalPlaylist: [],
   queueList: [],
   
+  // Datos persistentes en localStorage
   historyList: JSON.parse(localStorage.getItem('koteifyHistory')) || [],
   customPlaylists: JSON.parse(localStorage.getItem('koteifyPlaylists')) || [],
   favoriteIds: JSON.parse(localStorage.getItem('koteifyLikes')) || [],
   
+  // Estado de la reproducción
   currentIndex: 0,
   isPlaying: false,
   isVideoPlaying: false,
@@ -22,15 +25,20 @@ export const playerStore = reactive({
   currentMode: 'audio', 
   searchQuery: '', 
   
+  // Estado de la interfaz
   isVisualizerActive: false,
   isCassetteMode: false,
   isQueueOpen: false,
-  isMobileMenuOpen: false, // NUEVO: Control para el menú móvil
+  isMobileMenuOpen: false, // Control para el menú en dispositivos móviles
 
+  // ==========================================
+  // FUNCIONES DE REPRODUCCIÓN
+  // ==========================================
   playTrack(playlist, index) {
     this.currentPlaylist = playlist;
     this.currentIndex = index;
     const track = this.currentPlaylist[this.currentIndex];
+    
     if (!track) return;
 
     if (track.isVideo) {
@@ -40,14 +48,16 @@ export const playerStore = reactive({
     } else {
       this.isVideoPlaying = false;
       this.audioEl.src = track.src;
-      this.audioEl.play().catch(e => console.error("Play error:", e));
+      this.audioEl.play().catch(e => console.error("Error al reproducir:", e));
       this.isPlaying = true;
     }
+    
     this.addToHistory(track);
   },
 
   togglePlay() {
     if (this.currentPlaylist.length === 0) return;
+    
     if (this.isVideoPlaying) {
       this.isPlaying = !this.isPlaying;
     } else {
@@ -62,6 +72,7 @@ export const playerStore = reactive({
   },
 
   nextTrack() {
+    // Si hay canciones en la cola, tienen prioridad
     if (this.queueList.length > 0) {
       const nextSong = this.queueList.shift();
       const newList = [...this.currentPlaylist];
@@ -69,6 +80,7 @@ export const playerStore = reactive({
       this.playTrack(newList, this.currentIndex + 1);
       return;
     }
+
     if (this.currentPlaylist.length === 0) return;
     let next = (this.currentIndex + 1) % this.currentPlaylist.length;
     this.playTrack(this.currentPlaylist, next);
@@ -76,30 +88,42 @@ export const playerStore = reactive({
 
   prevTrack() {
     if (this.currentPlaylist.length === 0) return;
+    
     if (!this.isVideoPlaying && this.audioEl.currentTime > 3) {
       this.audioEl.currentTime = 0;
       return;
     }
+    
     let prev = (this.currentIndex - 1 + this.currentPlaylist.length) % this.currentPlaylist.length;
     this.playTrack(this.currentPlaylist, prev);
   },
 
-  setVolume(value) { this.audioEl.volume = value; },
-  addToQueue(track) { this.queueList.push(track); },
+  setVolume(value) {
+    this.audioEl.volume = value;
+  },
+
+  // ==========================================
+  // COLA Y FAVORITOS
+  // ==========================================
+  addToQueue(track) {
+    this.queueList.push(track);
+  },
+  
   playFromQueue(index) {
     const song = this.queueList.splice(index, 1)[0];
     const newList = [...this.currentPlaylist];
     newList.splice(this.currentIndex + 1, 0, song);
     this.playTrack(newList, this.currentIndex + 1);
   },
-  removeFromQueue(index) { this.queueList.splice(index, 1); },
-  clearQueue() { this.queueList = []; },
-  addToHistory(track) {
-    if (this.historyList.length > 0 && this.historyList[this.historyList.length - 1].id === track.id) return;
-    this.historyList.push(track);
-    if (this.historyList.length > 50) this.historyList.shift();
-    localStorage.setItem('koteifyHistory', JSON.stringify(this.historyList));
+
+  removeFromQueue(index) {
+    this.queueList.splice(index, 1);
   },
+
+  clearQueue() {
+    this.queueList = [];
+  },
+
   toggleFavorite(id) {
     if (this.favoriteIds.includes(id)) {
       this.favoriteIds = this.favoriteIds.filter(f => f !== id);
@@ -108,29 +132,68 @@ export const playerStore = reactive({
     }
     localStorage.setItem('koteifyLikes', JSON.stringify(this.favoriteIds));
   },
-  isFavorite(id) { return this.favoriteIds.includes(id); },
+
+  isFavorite(id) {
+    return this.favoriteIds.includes(id);
+  },
+
+  // ==========================================
+  // ÁLBUMES DINÁMICOS Y BACKEND
+  // ==========================================
+  addToHistory(track) {
+    if (this.historyList.length > 0 && this.historyList[this.historyList.length - 1].id === track.id) return;
+    this.historyList.push(track);
+    if (this.historyList.length > 50) this.historyList.shift();
+    localStorage.setItem('koteifyHistory', JSON.stringify(this.historyList));
+  },
+
   getFavoritesAlbum() {
     let allTracks = [];
     this.fullLibraryData.forEach(alb => allTracks.push(...alb.songs));
     const myFavs = allTracks.filter(t => this.favoriteIds.includes(t.id));
-    return { name: "Tus Favoritos ❤️", cover: "https://placehold.co/600/ff69b4/ffffff?text=Favoritos", songs: myFavs };
+    return { 
+      name: "Tus Favoritos ❤️", 
+      cover: "https://placehold.co/600/ff69b4/ffffff?text=Favoritos", 
+      songs: myFavs 
+    };
   },
+
   getHistoryAlbum() {
-    return { name: "Historial de Escucha 🕒", cover: "https://placehold.co/600/333333/ffffff?text=Historial", songs: [...this.historyList].reverse() };
+    return { 
+      name: "Historial de Escucha 🕒", 
+      cover: "https://placehold.co/600/333333/ffffff?text=Historial", 
+      songs: [...this.historyList].reverse() 
+    };
   },
+
   async loadTopSongs() {
-    this.currentAlbumData = { name: "Cargando Top...", cover: "https://placehold.co/600/ffd700/ffffff?text=Cargando...", songs: [] };
+    this.currentAlbumData = { 
+      name: "Cargando Top...", 
+      cover: "https://placehold.co/600/ffd700/ffffff?text=Cargando...", 
+      songs: [] 
+    };
     try {
       const res = await fetch('/api/stats/top');
       const topSongs = await res.json();
-      this.currentAlbumData = { name: "Top Canciones 🏆", cover: "https://placehold.co/600/ffd700/ffffff?text=Top+Hits", songs: topSongs };
-    } catch (e) { this.currentAlbumData = null; this.currentMode = 'audio'; }
+      this.currentAlbumData = { 
+        name: "Top Canciones 🏆", 
+        cover: "https://placehold.co/600/ffd700/ffffff?text=Top+Hits", 
+        songs: topSongs 
+      };
+    } catch (e) {
+      console.error("Error al cargar estadísticas:", e);
+      this.currentAlbumData = null;
+      this.currentMode = 'audio';
+    }
   }
 });
 
+// Listener para reproducción automática al terminar canción
 playerStore.audioEl.addEventListener('ended', () => {
   if (playerStore.repeatMode === 2) {
     playerStore.audioEl.currentTime = 0;
     playerStore.audioEl.play();
-  } else { playerStore.nextTrack(); }
+  } else {
+    playerStore.nextTrack();
+  }
 });
