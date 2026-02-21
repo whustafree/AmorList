@@ -38,6 +38,7 @@ import { playerStore } from '../store/playerStore.js';
 
 const isLoading = ref(true);
 
+// 1. Cargar datos del backend al iniciar
 onMounted(async () => {
   try {
     const res = await fetch('/api/albums');
@@ -46,24 +47,26 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error cargando biblioteca:", error);
   } finally {
-    // ¡AQUÍ ESTABA EL ERROR! Ya está corregido:
+    // Error corregido aquí:
     isLoading.value = false;
   }
 });
 
+// 2. Filtrar los discos dependiendo si estamos en Música o Video
 const albumsToRender = computed(() => {
   if (!playerStore.fullLibraryData) return [];
   
   return playerStore.fullLibraryData.map(alb => {
+    // Filtramos las canciones internas según el modo actual
     const filteredSongs = alb.songs.filter(s => 
       playerStore.currentMode === 'video' ? s.isVideo : !s.isVideo
     );
     return { ...alb, songs: filteredSongs };
-  }).filter(alb => alb.songs.length > 0);
+  }).filter(alb => alb.songs.length > 0); // Solo mostramos discos que tengan contenido
 });
 
+// 3. Abrir disco: Guarda el disco en el cerebro (Store) para que se muestre la lista de canciones
 const openAlbum = (album) => {
-  console.log("Abrir disco:", album.name);
-  alert(`Hiciste clic en: ${album.name}`);
+  playerStore.currentAlbumData = album;
 };
 </script>
