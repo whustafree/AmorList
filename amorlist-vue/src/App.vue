@@ -1,5 +1,5 @@
 <template>
-  <div :class="['min-h-screen bg-gray-900 text-white flex overflow-hidden font-sans relative', playerStore.isVideoPlaying ? '' : 'pb-20 lg:pb-24']">
+  <div :class="['h-[100dvh] w-full bg-gray-900 text-white flex overflow-hidden font-sans relative', playerStore.isVideoPlaying ? '' : 'pb-20 lg:pb-24']">
     
     <Visualizer />
     
@@ -83,7 +83,23 @@ onMounted(() => { setupTVControls(); });
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-/* Estilo para ocultar scrollbars pero mantener funcionalidad */
-.overflow-y-auto { scrollbar-width: none; -ms-overflow-style: none; }
-.overflow-y-auto::-webkit-scrollbar { display: none; }
+
+/* SOLUCIÓN AL SCROLL INVISIBLE: Una barra de desplazamiento elegante color rosa */
+.overflow-y-auto { 
+  scrollbar-width: thin; 
+  scrollbar-color: rgba(236, 72, 153, 0.5) transparent; 
+}
+.overflow-y-auto::-webkit-scrollbar { 
+  width: 6px; 
+}
+.overflow-y-auto::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+.overflow-y-auto::-webkit-scrollbar-thumb { 
+  background-color: rgba(236, 72, 153, 0.5); 
+  border-radius: 10px; 
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover { 
+  background-color: rgba(236, 72, 153, 0.8); 
+}
 </style>
