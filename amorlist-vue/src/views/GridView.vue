@@ -16,14 +16,16 @@
       <div 
         v-for="album in albumsToRender" 
         :key="album.name"
-        class="bg-white/5 hover:bg-white/10 p-3 lg:p-4 rounded-xl cursor-pointer transition-all hover:-translate-y-1 group"
+        tabindex="0" 
+        class="bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:ring-4 focus:ring-pink-500 focus:outline-none p-3 lg:p-4 rounded-xl cursor-pointer transition-all hover:-translate-y-1 focus:-translate-y-1 group"
         @click="openAlbum(album)"
+        @keydown.enter="openAlbum(album)"
       >
         <div class="aspect-square w-full overflow-hidden rounded-lg mb-3 shadow-lg">
           <img 
             :src="album.cover" 
             :alt="album.name" 
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            class="w-full h-full object-cover group-hover:scale-105 group-focus:scale-105 transition-transform duration-500"
             @error="(e) => e.target.src = 'https://placehold.co/600'"
           >
         </div>
