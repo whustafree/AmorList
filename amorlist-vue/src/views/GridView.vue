@@ -21,22 +21,22 @@
       </p>
     </div>
 
-    <!-- Album grid -->
-    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+    <!-- Album grid - responsive: 2 cols en móvil, más cols en pantallas grandes -->
+    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
       <div v-for="album in albumsToRender" :key="album.name" tabindex="0"
         @click="openAlbum(album)" @keydown.enter="openAlbum(album)"
-        class="group bg-[#181818] hover:bg-[#282828] p-3 lg:p-4 rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-white/30">
-        <div class="relative aspect-square w-full overflow-hidden rounded-md mb-3 shadow-lg">
+        class="group bg-[#181818] hover:bg-[#282828] p-2 sm:p-3 lg:p-4 rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-white/30">
+        <div class="relative aspect-square w-full overflow-hidden rounded-md mb-2 sm:mb-3 shadow-lg">
           <img :src="api.resolveUrl(album.cover)" :alt="album.name"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             @error="e => e.target.src = FALLBACK_LARC" loading="lazy">
-          <div class="absolute bottom-2 right-2 w-10 h-10 bg-[#1ed760] rounded-full shadow-xl flex items-center justify-center
+          <div class="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-[#1ed760] rounded-full shadow-xl flex items-center justify-center
                       opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-            <i class="fa-solid fa-play text-black text-sm ml-0.5"></i>
+            <i class="fa-solid fa-play text-black text-xs sm:text-sm ml-0.5"></i>
           </div>
         </div>
-        <h3 class="font-bold text-sm text-white truncate mb-1">{{ album.name }}</h3>
-        <p class="text-xs text-[#727272] truncate">{{ album.artist || 'AmorList' }}</p>
+        <h3 class="font-bold text-xs sm:text-sm text-white truncate mb-0.5 sm:mb-1">{{ album.name }}</h3>
+        <p class="text-[10px] sm:text-xs text-[#727272] truncate">{{ album.artist || (album.songs.length + ' canciones') }}</p>
       </div>
     </div>
 

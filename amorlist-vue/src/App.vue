@@ -32,7 +32,7 @@
     <main ref="mainContent"
       class="flex-1 overflow-y-auto relative z-10"
       @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
-      <div class="px-4 lg:px-8 pt-4 pb-8">
+      <div class="px-3 sm:px-4 lg:px-8 pt-3 sm:pt-4 pb-8">
         <TopBar />
         <div class="max-w-7xl mx-auto">
           <AlbumView v-if="playerStore.currentAlbumData" />

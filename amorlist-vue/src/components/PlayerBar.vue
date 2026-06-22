@@ -1,7 +1,8 @@
 <template>
-  <div class="h-[72px] bg-[#181818] border-t border-[#282828] flex items-center px-4 fixed bottom-0 left-0 right-0 z-50 select-none">
+  <div class="h-[72px] bg-[#181818] border-t border-[#282828] flex items-center px-2 sm:px-4 fixed bottom-0 left-0 right-0 z-50 select-none">
 
-    <div class="flex items-center gap-3 w-[30%] min-w-[140px]">
+    <!-- LEFT: Track info - hidden on mobile, shown on tablet+ -->
+    <div class="hidden sm:flex items-center gap-3 w-[30%] min-w-[140px]">
       <img :src="coverSrc" class="w-12 h-12 rounded object-cover shadow-lg shrink-0"
            @error="e => e.target.src = 'https://placehold.co/48/181818/fff?text=♪'">
       <div class="flex flex-col truncate">
@@ -10,30 +11,31 @@
       </div>
     </div>
 
-    <div class="flex flex-col items-center justify-center flex-1 max-w-[722px] mx-4 gap-0.5">
-      <div class="flex items-center gap-4">
+    <!-- CENTER: Controls + Progress - full width on mobile -->
+    <div class="flex flex-col items-center justify-center flex-1 max-w-[722px] mx-0 sm:mx-4 gap-0.5">
+      <div class="flex items-center gap-3 sm:gap-4">
         <button @click="playerStore.isShuffle = !playerStore.isShuffle"
-          :class="['text-sm', playerStore.isShuffle ? 'text-[#1ed760]' : 'text-[#727272] hover:text-white']">
+          :class="['text-sm hidden sm:block', playerStore.isShuffle ? 'text-[#1ed760]' : 'text-[#727272] hover:text-white']">
           <i class="fa-solid fa-shuffle text-xs"></i>
         </button>
         <button @click="playerStore.prevTrack()" class="text-[#727272] hover:text-white text-sm">
           <i class="fa-solid fa-backward-step"></i>
         </button>
         <button @click="playerStore.togglePlay()"
-          class="w-8 h-8 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 transition-transform">
-          <i :class="['fa-solid ml-0.5 text-xs', playerStore.isPlaying ? 'fa-pause' : 'fa-play']"></i>
+          class="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 transition-transform">
+          <i :class="['fa-solid ml-0.5 text-sm sm:text-xs', playerStore.isPlaying ? 'fa-pause' : 'fa-play']"></i>
         </button>
         <button @click="playerStore.nextTrack()" class="text-[#727272] hover:text-white text-sm">
           <i class="fa-solid fa-forward-step"></i>
         </button>
         <button @click="playerStore.repeatMode = (playerStore.repeatMode + 1) % 3"
-          :class="['text-sm relative', playerStore.repeatMode > 0 ? 'text-[#1ed760]' : 'text-[#727272] hover:text-white']">
+          :class="['text-sm relative hidden sm:block', playerStore.repeatMode > 0 ? 'text-[#1ed760]' : 'text-[#727272] hover:text-white']">
           <i class="fa-solid fa-repeat text-xs"></i>
           <span v-if="playerStore.repeatMode === 2" class="absolute -top-1 -right-2 text-[8px] font-bold">1</span>
         </button>
       </div>
-      <div class="flex items-center gap-2 w-full text-[11px] text-[#b3b3b3] font-mono tabular-nums">
-        <span class="w-8 text-right">{{ formatTime(playerStore.currentTime) }}</span>
+      <div class="flex items-center gap-2 w-full text-[10px] sm:text-[11px] text-[#b3b3b3] font-mono tabular-nums">
+        <span class="w-7 sm:w-8 text-right">{{ formatTime(playerStore.currentTime) }}</span>
         <div class="flex-1 h-1 bg-[#535353] rounded-full cursor-pointer relative group"
              ref="seekBarRef"
              @mousedown="startSeekDrag"
@@ -45,11 +47,12 @@
                  :class="isDragging ? 'bg-[#1ed760] scale-100' : 'bg-white opacity-0 group-hover:opacity-100'"></div>
           </div>
         </div>
-        <span class="w-8">{{ formatTime(playerStore.duration) }}</span>
+        <span class="w-7 sm:w-8">{{ formatTime(playerStore.duration) }}</span>
       </div>
     </div>
 
-    <div class="flex items-center justify-end gap-2 w-[30%] min-w-[140px]">
+    <!-- RIGHT: Extras - hidden on mobile -->
+    <div class="hidden sm:flex items-center justify-end gap-2 w-[30%] min-w-[140px]">
       <button @click="playerStore.isQueueOpen = !playerStore.isQueueOpen"
         :class="['text-sm', playerStore.isQueueOpen ? 'text-[#1ed760]' : 'text-[#727272] hover:text-white']">
         <i class="fa-solid fa-list-ul"></i>
@@ -129,32 +132,10 @@ const seekFromClientX = (clientX) => {
   playerStore.seekTo(pos)
 }
 
-const startSeekDrag = (e) => {
-  isDragging.value = true
-  seekFromClientX(e.clientX)
-  document.addEventListener('mousemove', onSeekDrag)
-  document.addEventListener('mouseup', stopSeekDrag)
-}
-
-const startSeekTouch = (e) => {
-  isDragging.value = true
-  seekFromClientX(e.touches[0].clientX)
-  document.addEventListener('touchmove', onSeekTouch, { passive: false })
-  document.addEventListener('touchend', stopSeekTouch)
-}
-
+const startSeekDrag = (e) => { isDragging.value = true; seekFromClientX(e.clientX); document.addEventListener('mousemove', onSeekDrag); document.addEventListener('mouseup', stopSeekDrag) }
+const startSeekTouch = (e) => { isDragging.value = true; seekFromClientX(e.touches[0].clientX); document.addEventListener('touchmove', onSeekTouch, { passive: false }); document.addEventListener('touchend', stopSeekTouch) }
 const onSeekDrag = (e) => seekFromClientX(e.clientX)
 const onSeekTouch = (e) => { e.preventDefault(); seekFromClientX(e.touches[0].clientX) }
-
-const stopSeekDrag = () => {
-  isDragging.value = false
-  document.removeEventListener('mousemove', onSeekDrag)
-  document.removeEventListener('mouseup', stopSeekDrag)
-}
-
-const stopSeekTouch = () => {
-  isDragging.value = false
-  document.removeEventListener('touchmove', onSeekTouch)
-  document.removeEventListener('touchend', stopSeekTouch)
-}
+const stopSeekDrag = () => { isDragging.value = false; document.removeEventListener('mousemove', onSeekDrag); document.removeEventListener('mouseup', stopSeekDrag) }
+const stopSeekTouch = () => { isDragging.value = false; document.removeEventListener('touchmove', onSeekTouch); document.removeEventListener('touchend', stopSeekTouch) }
 </script>
