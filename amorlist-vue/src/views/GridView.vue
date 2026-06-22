@@ -1,19 +1,19 @@
 <template>
-  <div class="fade-in">
+  <div>
     <!-- Welcome header -->
-    <div class="mb-6">
+    <div class="mb-6 fade-in">
       <h1 class="text-2xl lg:text-3xl font-bold text-white">{{ greeting }}</h1>
       <p class="text-sm text-[#b3b3b3] mt-1">{{ playerStore.fullLibraryData.length }} álbumes en tu biblioteca</p>
     </div>
 
     <!-- Loading state -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 fade-in">
       <div class="w-12 h-12 border-2 border-[#535353] border-t-[#1ed760] rounded-full animate-spin mb-4"></div>
       <p class="text-sm text-[#727272]">{{ loadingMessage }}</p>
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="albumsToRender.length === 0" class="text-center py-20">
+    <div v-else-if="albumsToRender.length === 0" class="text-center py-20 fade-in">
       <i class="fa-solid fa-compact-disc text-4xl mb-4 block text-[#535353]"></i>
       <p class="text-sm text-[#727272]">
         <template v-if="!isOnline && cacheInfo.exists">Modo offline — sin resultados en caché</template>
@@ -21,11 +21,13 @@
       </p>
     </div>
 
-    <!-- Album grid - responsive: 2 cols en móvil, más cols en pantallas grandes -->
-    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-      <div v-for="album in albumsToRender" :key="album.name" tabindex="0"
+    <!-- Album grid con TransitionGroup para animación escalonada -->
+    <TransitionGroup v-else name="card" tag="div" 
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+      <div v-for="(album, i) in albumsToRender" :key="album.name" tabindex="0"
         @click="openAlbum(album)" @keydown.enter="openAlbum(album)"
-        class="group bg-[#181818] hover:bg-[#282828] p-2 sm:p-3 lg:p-4 rounded-md cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-white/30">
+        :style="{ '--i': i }"
+        class="card-item group bg-[#181818] hover:bg-[#282828] p-2 sm:p-3 lg:p-4 rounded-md cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/30">
         <div class="relative aspect-square w-full overflow-hidden rounded-md mb-2 sm:mb-3 shadow-lg">
           <img :src="api.resolveUrl(album.cover)" :alt="album.name"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -38,7 +40,7 @@
         <h3 class="font-bold text-xs sm:text-sm text-white truncate mb-0.5 sm:mb-1">{{ album.name }}</h3>
         <p class="text-[10px] sm:text-xs text-[#727272] truncate">{{ album.artist || (album.songs.length + ' canciones') }}</p>
       </div>
-    </div>
+    </TransitionGroup>
 
     <!-- Cache info -->
     <div v-if="!isLoading && cacheInfo.exists" class="mt-6 flex items-center justify-center gap-2 text-[11px] text-[#535353]">
@@ -133,3 +135,40 @@ const openAlbum = (album) => {
   document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>
+
+<style scoped>
+/* TransitionGroup animation for grid cards */
+.card-enter-active {
+  animation: cardEnter 0.35s ease-out both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+.card-leave-active {
+  animation: cardLeave 0.25s ease-in both;
+  animation-delay: calc(var(--i, 0) * 20ms);
+}
+.card-move {
+  transition: transform 0.4s ease;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cardLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+</style>

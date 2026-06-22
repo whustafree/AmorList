@@ -35,12 +35,14 @@
       <div class="px-3 sm:px-4 lg:px-8 pt-3 sm:pt-4 pb-8">
         <TopBar />
         <div class="max-w-7xl mx-auto">
-          <AlbumView v-if="playerStore.currentAlbumData" />
-          <GridView v-else-if="playerStore.currentMode === 'audio' || playerStore.currentMode === 'video'" />
-          <div v-else class="text-center py-20 text-[#727272]">
-            <i class="fa-solid fa-layer-group text-4xl mb-4 block"></i>
-            <p>Modo <span class="text-white font-bold capitalize">{{ playerStore.currentMode }}</span></p>
-          </div>
+          <Transition name="view" mode="out-in">
+            <AlbumView v-if="playerStore.currentAlbumData" key="album" />
+            <GridView v-else-if="playerStore.currentMode === 'audio' || playerStore.currentMode === 'video'" key="grid" />
+            <div v-else key="fallback" class="text-center py-20 text-[#727272]">
+              <i class="fa-solid fa-layer-group text-4xl mb-4 block"></i>
+              <p>Modo <span class="text-white font-bold capitalize">{{ playerStore.currentMode }}</span></p>
+            </div>
+          </Transition>
         </div>
       </div>
     </main>
@@ -177,6 +179,11 @@ onUnmounted(() => {
 
 .fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* View transition (Grid <-> Album) */
+.view-enter-active { animation: viewIn 0.3s ease-out; }
+.view-leave-active { animation: viewIn 0.2s ease-in reverse; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 .badge-slide-enter-active { animation: badgeIn 0.3s ease-out; }
 .badge-slide-leave-active { animation: badgeIn 0.3s ease-in reverse; }
