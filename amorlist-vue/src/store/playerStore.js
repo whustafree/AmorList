@@ -1,9 +1,43 @@
 import { reactive } from 'vue';
 import { api } from '../utils/api.js';
 
+// Elemento de audio en el DOM (se asigna desde App.vue)
+let _audioEl = null;
+let _initialized = false;
+
+/** Inicializa el elemento de audio (llamar desde App.vue onMounted) */
+export function initAudio(el) {
+  if (_initialized) return;
+  _initialized = true;
+  _audioEl = el;
+  _audioEl.addEventListener('ended', () => {
+    if (playerStore.repeatMode === 2) {
+      _audioEl.currentTime = 0;
+      _audioEl.play().catch(() => {});
+    } else {
+      playerStore.nextTrack();
+    }
+  });
+  _audioEl.addEventListener('error', () => {
+    console.error('🔇 Error de audio:', _audioEl.error?.message);
+    playerStore.isPlaying = false;
+    playerStore.audioError = true;
+  });
+}
+
+function getAudio() {
+  if (!_audioEl) {
+    // Fallback: crear audio si no se inicializó (útil en desarrollo)
+    _audioEl = new Audio();
+    _audioEl.addEventListener('ended', () => {
+      playerStore.nextTrack();
+    });
+  }
+  return _audioEl;
+}
+
 export const playerStore = reactive({
-  audioEl: new Audio(),
-  videoEl: document.createElement('video'),
+  audioError: false,
   
   // Listas de datos
   fullLibraryData: [],
@@ -40,14 +74,23 @@ export const playerStore = reactive({
     this.currentIndex = index;
     const track = this.currentPlaylist[this.currentIndex];
     
-    if (!track) return;        if (track.isVideo) {
-      this.audioEl.pause();
+    if (!track) return;
+    this.audioError = false;
+    if (track.isVideo) {
+      const audio = getAudio();
+      audio.pause();
       this.isVideoPlaying = true;
       this.isPlaying = true;
     } else {
+      const audio = getAudio();
       this.isVideoPlaying = false;
-      this.audioEl.src = api.resolveUrl(track.src);
-      this.audioEl.play().catch(e => console.error("Error al reproducir:", e));
+      audio.src = api.resolveUrl(track.src);
+      audio.load(); // Force load en Capacitor
+      audio.play().catch(e => {
+        console.error("🔇 Error al reproducir:", e);
+        this.audioError = true;
+        this.isPlaying = false;
+      });
       this.isPlaying = true;
     }
     
@@ -60,11 +103,16 @@ export const playerStore = reactive({
     if (this.isVideoPlaying) {
       this.isPlaying = !this.isPlaying;
     } else {
-      if (this.audioEl.paused) {
-        this.audioEl.play();
+      const audio = getAudio();
+      if (audio.paused) {
+        audio.play().catch(e => {
+          console.error('🔇 Error al reanudar:', e);
+          this.audioError = true;
+          this.isPlaying = false;
+        });
         this.isPlaying = true;
       } else {
-        this.audioEl.pause();
+        audio.pause();
         this.isPlaying = false;
       }
     }
@@ -88,8 +136,9 @@ export const playerStore = reactive({
   prevTrack() {
     if (this.currentPlaylist.length === 0) return;
     
-    if (!this.isVideoPlaying && this.audioEl.currentTime > 3) {
-      this.audioEl.currentTime = 0;
+    const audio = getAudio();
+    if (!this.isVideoPlaying && audio.currentTime > 3) {
+      audio.currentTime = 0;
       return;
     }
     
@@ -98,7 +147,7 @@ export const playerStore = reactive({
   },
 
   setVolume(value) {
-    this.audioEl.volume = value;
+    getAudio().volume = value;
   },
 
   // ==========================================
@@ -183,15 +232,5 @@ export const playerStore = reactive({
       this.currentAlbumData = null;
       this.currentMode = 'audio';
     }
-  }
-});
-
-// Listener para reproducción automática al terminar canción
-playerStore.audioEl.addEventListener('ended', () => {
-  if (playerStore.repeatMode === 2) {
-    playerStore.audioEl.currentTime = 0;
-    playerStore.audioEl.play();
-  } else {
-    playerStore.nextTrack();
   }
 });

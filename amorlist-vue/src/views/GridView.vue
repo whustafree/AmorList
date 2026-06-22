@@ -79,17 +79,17 @@ const isRefreshing = ref(false);
 const isOnline = ref(navigator.onLine);
 const cacheInfo = ref({ exists: false, ageFormatted: '', expired: true });
 
-// ✅ Fallback doble de imágenes: placehold.co → SVG inline (sin dependencias externas)
+// ✅ Fallback de imágenes con temática L'Arc~en~Ciel
 const FALLBACK_PLACEHOLDER = 'https://placehold.co/600/1a1a2e/e94560?text=AmorList';
-const FALLBACK_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect fill=%22%231a1a2e%22 width=%22600%22 height=%22600%22/%3E%3Ctext fill=%22%23e94560%22 font-family=%22sans-serif%22 font-size=%2240%22 x=%22300%22 y=%22300%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E🎵%3C/text%3E%3C/svg%3E';
+const FALLBACK_LARC = `data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect fill=%22%23121212%22 width=%22600%22 height=%22600%22/%3E%3Ccircle fill=%22%23e94560%22 opacity=%220.15%22 cx=%22300%22 cy=%22300%22 r=%22200%22/%3E%3Ctext fill=%22%23e94560%22 font-family=%22sans-serif%22 font-size=%2250%22 font-weight=%22bold%22 x=%22300%22 y=%22270%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E%E2%99%AB%3C/text%3E%3Ctext fill=%22%23999%22 font-family=%22sans-serif%22 font-size=%2220%22 x=%22300%22 y=%22320%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EL\'Arc~en~Ciel%3C/text%3E%3C/svg%3E`;
 
 const handleImageError = (e) => {
   const img = e.target;
   if (!img.dataset.fallback) {
     img.dataset.fallback = '1';
-    img.src = FALLBACK_PLACEHOLDER;
+    img.src = FALLBACK_LARC;
   } else {
-    img.src = FALLBACK_SVG;
+    img.src = FALLBACK_LARC;
   }
 };
 
