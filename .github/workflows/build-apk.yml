@@ -41,6 +41,8 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build web app
+        env:
+          VITE_API_URL: https://amorlist-94u2.onrender.com
         run: npm run build
 
       - name: Sync Capacitor (manual)
