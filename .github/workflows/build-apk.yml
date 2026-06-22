@@ -84,8 +84,11 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
+          # Asegurar local.properties con SDK real
+          echo "sdk.dir=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}" > local.properties
+          cat local.properties
           echo "=== Build debug APK ==="
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tail -40
 
       - name: Build release AAB
         if: ${{ false }}  # Deshabilitado hasta que tengamos keystore
