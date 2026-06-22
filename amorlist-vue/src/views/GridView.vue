@@ -26,7 +26,7 @@
             :src="album.cover" 
             :alt="album.name" 
             class="w-full h-full object-cover group-hover:scale-105 group-focus:scale-105 transition-transform duration-500"
-            @error="(e) => e.target.src = 'https://placehold.co/600'"
+            @error="handleImageError"
           >
         </div>
         <h3 class="font-bold text-xs lg:text-sm truncate text-white mb-1">{{ album.name }}</h3>
@@ -41,6 +41,20 @@ import { ref, computed, onMounted } from 'vue';
 import { playerStore } from '../store/playerStore.js';
 
 const isLoading = ref(true);
+
+// ✅ Fallback doble de imágenes: placehold.co → SVG inline (sin dependencias externas)
+const FALLBACK_PLACEHOLDER = 'https://placehold.co/600/1a1a2e/e94560?text=AmorList';
+const FALLBACK_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect fill=%22%231a1a2e%22 width=%22600%22 height=%22600%22/%3E%3Ctext fill=%22%23e94560%22 font-family=%22sans-serif%22 font-size=%2240%22 x=%22300%22 y=%22300%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E🎵%3C/text%3E%3C/svg%3E';
+
+const handleImageError = (e) => {
+  const img = e.target;
+  if (!img.dataset.fallback) {
+    img.dataset.fallback = '1';
+    img.src = FALLBACK_PLACEHOLDER;
+  } else {
+    img.src = FALLBACK_SVG;
+  }
+};
 
 onMounted(async () => {
   try {
@@ -74,6 +88,7 @@ const albumsToRender = computed(() => {
 
 const openAlbum = (album) => {
   playerStore.currentAlbumData = album;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const mainEl = document.querySelector('main');
+  if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
 };
 </script>

@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { playerStore } from '../store/playerStore.js';
 
 const canvas = ref(null);
@@ -15,7 +15,6 @@ let audioCtx, analyser, source;
 let animationId;
 
 const initVisualizer = () => {
-  // Asegurarnos de que el audio context solo se cree una vez
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioCtx.createAnalyser();
@@ -54,12 +53,22 @@ const draw = () => {
   }
 };
 
-// Escuchamos si el usuario activa o desactiva el botón del visualizador
 watch(() => playerStore.isVisualizerActive, (isActive) => {
   if (isActive) {
     initVisualizer();
   } else {
     cancelAnimationFrame(animationId);
+  }
+});
+
+// ✅ Limpieza al desmontar: cancela animación y libera recursos de audio
+onUnmounted(() => {
+  cancelAnimationFrame(animationId);
+  if (source) {
+    try { source.disconnect(); } catch (e) { /* ignorar */ }
+  }
+  if (audioCtx && audioCtx.state !== 'closed') {
+    audioCtx.close().catch(() => {});
   }
 });
 </script>

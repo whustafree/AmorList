@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { playerStore } from '../store/playerStore.js';
 
 const currentTrack = computed(() => playerStore.currentPlaylist[playerStore.currentIndex] || null);
@@ -78,10 +78,17 @@ const handleSeek = (e) => {
 
 const updateVolume = () => playerStore.setVolume(volume.value);
 
+// ✅ Listener con cleanup: evita acumulación de listeners al remontar el componente
+const onTimeUpdate = () => {
+  currentTime.value = playerStore.audioEl.currentTime;
+  duration.value = playerStore.audioEl.duration || 0;
+};
+
 onMounted(() => {
-  playerStore.audioEl.addEventListener('timeupdate', () => {
-    currentTime.value = playerStore.audioEl.currentTime;
-    duration.value = playerStore.audioEl.duration || 0;
-  });
+  playerStore.audioEl.addEventListener('timeupdate', onTimeUpdate);
+});
+
+onUnmounted(() => {
+  playerStore.audioEl.removeEventListener('timeupdate', onTimeUpdate);
 });
 </script>

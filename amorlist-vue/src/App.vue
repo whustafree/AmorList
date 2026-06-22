@@ -61,6 +61,7 @@ const closeVideo = () => {
   playerStore.isPlaying = false;
 };
 
+// ✅ Al cambiar de modo: prepara el álbum correspondiente o limpia la vista
 watch(() => playerStore.currentMode, (newMode) => {
   playerStore.searchQuery = ''; 
   if (['audio', 'video'].includes(newMode)) {
@@ -71,6 +72,13 @@ watch(() => playerStore.currentMode, (newMode) => {
     playerStore.currentAlbumData = playerStore.getHistoryAlbum();
   } else if (newMode === 'stats') {
     playerStore.loadTopSongs();
+  }
+});
+
+// ✅ Al cerrar un álbum (volver): restaura el modo original si estábamos en fav/history/stats
+watch(() => playerStore.currentAlbumData, (newData) => {
+  if (!newData && ['fav', 'history', 'stats'].includes(playerStore.currentMode)) {
+    playerStore.currentMode = 'audio';
   }
 });
 

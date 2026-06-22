@@ -160,8 +160,7 @@ function writeJsonFile(filename, data) {
  */
 async function scanDrive() {
     console.log("📡 Iniciando escaneo de Google Drive...");
-    const library = [];
-    
+
     if (!drive || !FOLDER_ID) {
         console.error("❌ Drive no configurado correctamente");
         return readJsonFile(CACHE_FILE, []);
@@ -177,71 +176,76 @@ async function scanDrive() {
 
         console.log(`📁 Encontradas ${foldersRes.data.files.length} carpetas`);
 
-        // 2. Procesar cada álbum
-        for (const folder of foldersRes.data.files) {
-            try {
-                // Listar archivos multimedia
+        // 2. Procesar todas las carpetas en PARALELO (antes era secuencial)
+        const results = await Promise.allSettled(
+            foldersRes.data.files.map(async (folder) => {
                 const mediaRes = await drive.files.list({
                     q: `'${folder.id}' in parents and (mimeType contains 'audio/' or mimeType contains 'video/') and trashed = false`,
                     fields: 'files(id, name, mimeType, thumbnailLink)',
-                    pageSize: 100 
+                    pageSize: 100
                 });
 
-                if (mediaRes.data.files.length > 0) {
-                    // Buscar portada
-                    const coverRes = await drive.files.list({
-                        q: `'${folder.id}' in parents and mimeType contains 'image/' and trashed = false`,
-                        fields: 'files(id, thumbnailLink)',
-                        pageSize: 1
-                    });
+                if (mediaRes.data.files.length === 0) return null;
 
-                    let albumCover = null;
-                    if (coverRes.data.files.length > 0) {
-                        albumCover = `/api/image/${coverRes.data.files[0].id}`;
-                    } else {
-                        albumCover = await findCoverOnItunes(folder.name);
-                    }
-                    
-                    if (!albumCover) {
-                        albumCover = `https://placehold.co/600?text=${encodeURIComponent(folder.name)}`;
-                    }
+                const coverRes = await drive.files.list({
+                    q: `'${folder.id}' in parents and mimeType contains 'image/' and trashed = false`,
+                    fields: 'files(id, thumbnailLink)',
+                    pageSize: 1
+                });
 
-                    // Construir lista de pistas
-                    const tracks = mediaRes.data.files.map(file => ({
-                        id: file.id,
-                        title: file.name.replace(/\.[^/.]+$/, ""),
-                        artist: "Para ti ❤️",
-                        album: folder.name,
-                        src: `/api/stream/${file.id}`,
-                        cover: albumCover,
-                        isVideo: file.mimeType.includes('video')
-                    }));
-
-                    library.push({
-                        id: folder.id,
-                        name: folder.name,
-                        cover: albumCover,
-                        songs: tracks
-                    });
+                let albumCover = null;
+                if (coverRes.data.files.length > 0) {
+                    albumCover = `/api/image/${coverRes.data.files[0].id}`;
+                } else {
+                    albumCover = await findCoverOnItunes(folder.name);
                 }
-            } catch (folderError) {
-                console.error(`⚠️ Error procesando carpeta ${folder.name}:`, folderError.message);
+
+                if (!albumCover) {
+                    albumCover = `https://placehold.co/600?text=${encodeURIComponent(folder.name)}`;
+                }
+
+                const tracks = mediaRes.data.files.map(file => ({
+                    id: file.id,
+                    title: file.name.replace(/\.[^/.]+$/, ""),
+                    artist: "Para ti ❤️",
+                    album: folder.name,
+                    src: `/api/stream/${file.id}`,
+                    cover: albumCover,
+                    isVideo: file.mimeType.includes('video')
+                }));
+
+                return {
+                    id: folder.id,
+                    name: folder.name,
+                    cover: albumCover,
+                    songs: tracks
+                };
+            })
+        );
+
+        const library = results
+            .filter(r => r.status === 'fulfilled' && r.value !== null)
+            .map(r => r.value);
+
+        // Registrar errores de carpetas individuales
+        results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+                console.error(`⚠️ Error procesando carpeta ${foldersRes.data.files[i]?.name}:`, r.reason?.message || r.reason);
             }
-        }
+        });
 
         // Ordenar por nombre
         library.sort((a, b) => a.name.localeCompare(b.name));
-        
+
         // Guardar en caché
         writeJsonFile(CACHE_FILE, library);
         console.log(`💾 Biblioteca guardada: ${library.length} álbumes, ${library.reduce((acc, a) => acc + a.songs.length, 0)} canciones`);
-        
+        return library;
+
     } catch (error) {
         console.error("❌ Error escaneando Drive:", error.message);
         return readJsonFile(CACHE_FILE, []);
     }
-    
-    return library;
 }
 
 // ==================== ENDPOINTS DE LA API ====================
@@ -526,7 +530,7 @@ app.get('/api/lyrics', async (req, res) => {
         
         // Usar API de letras libre (lrclib.net)
         const response = await axios.get(`https://lrclib.net/api/search`, {
-            params: { track_name: title },
+            params: { track_name: title, artist_name: artist },
             timeout: 5000
         });
         

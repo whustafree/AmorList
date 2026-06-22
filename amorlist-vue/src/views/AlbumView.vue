@@ -9,7 +9,12 @@
         class="w-48 h-48 lg:w-56 lg:h-56 overflow-hidden shadow-2xl shrink-0 transition-all duration-500"
         :class="playerStore.isCassetteMode ? 'rounded-full animate-[spin_4s_linear_infinite]' : 'rounded-2xl'"
       >
-        <img :src="album.cover" :alt="album.name" class="w-full h-full object-cover">
+        <img 
+          :src="album.cover" 
+          :alt="album.name" 
+          class="w-full h-full object-cover"
+          @error="handleImageError"
+        >
       </div>
 
       <div class="flex flex-col gap-2 w-full">
@@ -74,6 +79,20 @@ import { playerStore } from '../store/playerStore.js';
 
 const album = computed(() => playerStore.currentAlbumData);
 const goBack = () => { playerStore.currentAlbumData = null; };
+
+// ✅ Fallback doble de imágenes
+const FALLBACK_PLACEHOLDER = 'https://placehold.co/600/1a1a2e/e94560?text=AmorList';
+const FALLBACK_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect fill=%22%231a1a2e%22 width=%22600%22 height=%22600%22/%3E%3Ctext fill=%22%23e94560%22 font-family=%22sans-serif%22 font-size=%2240%22 x=%22300%22 y=%22300%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E🎵%3C/text%3E%3C/svg%3E';
+
+const handleImageError = (e) => {
+  const img = e.target;
+  if (!img.dataset.fallback) {
+    img.dataset.fallback = '1';
+    img.src = FALLBACK_PLACEHOLDER;
+  } else {
+    img.src = FALLBACK_SVG;
+  }
+};
 const playSong = (index) => { playerStore.playTrack(album.value.songs, index); };
 const playAll = () => { if (album.value?.songs.length) playerStore.playTrack(album.value.songs, 0); };
 const isCurrentSong = (song) => {
