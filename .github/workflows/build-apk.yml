@@ -87,12 +87,10 @@ jobs:
           VITE_API_URL: https://amorlist-94u2.onrender.com
         run: npm run build
 
-      - name: Sync Capacitor (manual)
+      - name: Sync Capacitor
         run: |
-          echo "=== Copiando web assets a Android ==="
-          mkdir -p android/app/src/main/assets/public
-          cp -r dist/* android/app/src/main/assets/public/
-          cp capacitor.config.json android/app/src/main/assets/
+          echo "=== Sincronizando Capacitor (genera plugins nativos) ==="
+          npx cap sync android 2>&1
           echo "✅ Sync completado"
 
       - name: Build debug APK
