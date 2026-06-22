@@ -137,7 +137,7 @@ onMounted(() => { setupTVControls(); });
   border-radius: 12px;
 }
 
-/* Cursor pointer siempre visible en TV */
+/* Sin cursor en TV — navegación solo por foco */
 .tv-mode * {
   cursor: default;
 }
