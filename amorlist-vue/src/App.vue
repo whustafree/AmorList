@@ -58,7 +58,7 @@ import { setupTVControls } from './utils/tv-input.js';
 const currentTrack = computed(() => {
   const track = playerStore.currentPlaylist[playerStore.currentIndex];
   if (!track) return null;
-  return { ...track, streamUrl: api.streamUrl(track.src) };
+  return { ...track, streamUrl: api.resolveUrl(track.src) };
 });
 
 const closeVideo = () => {

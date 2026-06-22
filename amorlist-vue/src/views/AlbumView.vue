@@ -10,7 +10,7 @@
         :class="playerStore.isCassetteMode ? 'rounded-full animate-[spin_4s_linear_infinite]' : 'rounded-2xl'"
       >
         <img 
-          :src="album.cover" 
+          :src="api.resolveUrl(album.cover)" 
           :alt="album.name" 
           class="w-full h-full object-cover"
           @error="handleImageError"
@@ -76,6 +76,7 @@
 <script setup>
 import { computed } from 'vue';
 import { playerStore } from '../store/playerStore.js';
+import { api } from '../utils/api.js';
 
 const album = computed(() => playerStore.currentAlbumData);
 const goBack = () => { playerStore.currentAlbumData = null; };

@@ -50,9 +50,10 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { playerStore } from '../store/playerStore.js';
+import { api } from '../utils/api.js';
 
 const currentTrack = computed(() => playerStore.currentPlaylist[playerStore.currentIndex] || null);
-const coverSrc = computed(() => currentTrack.value?.cover || 'https://placehold.co/56');
+const coverSrc = computed(() => currentTrack.value ? api.resolveUrl(currentTrack.value.cover) : 'https://placehold.co/56');
 const title = computed(() => currentTrack.value?.title || 'AmorList');
 const artist = computed(() => currentTrack.value?.artist || 'Selecciona algo bonito ❤️');
 

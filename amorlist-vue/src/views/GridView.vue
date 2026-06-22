@@ -23,7 +23,7 @@
       >
         <div class="aspect-square w-full overflow-hidden rounded-lg mb-3 shadow-lg">
           <img 
-            :src="album.cover" 
+            :src="api.resolveUrl(album.cover)" 
             :alt="album.name" 
             class="w-full h-full object-cover group-hover:scale-105 group-focus:scale-105 transition-transform duration-500"
             @error="handleImageError"

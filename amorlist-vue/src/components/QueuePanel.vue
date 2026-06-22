@@ -24,7 +24,7 @@
         class="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 group cursor-pointer transition-all border border-transparent hover:border-white/10"
         @click="playerStore.playFromQueue(index)"
       >
-        <img :src="song.cover" class="w-10 h-10 rounded-lg object-cover">
+        <img :src="api.resolveUrl(song.cover)" class="w-10 h-10 rounded-lg object-cover">
         <div class="flex-1 truncate">
           <div class="text-sm font-bold text-white truncate">{{ song.title }}</div>
           <div class="text-[10px] text-gray-500 truncate uppercase tracking-tighter">{{ song.album }}</div>
@@ -45,6 +45,7 @@
 
 <script setup>
 import { playerStore } from '../store/playerStore.js';
+import { api } from '../utils/api.js';
 </script>
 
 <style scoped>

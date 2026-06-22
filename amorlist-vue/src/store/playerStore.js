@@ -46,7 +46,7 @@ export const playerStore = reactive({
       this.isPlaying = true;
     } else {
       this.isVideoPlaying = false;
-      this.audioEl.src = api.streamUrl(track.src);
+      this.audioEl.src = api.resolveUrl(track.src);
       this.audioEl.play().catch(e => console.error("Error al reproducir:", e));
       this.isPlaying = true;
     }
