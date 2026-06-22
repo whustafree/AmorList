@@ -1,70 +1,52 @@
 <template>
-  <div class="fade-in pb-10 px-2 lg:px-0">
-    <button @click="goBack" class="text-gray-400 hover:text-white focus:text-pink-500 focus:outline-none focus:bg-white/10 flex items-center gap-2 mb-6 transition-colors font-bold text-sm p-2 rounded-lg">
-      <i class="fa-solid fa-chevron-left"></i> VOLVER
-    </button>
-
-    <div class="flex flex-col md:flex-row gap-6 items-center md:items-end mb-10 text-center md:text-left">
-      <div 
-        class="w-48 h-48 lg:w-56 lg:h-56 overflow-hidden shadow-2xl shrink-0 transition-all duration-500"
-        :class="playerStore.isCassetteMode ? 'rounded-full animate-[spin_4s_linear_infinite]' : 'rounded-2xl'"
-      >
-        <img 
-          :src="api.resolveUrl(album.cover)" 
-          :alt="album.name" 
-          class="w-full h-full object-cover"
-          @error="handleImageError"
-        >
-      </div>
-
-      <div class="flex flex-col gap-2 w-full">
-        <span class="text-[10px] font-black text-pink-500 tracking-[0.2em] uppercase">Álbum</span>
-        <h1 class="text-3xl lg:text-5xl font-black text-white leading-tight">{{ album.name }}</h1>
-        <p class="text-sm text-gray-400 font-medium">AmorList • {{ album.songs.length }} canciones</p>
-        
-        <div class="flex justify-center md:justify-start gap-3 mt-4">
-          <button @click="playAll" class="bg-pink-500 hover:bg-pink-400 focus:ring-4 focus:ring-white/50 focus:outline-none text-white px-8 py-3 rounded-full font-bold transition-all flex items-center gap-2 shadow-lg shadow-pink-500/30 text-sm">
-            <i class="fa-solid fa-play"></i> REPRODUCIR
-          </button>
+  <div class="fade-in">
+    <!-- Gradient header -->
+    <div class="relative -mx-4 lg:-mx-8 -mt-4 mb-6 px-4 lg:px-8 pt-16 pb-8"
+         :style="{ background: `linear-gradient(180deg, ${headerColor} 0%, #121212 100%)` }">
+      <button @click="goBack"
+        class="text-[#b3b3b3] hover:text-white flex items-center gap-2 mb-6 text-sm font-medium">
+        <i class="fa-solid fa-chevron-left"></i> Volver
+      </button>
+      <div class="flex flex-col md:flex-row gap-6 items-center md:items-end">
+        <div class="w-48 h-48 lg:w-56 lg:h-56 overflow-hidden shadow-2xl shrink-0 rounded-md"
+             :class="playerStore.isCassetteMode ? 'rounded-full animate-spin' : ''">
+          <img :src="api.resolveUrl(album.cover)" :alt="album.name"
+            class="w-full h-full object-cover" @error="e => e.target.src = 'https://placehold.co/224/282828/fff?text=♪'">
+        </div>
+        <div class="flex flex-col gap-2 text-center md:text-left">
+          <span class="text-[11px] font-bold text-[#b3b3b3] tracking-widest uppercase">Álbum</span>
+          <h1 class="text-3xl lg:text-5xl font-black text-white leading-tight">{{ album.name }}</h1>
+          <p class="text-sm text-[#b3b3b3]">{{ album.songs.length }} canciones</p>
+          <div class="flex justify-center md:justify-start gap-3 mt-3">
+            <button @click="playAll"
+              class="bg-[#1ed760] hover:bg-[#1fdf64] text-black px-8 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-[#1ed760]/30">
+              <i class="fa-solid fa-play"></i> Reproducir
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="w-full">
-      <div class="hidden lg:flex text-gray-500 border-b border-white/5 pb-2 mb-4 px-4 text-[10px] font-black uppercase tracking-widest">
-        <div class="w-12 text-center">#</div>
-        <div class="flex-1 px-4">Título</div>
-        <div class="w-32 text-right">Acciones</div>
-      </div>
-      
-      <div 
-        v-for="(song, index) in album.songs" 
-        :key="song.id"
-        tabindex="0"
-        @click="playSong(index)"
-        @keydown.enter="playSong(index)"
-        :class="['flex items-center p-4 rounded-xl transition-all group cursor-pointer mb-1 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:bg-white/10', 
-                 isCurrentSong(song) ? 'bg-pink-500/10 text-pink-500' : 'text-gray-300 hover:bg-white/5']"
-      >
-        <div :class="['w-8 lg:w-12 text-center text-xs lg:text-sm', isCurrentSong(song) ? 'text-pink-500' : 'text-gray-500']">
-          <i v-if="isCurrentSong(song) && playerStore.isPlaying" class="fa-solid fa-volume-high animate-pulse"></i>
+    <!-- Track list -->
+    <div class="px-0">
+      <div v-for="(song, index) in album.songs" :key="song.id" tabindex="0"
+        @click="playSong(index)" @keydown.enter="playSong(index)"
+        :class="['flex items-center p-3 rounded-md transition-all group cursor-pointer hover:bg-[#282828] focus:outline-none focus:bg-[#282828]',
+          isCurrentSong(song) ? 'bg-[#282828]' : '']">
+        <div class="w-8 text-center text-sm text-[#727272] shrink-0">
+          <i v-if="isCurrentSong(song) && playerStore.isPlaying" class="fa-solid fa-volume-high text-[#1ed760] text-xs animate-pulse"></i>
           <span v-else>{{ index + 1 }}</span>
         </div>
-        
-        <div class="flex-1 px-2 lg:px-4 truncate">
-          <div :class="['font-bold text-sm lg:text-base truncate', isCurrentSong(song) ? 'text-pink-500' : 'text-white']">
-            {{ song.title }}
-          </div>
-          <div class="text-[10px] lg:text-xs text-gray-500 mt-0.5" v-if="song.playCount">
-             {{ song.playCount }} reproducciones
-          </div>
+        <div class="flex-1 px-3 truncate">
+          <div :class="['text-sm truncate', isCurrentSong(song) ? 'text-[#1ed760]' : 'text-white']">{{ song.title }}</div>
         </div>
-        
-        <div class="flex items-center gap-3 lg:gap-5">
-          <button @click.stop="playerStore.addToQueue(song)" class="text-gray-500 hover:text-white focus:text-pink-500 focus:outline-none focus:scale-125 transition-transform p-2">
-            <i class="fa-solid fa-plus text-sm"></i>
+        <div class="flex items-center gap-2 shrink-0">
+          <button @click.stop="playerStore.addToQueue(song)"
+            class="text-[#727272] hover:text-white p-1.5 opacity-0 group-hover:opacity-100 transition-all">
+            <i class="fa-solid fa-plus text-xs"></i>
           </button>
-          <button @click.stop="playerStore.toggleFavorite(song.id)" :class="['p-2 transition-all focus:outline-none focus:scale-125', playerStore.isFavorite(song.id) ? 'text-pink-500' : 'text-gray-500 hover:text-pink-500 focus:text-pink-500']">
+          <button @click.stop="playerStore.toggleFavorite(song.id)"
+            :class="['p-1.5 transition-all', playerStore.isFavorite(song.id) ? 'text-[#1ed760]' : 'text-[#727272] hover:text-white']">
             <i :class="playerStore.isFavorite(song.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
           </button>
         </div>
@@ -74,30 +56,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { playerStore } from '../store/playerStore.js';
-import { api } from '../utils/api.js';
+import { computed } from 'vue'
+import { playerStore } from '../store/playerStore.js'
+import { api } from '../utils/api.js'
 
-const album = computed(() => playerStore.currentAlbumData);
-const goBack = () => { playerStore.currentAlbumData = null; };
+const album = computed(() => playerStore.currentAlbumData)
+const goBack = () => { playerStore.currentAlbumData = null }
 
-// ✅ Fallback doble de imágenes
-const FALLBACK_PLACEHOLDER = 'https://placehold.co/600/1a1a2e/e94560?text=AmorList';
-const FALLBACK_SVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect fill=%22%231a1a2e%22 width=%22600%22 height=%22600%22/%3E%3Ctext fill=%22%23e94560%22 font-family=%22sans-serif%22 font-size=%2240%22 x=%22300%22 y=%22300%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E🎵%3C/text%3E%3C/svg%3E';
+const headerColor = computed(() => {
+  const colors = ['#503078', '#c81e50', '#1e64b4', '#149650', '#7a2878', '#b44020']
+  return colors[playerStore.currentIndex % colors.length]
+})
 
-const handleImageError = (e) => {
-  const img = e.target;
-  if (!img.dataset.fallback) {
-    img.dataset.fallback = '1';
-    img.src = FALLBACK_PLACEHOLDER;
-  } else {
-    img.src = FALLBACK_SVG;
-  }
-};
-const playSong = (index) => { playerStore.playTrack(album.value.songs, index); };
-const playAll = () => { if (album.value?.songs.length) playerStore.playTrack(album.value.songs, 0); };
+const playSong = (index) => playerStore.playTrack(album.value.songs, index)
+const playAll = () => { if (album.value?.songs.length) playerStore.playTrack(album.value.songs, 0) }
 const isCurrentSong = (song) => {
-  const current = playerStore.currentPlaylist[playerStore.currentIndex];
-  return current && current.id === song.id;
-};
+  const current = playerStore.currentPlaylist[playerStore.currentIndex]
+  return current && current.id === song.id
+}
 </script>

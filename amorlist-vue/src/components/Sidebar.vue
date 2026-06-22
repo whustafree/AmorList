@@ -1,65 +1,76 @@
 <template>
-  <div 
-    v-if="playerStore.isMobileMenuOpen" 
-    class="fixed inset-0 bg-black/60 z-40 lg:hidden"
-    @click="playerStore.isMobileMenuOpen = false"
-  ></div>
+  <Transition name="sidebar-overlay">
+    <div v-if="playerStore.isMobileMenuOpen"
+      class="fixed inset-0 bg-black/60 z-40 lg:hidden"
+      @click="playerStore.isMobileMenuOpen = false"
+    ></div>
+  </Transition>
 
-  <aside 
+  <aside
     :class="[
-      'fixed lg:relative z-50 w-64 bg-black/90 lg:bg-black/40 backdrop-blur-md border-r border-white/10 flex flex-col p-4 h-full transition-transform duration-300',
+      'fixed lg:relative z-50 w-60 lg:w-[220px] bg-[#000] lg:bg-transparent border-r border-[#282828] flex flex-col h-full transition-transform duration-300',
       playerStore.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
     ]"
   >
-    <div class="flex justify-between items-center mb-8 mt-4">
-      <img src="/logo.png" alt="AmorList" class="w-32 h-auto drop-shadow-md">
-      <button @click="playerStore.isMobileMenuOpen = false" class="lg:hidden text-gray-400">
-        <i class="fa-solid fa-xmark text-2xl"></i>
-      </button>
-    </div>
-    
-    <div class="flex flex-col gap-1 overflow-y-auto">
-      <div class="text-xs text-gray-500 font-bold tracking-wider mb-2 px-4 uppercase">Biblioteca</div>
-      
-      <button @click="changeMode('audio')" :class="btnClass('audio')">
-        <i class="fa-solid fa-music w-5"></i> Música
-      </button>
-      
-      <button @click="changeMode('video')" :class="btnClass('video')">
-        <i class="fa-solid fa-film w-5"></i> Videos
-      </button>
-
-      <div class="text-xs text-gray-500 font-bold tracking-wider mb-2 mt-4 px-4 uppercase">Actividad</div>
-
-      <button @click="changeMode('fav')" :class="btnClass('fav')">
-        <i class="fa-solid fa-heart w-5"></i> Favoritos
-      </button>
-
-      <button @click="changeMode('history')" :class="btnClass('history')">
-        <i class="fa-solid fa-clock-rotate-left w-5"></i> Historial
-      </button>
-
-      <button @click="changeMode('stats')" :class="btnClass('stats')">
-        <i class="fa-solid fa-trophy w-5"></i> Top Canciones
+    <div class="p-5 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg">
+          <span class="text-white font-black text-sm">A</span>
+        </div>
+        <span class="font-bold text-white text-sm tracking-tight">AmorList</span>
+      </div>
+      <button @click="playerStore.isMobileMenuOpen = false" class="lg:hidden text-[#727272] hover:text-white">
+        <i class="fa-solid fa-xmark text-xl"></i>
       </button>
     </div>
 
-    <div class="mt-auto text-center text-[10px] text-gray-500 opacity-50 pb-4">
-      Propiedad de <strong>whustaf</strong>
+    <div class="flex flex-col gap-1 px-3">
+      <button @click="changeMode('audio')" :class="navBtnClass('audio')">
+        <i class="fa-solid fa-house w-5 text-center"></i>
+        <span>Inicio</span>
+      </button>
+      <button @click="changeMode('video')" :class="navBtnClass('video')">
+        <i class="fa-solid fa-film w-5 text-center"></i>
+        <span>Videos</span>
+      </button>
+    </div>
+
+    <div class="mt-5 px-3">
+      <div class="text-[11px] text-[#727272] font-bold tracking-widest uppercase mb-2 px-3">Tu Biblioteca</div>
+      <div class="flex flex-col gap-1">
+        <button @click="changeMode('fav')" :class="navBtnClass('fav')">
+          <i class="fa-solid fa-heart w-5 text-center"></i>
+          <span>Favoritos</span>
+        </button>
+        <button @click="changeMode('history')" :class="navBtnClass('history')">
+          <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+          <span>Historial</span>
+        </button>
+        <button @click="changeMode('stats')" :class="navBtnClass('stats')">
+          <i class="fa-solid fa-chart-simple w-5 text-center"></i>
+          <span>Top</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-auto p-5 text-center text-[10px] text-[#535353]">
+      whustaf &middot; AmorList
     </div>
   </aside>
 </template>
 
 <script setup>
-import { playerStore } from '../store/playerStore.js';
+import { playerStore } from '../store/playerStore.js'
 
 const changeMode = (mode) => {
-  playerStore.currentMode = mode;
-  playerStore.isMobileMenuOpen = false; // Cerrar al elegir algo en móvil
-};
+  playerStore.currentMode = mode
+  playerStore.isMobileMenuOpen = false
+}
 
-const btnClass = (mode) => [
-  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm',
-  playerStore.currentMode === mode ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'
-];
+const navBtnClass = (mode) => [
+  'flex items-center gap-3 px-3 py-2.5 rounded-md transition-all text-sm font-medium w-full',
+  playerStore.currentMode === mode
+    ? 'bg-[#282828] text-white'
+    : 'text-[#727272] hover:text-white hover:bg-[#1a1a1a]'
+]
 </script>

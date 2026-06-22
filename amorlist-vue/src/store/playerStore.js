@@ -5,11 +5,19 @@ import { api } from '../utils/api.js';
 let _audioEl = null;
 let _initialized = false;
 
-/** Inicializa el elemento de audio (llamar desde App.vue onMounted) */
+/** Inicializa el elemento de audio con todos los listeners */
 export function initAudio(el) {
   if (_initialized) return;
   _initialized = true;
   _audioEl = el;
+
+  // timeupdate → actualiza currentTime/duration reactivos
+  _audioEl.addEventListener('timeupdate', () => {
+    playerStore.currentTime = _audioEl.currentTime || 0;
+    playerStore.duration = _audioEl.duration || 0;
+  });
+
+  // ended → siguiente canción o repeat
   _audioEl.addEventListener('ended', () => {
     if (playerStore.repeatMode === 2) {
       _audioEl.currentTime = 0;
@@ -18,6 +26,8 @@ export function initAudio(el) {
       playerStore.nextTrack();
     }
   });
+
+  // error → mostrar error
   _audioEl.addEventListener('error', () => {
     console.error('🔇 Error de audio:', _audioEl.error?.message);
     playerStore.isPlaying = false;
@@ -25,19 +35,15 @@ export function initAudio(el) {
   });
 }
 
-/** Obtiene el elemento de audio (exportado para componentes) */
+/** Obtiene el elemento de audio */
 export function getAudio() {
-  if (!_audioEl) {
-    // Fallback: crear audio si no se inicializó (útil en desarrollo)
-    _audioEl = new Audio();
-    _audioEl.addEventListener('ended', () => {
-      playerStore.nextTrack();
-    });
-  }
   return _audioEl;
 }
 
 export const playerStore = reactive({
+  // ===== TIEMPO REACTIVO (actualizado por initAudio) =====
+  currentTime: 0,
+  duration: 0,
   audioError: false,
   
   // Listas de datos
@@ -65,7 +71,7 @@ export const playerStore = reactive({
   isVisualizerActive: false,
   isCassetteMode: false,
   isQueueOpen: false,
-  isMobileMenuOpen: false, // Control para el menú en dispositivos móviles
+  isMobileMenuOpen: false,
 
   // ==========================================
   // FUNCIONES DE REPRODUCCIÓN
@@ -74,53 +80,53 @@ export const playerStore = reactive({
     this.currentPlaylist = playlist;
     this.currentIndex = index;
     const track = this.currentPlaylist[this.currentIndex];
-    
+
     if (!track) return;
     this.audioError = false;
+    this.currentTime = 0;
+    this.duration = 0;
+
     if (track.isVideo) {
-      const audio = getAudio();
-      audio.pause();
+      if (_audioEl) _audioEl.pause();
       this.isVideoPlaying = true;
       this.isPlaying = true;
     } else {
-      const audio = getAudio();
+      if (!_audioEl) return;
       this.isVideoPlaying = false;
-      audio.src = api.resolveUrl(track.src);
-      audio.load(); // Force load en Capacitor
-      audio.play().catch(e => {
+      _audioEl.src = api.resolveUrl(track.src);
+      _audioEl.load();
+      _audioEl.play().catch(e => {
         console.error("🔇 Error al reproducir:", e);
         this.audioError = true;
         this.isPlaying = false;
       });
       this.isPlaying = true;
     }
-    
+
     this.addToHistory(track);
   },
 
   togglePlay() {
     if (this.currentPlaylist.length === 0) return;
-    
     if (this.isVideoPlaying) {
       this.isPlaying = !this.isPlaying;
     } else {
-      const audio = getAudio();
-      if (audio.paused) {
-        audio.play().catch(e => {
+      if (!_audioEl) return;
+      if (_audioEl.paused) {
+        _audioEl.play().catch(e => {
           console.error('🔇 Error al reanudar:', e);
           this.audioError = true;
           this.isPlaying = false;
         });
         this.isPlaying = true;
       } else {
-        audio.pause();
+        _audioEl.pause();
         this.isPlaying = false;
       }
     }
   },
 
   nextTrack() {
-    // Si hay canciones en la cola, tienen prioridad
     if (this.queueList.length > 0) {
       const nextSong = this.queueList.shift();
       const newList = [...this.currentPlaylist];
@@ -128,7 +134,6 @@ export const playerStore = reactive({
       this.playTrack(newList, this.currentIndex + 1);
       return;
     }
-
     if (this.currentPlaylist.length === 0) return;
     let next = (this.currentIndex + 1) % this.currentPlaylist.length;
     this.playTrack(this.currentPlaylist, next);
@@ -136,42 +141,36 @@ export const playerStore = reactive({
 
   prevTrack() {
     if (this.currentPlaylist.length === 0) return;
-    
-    const audio = getAudio();
-    if (!this.isVideoPlaying && audio.currentTime > 3) {
-      audio.currentTime = 0;
+    if (_audioEl && !this.isVideoPlaying && _audioEl.currentTime > 3) {
+      _audioEl.currentTime = 0;
       return;
     }
-    
     let prev = (this.currentIndex - 1 + this.currentPlaylist.length) % this.currentPlaylist.length;
     this.playTrack(this.currentPlaylist, prev);
   },
 
   setVolume(value) {
-    getAudio().volume = value;
+    if (_audioEl) _audioEl.volume = value;
+  },
+
+  seekTo(position) {
+    if (_audioEl && this.duration) {
+      _audioEl.currentTime = position * this.duration;
+    }
   },
 
   // ==========================================
   // COLA Y FAVORITOS
   // ==========================================
-  addToQueue(track) {
-    this.queueList.push(track);
-  },
-  
+  addToQueue(track) { this.queueList.push(track); },
   playFromQueue(index) {
     const song = this.queueList.splice(index, 1)[0];
     const newList = [...this.currentPlaylist];
     newList.splice(this.currentIndex + 1, 0, song);
     this.playTrack(newList, this.currentIndex + 1);
   },
-
-  removeFromQueue(index) {
-    this.queueList.splice(index, 1);
-  },
-
-  clearQueue() {
-    this.queueList = [];
-  },
+  removeFromQueue(index) { this.queueList.splice(index, 1); },
+  clearQueue() { this.queueList = []; },
 
   toggleFavorite(id) {
     if (this.favoriteIds.includes(id)) {
@@ -181,13 +180,10 @@ export const playerStore = reactive({
     }
     localStorage.setItem('koteifyLikes', JSON.stringify(this.favoriteIds));
   },
-
-  isFavorite(id) {
-    return this.favoriteIds.includes(id);
-  },
+  isFavorite(id) { return this.favoriteIds.includes(id); },
 
   // ==========================================
-  // ÁLBUMES DINÁMICOS Y BACKEND
+  // ÁLBUMES DINÁMICOS
   // ==========================================
   addToHistory(track) {
     if (this.historyList.length > 0 && this.historyList[this.historyList.length - 1].id === track.id) return;
