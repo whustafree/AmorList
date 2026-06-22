@@ -39,9 +39,17 @@ app.use(compression({
     }
 }));
 
-// CORS configurado correctamente
+// CORS configurado correctamente (compatible con Capacitor APK)
 const corsOptions = {
-    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['*'],
+    origin: (() => {
+        const raw = process.env.CORS_ORIGINS;
+        // Si no esta seteado, vacio, o '*', permitir todo
+        if (!raw || raw.trim() === '' || raw.trim() === '*') {
+            return '*';
+        }
+        // Lista de origenes separados por coma
+        return raw.split(',').map(o => o.trim()).filter(o => o.length > 0);
+    })(),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
     credentials: true,
