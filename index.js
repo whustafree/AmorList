@@ -39,17 +39,23 @@ app.use(compression({
     }
 }));
 
-// CORS configurado correctamente (compatible con Capacitor APK)
+// CORS configurado correctamente (compatible con Capacitor APK y web)
 const corsOptions = {
-    origin: (() => {
+    origin: function(requestOrigin, callback) {
         const raw = process.env.CORS_ORIGINS;
-        // Si no esta seteado, vacio, o '*', permitir todo
+        // Si no esta seteado, vacio, o '*': permitir cualquier origen
         if (!raw || raw.trim() === '' || raw.trim() === '*') {
-            return '*';
+            // Reflejar el origen de la peticion para soportar credentials
+            return callback(null, requestOrigin || true);
         }
-        // Lista de origenes separados por coma
-        return raw.split(',').map(o => o.trim()).filter(o => o.length > 0);
-    })(),
+        // Lista de origenes permitidos (separados por coma)
+        const allowed = raw.split(',').map(o => o.trim()).filter(o => o.length > 0);
+        if (allowed.includes(requestOrigin)) {
+            callback(null, requestOrigin);
+        } else {
+            callback(null, false); // Bloquear
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
     credentials: true,
