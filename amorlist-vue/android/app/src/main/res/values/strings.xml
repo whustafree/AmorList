@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AmorList</string>
+    <string name="title_activity_main">AmorList</string>
+    <string name="package_name">com.whustaf.amorlist</string>
+    <string name="custom_url_scheme">com.whustaf.amorlist</string>
+</resources>

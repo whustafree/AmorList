@@ -39,6 +39,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { playerStore } from '../store/playerStore.js';
+import { api } from '../utils/api.js';
 
 const isLoading = ref(true);
 
@@ -58,8 +59,7 @@ const handleImageError = (e) => {
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/albums');
-    const data = await res.json();
+    const data = await api.get('/api/albums');
     playerStore.fullLibraryData = data;
   } catch (error) {
     console.error("Error:", error);

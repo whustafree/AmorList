@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import { api } from '../utils/api.js';
 
 export const playerStore = reactive({
   audioEl: new Audio(),
@@ -39,15 +40,13 @@ export const playerStore = reactive({
     this.currentIndex = index;
     const track = this.currentPlaylist[this.currentIndex];
     
-    if (!track) return;
-
-    if (track.isVideo) {
+    if (!track) return;        if (track.isVideo) {
       this.audioEl.pause();
       this.isVideoPlaying = true;
       this.isPlaying = true;
     } else {
       this.isVideoPlaying = false;
-      this.audioEl.src = track.src;
+      this.audioEl.src = api.streamUrl(track.src);
       this.audioEl.play().catch(e => console.error("Error al reproducir:", e));
       this.isPlaying = true;
     }
@@ -173,8 +172,7 @@ export const playerStore = reactive({
       songs: [] 
     };
     try {
-      const res = await fetch('/api/stats/top');
-      const topSongs = await res.json();
+      const topSongs = await api.get('/api/stats/top');
       this.currentAlbumData = { 
         name: "Top Canciones 🏆", 
         cover: "https://placehold.co/600/ffd700/ffffff?text=Top+Hits", 

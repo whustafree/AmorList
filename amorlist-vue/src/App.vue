@@ -31,7 +31,7 @@
         <div class="w-10"></div>
       </div>
       <video 
-        :src="currentTrack?.src" 
+        :src="currentTrack?.streamUrl" 
         controls 
         autoplay 
         class="w-full h-full object-contain"
@@ -52,9 +52,14 @@ import AlbumView from './views/AlbumView.vue';
 import QueuePanel from './components/QueuePanel.vue'; 
 import Visualizer from './components/Visualizer.vue';
 import { playerStore } from './store/playerStore.js';
+import { api } from './utils/api.js';
 import { setupTVControls } from './utils/tv-input.js';
 
-const currentTrack = computed(() => playerStore.currentPlaylist[playerStore.currentIndex]);
+const currentTrack = computed(() => {
+  const track = playerStore.currentPlaylist[playerStore.currentIndex];
+  if (!track) return null;
+  return { ...track, streamUrl: api.streamUrl(track.src) };
+});
 
 const closeVideo = () => {
   playerStore.isVideoPlaying = false;

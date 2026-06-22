@@ -44,6 +44,7 @@
 <script setup>
 import { ref } from 'vue';
 import { playerStore } from '../store/playerStore.js';
+import { api } from '../utils/api.js';
 
 const isRefreshing = ref(false);
 
@@ -51,8 +52,7 @@ const refreshLibrary = async () => {
   if (isRefreshing.value) return;
   isRefreshing.value = true;
   try {
-    const res = await fetch('/api/refresh');
-    const data = await res.json();
+    const data = await api.get('/api/refresh');
     playerStore.fullLibraryData = data;
   } catch (error) { console.error(error); } 
   finally { isRefreshing.value = false; }
