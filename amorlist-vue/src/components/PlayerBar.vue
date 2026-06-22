@@ -49,7 +49,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { playerStore } from '../store/playerStore.js';
+import { playerStore, getAudio } from '../store/playerStore.js';
 import { api } from '../utils/api.js';
 
 const currentTrack = computed(() => playerStore.currentPlaylist[playerStore.currentIndex] || null);
@@ -74,22 +74,35 @@ const handleSeek = (e) => {
   if (!duration.value) return;
   const rect = e.currentTarget.getBoundingClientRect();
   const pos = (e.clientX - rect.left) / rect.width;
-  playerStore.audioEl.currentTime = pos * duration.value;
+  const audio = getAudio();
+  if (!audio) return;
+  audio.currentTime = pos * duration.value;
 };
 
-const updateVolume = () => playerStore.setVolume(volume.value);
+const updateVolume = () => {
+  const audio = getAudio();
+  if (audio) audio.volume = volume.value;
+};
 
 // ✅ Listener con cleanup: evita acumulación de listeners al remontar el componente
 const onTimeUpdate = () => {
-  currentTime.value = playerStore.audioEl.currentTime;
-  duration.value = playerStore.audioEl.duration || 0;
+  const audio = getAudio();
+  if (!audio) return;
+  currentTime.value = audio.currentTime || 0;
+  duration.value = audio.duration || 0;
 };
 
 onMounted(() => {
-  playerStore.audioEl.addEventListener('timeupdate', onTimeUpdate);
+  const audio = getAudio();
+  if (audio) {
+    audio.addEventListener('timeupdate', onTimeUpdate);
+  }
 });
 
 onUnmounted(() => {
-  playerStore.audioEl.removeEventListener('timeupdate', onTimeUpdate);
+  const audio = getAudio();
+  if (audio) {
+    audio.removeEventListener('timeupdate', onTimeUpdate);
+  }
 });
 </script>

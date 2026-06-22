@@ -8,7 +8,7 @@
 
 <script setup>
 import { ref, watch, onUnmounted } from 'vue';
-import { playerStore } from '../store/playerStore.js';
+import { playerStore, getAudio } from '../store/playerStore.js';
 
 const canvas = ref(null);
 let audioCtx, analyser, source;
@@ -19,7 +19,9 @@ const initVisualizer = () => {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
-    source = audioCtx.createMediaElementSource(playerStore.audioEl);
+    const audioEl = getAudio();
+    if (!audioEl) return;
+    source = audioCtx.createMediaElementSource(audioEl);
     source.connect(analyser);
     analyser.connect(audioCtx.destination);
   }

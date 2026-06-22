@@ -25,7 +25,8 @@ export function initAudio(el) {
   });
 }
 
-function getAudio() {
+/** Obtiene el elemento de audio (exportado para componentes) */
+export function getAudio() {
   if (!_audioEl) {
     // Fallback: crear audio si no se inicializó (útil en desarrollo)
     _audioEl = new Audio();
