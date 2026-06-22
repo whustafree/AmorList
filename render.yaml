@@ -1,0 +1,28 @@
+# Render Blueprint — Deploy del backend de AmorList
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: amorlist-api
+    runtime: node
+    repo: https://github.com/whustafree/AmorList
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DRIVE_FOLDER_ID
+        sync: false
+      - key: GOOGLE_CREDENTIALS
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://amorlist.vercel.app
+      - key: RENDER_EXTERNAL_URL
+        fromService:
+          type: web
+          name: amorlist-api
+          property: url
