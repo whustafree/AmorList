@@ -1,5 +1,5 @@
 <template>
-  <div :class="['h-[100dvh] w-full bg-gray-900 text-white flex overflow-hidden font-sans relative', playerStore.isVideoPlaying ? '' : 'pb-20 lg:pb-24']">
+  <div :class="['h-[100dvh] w-full bg-gray-900 text-white flex overflow-hidden font-sans relative', device.cssClass, playerStore.isVideoPlaying ? '' : 'pb-20 lg:pb-24']">
     
     <Visualizer />
     
@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { onMounted, watch, computed } from 'vue';
+import { onMounted, watch, computed, ref } from 'vue';
 import Sidebar from './components/Sidebar.vue';
 import PlayerBar from './components/PlayerBar.vue';
 import TopBar from './components/TopBar.vue';
@@ -53,6 +53,7 @@ import QueuePanel from './components/QueuePanel.vue';
 import Visualizer from './components/Visualizer.vue';
 import { playerStore } from './store/playerStore.js';
 import { api } from './utils/api.js';
+import { device } from './utils/device.js';
 import { setupTVControls } from './utils/tv-input.js';
 
 const currentTrack = computed(() => {
@@ -114,5 +115,40 @@ onMounted(() => { setupTVControls(); });
 }
 .overflow-y-auto::-webkit-scrollbar-thumb:hover { 
   background-color: rgba(236, 72, 153, 0.8); 
+}
+
+/* ===== MODO TV ===== */
+.tv-mode button:focus-visible,
+.tv-mode [tabindex]:focus-visible {
+  outline: 3px solid #ec4899 !important;
+  outline-offset: 3px;
+  border-radius: 12px;
+  box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.3), 0 0 20px rgba(236, 72, 153, 0.2);
+  transform: scale(1.03);
+  transition: all 0.15s ease;
+}
+
+/* Elementos más grandes en TV */
+.tv-mode .grid > div {
+  padding: 1rem !important;
+}
+
+.tv-mode .grid img {
+  border-radius: 12px;
+}
+
+/* Cursor pointer siempre visible en TV */
+.tv-mode * {
+  cursor: default;
+}
+
+/* ===== MODO MÓVIL ===== */
+.device-mobile button {
+  min-height: 44px;
+}
+
+/* ===== TRANSICIÓN SUAVE AL CAMBIAR DE DISPOSITIVO ===== */
+html {
+  transition: font-size 0.2s ease;
 }
 </style>
