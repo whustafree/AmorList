@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     defaults:
       run:
@@ -31,41 +31,56 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Verify Android SDK & Java
         run: |
-          echo "=== JAVA_HOME ==="
-          echo "JAVA_HOME=$JAVA_HOME"
+          ANDROID_SDK=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$ANDROID_SDK" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> $GITHUB_ENV
+          
+          echo "=== Java ==="
           java -version 2>&1
-          echo ""
-          echo "=== ANDROID_HOME ==="
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          if [ -z "$ANDROID_HOME" ]; then
-            # Fallback: buscar SDK en ubicaciones comunes
-            for dir in /usr/local/lib/android/sdk /opt/android-sdk $HOME/Android/Sdk; do
+          echo "JAVA_HOME=$JAVA_HOME"
+          
+          echo "=== Android SDK ==="
+          ls -la $ANDROID_SDK/ 2>&1 || echo "SDK NOT FOUND in $ANDROID_SDK"
+          
+          # Buscar SDK en ubicaciones alternativas si no existe
+          if [ ! -d "$ANDROID_SDK" ]; then
+            for dir in /opt/android-sdk $HOME/android/sdk $HOME/Android/Sdk; do
               if [ -d "$dir" ]; then
+                echo "SDK encontrado en: $dir"
+                ANDROID_SDK=$dir
                 echo "ANDROID_HOME=$dir" >> $GITHUB_ENV
                 echo "ANDROID_SDK_ROOT=$dir" >> $GITHUB_ENV
-                echo "Usando SDK en: $dir"
                 break
               fi
             done
           fi
-          ls -la $ANDROID_HOME/platforms/ 2>/dev/null || echo "No platforms dir yet"
-
-      - name: Install Android SDK 36
-        run: |
-          yes | sdkmanager "platforms;android-36" "build-tools;36.0.0" 2>&1 | tail -5 || echo 'SDK ya instalado'
-          ls $ANDROID_HOME/platforms/android-36/ 2>/dev/null && echo 'SDK 36 OK' || echo 'SDK 36 NO INSTALADO'
+          
+          echo "=== SDK Manager ==="
+          SDKMAN=$ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager
+          if [ -f "$SDKMAN" ]; then
+            echo "sdkmanager encontrado"
+          else
+            # Buscar sdkmanager
+            SDKMAN=$(find $ANDROID_SDK -name sdkmanager -type f 2>/dev/null | head -1)
+            echo "sdkmanager encontrado en: $SDKMAN"
+          fi
+          
+          # Instalar SDK 36 si no existe
+          if [ ! -d "$ANDROID_SDK/platforms/android-36" ]; then
+            echo "Instalando Android SDK 36..."
+            yes | $SDKMAN "platforms;android-36" "build-tools;36.0.0" 2>&1 | tail -10
+            echo "SDK 36 instalado: $(ls $ANDROID_SDK/platforms/ 2>&1)"
+          else
+            echo "SDK 36 ya instalado"
+          fi
 
       - name: Build web app
         env:
@@ -84,17 +99,9 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          # Asegurar local.properties con SDK real
-          echo "sdk.dir=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}" > local.properties
-          cat local.properties
-          echo "=== Build debug APK ==="
+          echo "sdk.dir=${ANDROID_HOME:-/usr/local/lib/android/sdk}" > local.properties
+          echo "=== Build debug APK === (JAVA_HOME=${JAVA_HOME})"
           ./gradlew assembleDebug --no-daemon --stacktrace 2>&1
-
-      - name: Build release AAB
-        if: ${{ false }}  # Deshabilitado hasta que tengamos keystore
-        run: |
-          cd android
-          ./gradlew bundleRelease --no-daemon --stacktrace 2>&1
 
       - name: Get version
         id: version
@@ -103,32 +110,23 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "app_name=AmorList-v$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Rename APK/AAB
+      - name: Rename APK
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if [ -f android/app/build/outputs/apk/debug/app-debug.apk ]; then
-            cp android/app/build/outputs/apk/debug/app-debug.apk "AmorList-v${VERSION}-debug.apk"
-          fi
-          if [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ]; then
-            cp android/app/build/outputs/apk/release/app-release-unsigned.apk "AmorList-v${VERSION}-release-unsigned.apk"
-          fi
-          if [ -f android/app/build/outputs/bundle/release/app-release.aab ]; then
-            cp android/app/build/outputs/bundle/release/app-release.aab "AmorList-v${VERSION}.aab"
+          APK_PATH=android/app/build/outputs/apk/debug/app-debug.apk
+          if [ -f "$APK_PATH" ]; then
+            cp "$APK_PATH" "AmorList-v${VERSION}-debug.apk"
+            echo "✅ APK generado: AmorList-v${VERSION}-debug.apk"
+            ls -lh "AmorList-v${VERSION}-debug.apk"
+          else
+            echo "❌ app-debug.apk no encontrado"
+            find android -name "*.apk" 2>/dev/null
+            find android -name "*.log" 2>/dev/null | head -5
           fi
 
-      - name: Upload artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AmorList-v${{ steps.version.outputs.version }}
           path: amorlist-vue/AmorList-v*
           if-no-files-found: error
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          name: AmorList v${{ steps.version.outputs.version }}
-          tag_name: v${{ steps.version.outputs.version }}-build-${{ github.run_number }}
-          files: |
-            amorlist-vue/AmorList-v*
-          generate_release_notes: true
