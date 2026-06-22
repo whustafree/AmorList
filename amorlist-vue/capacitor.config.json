@@ -1,5 +1,15 @@
 {
   "appId": "com.whustaf.amorlist",
   "appName": "AmorList",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1000,
+      "backgroundColor": "#0f0f1a"
+    }
+  }
 }
