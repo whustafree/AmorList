@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Java 17
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -113,18 +113,41 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           APK_PATH=android/app/build/outputs/apk/debug/app-debug.apk
           if [ -f "$APK_PATH" ]; then
-            cp "$APK_PATH" "AmorList-v${VERSION}-debug.apk"
-            echo "✅ APK generado: AmorList-v${VERSION}-debug.apk"
-            ls -lh "AmorList-v${VERSION}-debug.apk"
+            cp "$APK_PATH" "AmorList-v${VERSION}.apk"
+            echo "✅ APK generado: AmorList-v${VERSION}.apk"
+            ls -lh "AmorList-v${VERSION}.apk"
           else
             echo "❌ app-debug.apk no encontrado"
             find android -name "*.apk" 2>/dev/null
             find android -name "*.log" 2>/dev/null | head -5
           fi
 
-      - name: Upload APK
+      - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: AmorList-v${{ steps.version.outputs.version }}
-          path: amorlist-vue/AmorList-v*
+          path: amorlist-vue/AmorList-v*.apk
           if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}-build-${{ github.run_number }}
+          name: AmorList v${{ steps.version.outputs.version }} (build ${{ github.run_number }})
+          body: |
+            ## 📱 AmorList v${{ steps.version.outputs.version }}
+            
+            APK generado automáticamente.
+            
+            ### ✅ Características
+            - Detección de dispositivo (TV / móvil / tablet / escritorio)
+            - Navegación por control remoto en Smart TV
+            - Reproducción de música y video desde Google Drive
+            - Cola de reproducción
+            
+            ### 🔧 Cambios
+            - Build #${{ github.run_number }} del commit ${{ github.sha }}
+          files: |
+            amorlist-vue/AmorList-v*.apk
+          generate_release_notes: true
+          make_latest: true
