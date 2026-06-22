@@ -20,7 +20,7 @@ services:
       - key: GOOGLE_CREDENTIALS
         sync: false
       - key: CORS_ORIGINS
-        value: https://amorlist-94u2.onrender.com,http://localhost:5173,http://localhost:3000
+        sync: false
       - key: RENDER_EXTERNAL_URL
         fromService:
           type: web
