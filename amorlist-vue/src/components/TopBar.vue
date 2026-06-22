@@ -45,6 +45,7 @@
 import { ref } from 'vue';
 import { playerStore } from '../store/playerStore.js';
 import { api } from '../utils/api.js';
+import { setCache, CACHE_KEYS } from '../utils/cache.js';
 
 const isRefreshing = ref(false);
 
@@ -54,6 +55,8 @@ const refreshLibrary = async () => {
   try {
     const data = await api.get('/api/refresh');
     playerStore.fullLibraryData = data;
+    // Guardar en caché offline
+    setCache(CACHE_KEYS.LIBRARY, data);
   } catch (error) { console.error(error); } 
   finally { isRefreshing.value = false; }
 };
